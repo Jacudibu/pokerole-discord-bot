@@ -35,49 +35,49 @@ pub async fn autocomplete_move<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
 ) -> Vec<String> {
-    autocomplete(partial, &_ctx.data().move_names, 2)
+    autocomplete(partial, &_ctx.data().game.move_names, 2)
 }
 
 pub async fn autocomplete_ability<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
 ) -> Vec<String> {
-    autocomplete(partial, &_ctx.data().ability_names, 2)
+    autocomplete(partial, &_ctx.data().game.ability_names, 2)
 }
 
 pub async fn autocomplete_pokemon<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
 ) -> Vec<String> {
-    autocomplete(partial, &_ctx.data().pokemon_names, 2)
+    autocomplete(partial, &_ctx.data().game.pokemon_names, 2)
 }
 
 pub async fn autocomplete_item<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
-) -> Vec<String> { autocomplete(partial, &_ctx.data().item_names, 2) }
+) -> Vec<String> { autocomplete(partial, &_ctx.data().game.item_names, 2) }
 
 pub async fn autocomplete_weather<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
-) -> Vec<String> { autocomplete(partial, &_ctx.data().weather_names, 0) }
+) -> Vec<String> { autocomplete(partial, &_ctx.data().game.weather_names, 0) }
 
 pub async fn autocomplete_status_effect<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
-) -> Vec<String> { autocomplete(partial, &_ctx.data().status_effects_names, 0) }
+) -> Vec<String> { autocomplete(partial, &_ctx.data().game.status_effects_names, 0) }
 
 pub async fn autocomplete_rule<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
-) -> Vec<String> { autocomplete(partial, &_ctx.data().rule_names, 0) }
+) -> Vec<String> { autocomplete(partial, &_ctx.data().game.rule_names, 0) }
 
 pub async fn autocomplete_nature<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
-) -> Vec<String> { autocomplete(partial, &_ctx.data().nature_names, 0) }
+) -> Vec<String> { autocomplete(partial, &_ctx.data().game.nature_names, 0) }
 
 pub async fn autocomplete_potion<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
-) -> Vec<String> { autocomplete(partial, &_ctx.data().potion_names, 0) }
+) -> Vec<String> { autocomplete(partial, &_ctx.data().game.potion_names, 0) }

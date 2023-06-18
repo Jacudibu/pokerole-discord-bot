@@ -13,7 +13,7 @@ pub async fn learns(
     #[autocomplete = "autocomplete_pokemon"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(pokemon) = ctx.data().pokemon.get(&name.to_lowercase()) {
+    if let Some(pokemon) = ctx.data().game.pokemon.get(&name.to_lowercase()) {
         ctx.send(|b| create_reply(b, pokemon)).await?;
     } else {
         ctx.send(|b| {

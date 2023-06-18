@@ -7,9 +7,9 @@ use serenity::model::application::component::{ComponentType};
 use serenity::model::application::interaction::{Interaction};
 use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 use crate::{Error};
-use crate::game_data::GameData;
+use crate::game_data::Data;
 
-type FrameworkContext<'a> = poise::FrameworkContext<'a, GameData, Error>;
+type FrameworkContext<'a> = poise::FrameworkContext<'a, Data, Error>;
 
 pub async fn handle_events<'a>(
     context: &'a Context,

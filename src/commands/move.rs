@@ -12,7 +12,7 @@ pub async fn poke_move(
     #[autocomplete = "autocomplete_move"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(poke_move) = ctx.data().moves.get(&name.to_lowercase()) {
+    if let Some(poke_move) = ctx.data().game.moves.get(&name.to_lowercase()) {
         if poke_move.name == "Metronome" {
             execute_metronome(ctx, poke_move).await?;
         } else {

@@ -13,7 +13,7 @@ pub async fn stats(
     #[autocomplete = "autocomplete_pokemon"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(pokemon) = ctx.data().pokemon.get(&name.to_lowercase()) {
+    if let Some(pokemon) = ctx.data().game.pokemon.get(&name.to_lowercase()) {
         ctx.send(|b| {
             b.content(pokemon.build_stats_string());
             b.components(|b| create_buttons(b, &pokemon.name.to_lowercase()))

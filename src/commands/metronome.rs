@@ -7,7 +7,7 @@ use crate::game_data::GameData;
 pub async fn metronome(
     ctx: Context<'_>,
 ) -> Result<(), Error> {
-    ctx.say(get_metronome_text(ctx.data())).await?;
+    ctx.say(get_metronome_text(&ctx.data().game)).await?;
     Ok(())
 }
 

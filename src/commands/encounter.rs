@@ -25,9 +25,9 @@ pub async fn encounter(
     #[description = "How many? Defaults to 1."]
     amount: Option<u8>
 ) -> Result<(), Error> {
-    if let Some(pokemon) = ctx.data().pokemon.get(&pokemon.to_lowercase()) {
+    if let Some(pokemon) = ctx.data().game.pokemon.get(&pokemon.to_lowercase()) {
         for encounter in build_encounter(pokemon, level, amount) {
-            for part in helpers::split_long_messages(encounter.build_string(pokemon, ctx.data())) {
+            for part in helpers::split_long_messages(encounter.build_string(pokemon, &ctx.data().game)) {
                 ctx.say(part).await?;
             }
         }

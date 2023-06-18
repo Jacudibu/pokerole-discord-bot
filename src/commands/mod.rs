@@ -1,8 +1,8 @@
 use poise::Command;
 use crate::Error;
-use crate::game_data::GameData;
+use crate::game_data::Data;
 
-type Context<'a> = poise::Context<'a, GameData, Error>;
+type Context<'a> = poise::Context<'a, Data, Error>;
 
 mod autocompletion;
 
@@ -31,7 +31,7 @@ mod create_role_reaction_post;
 
 mod characters;
 
-pub fn get_all_commands() -> Vec<Command<GameData, Error>> {
+pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec![
         roll::roll(),
         roll::r(),

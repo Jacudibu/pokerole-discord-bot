@@ -10,7 +10,7 @@ pub async fn item(
     #[autocomplete = "autocomplete_item"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(item) = ctx.data().items.get(&name.to_lowercase()) {
+    if let Some(item) = ctx.data().game.items.get(&name.to_lowercase()) {
         ctx.say(item.build_string()).await?;
     } else {
         ctx.send(|b| {

@@ -8,14 +8,21 @@ mod parse_error;
 mod events;
 mod helpers;
 
+use std::sync::Arc;
 use poise::serenity_prelude as serenity;
+use sqlx::{Pool, Sqlite};
+use crate::game_data::Data;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 #[tokio::main]
 async fn main() {
     logger::init_logging();
-    let data = data::parser::initialize_data().await;
+
+    let data = Data {
+        database: initialize_database().await,
+        game: Arc::new(data::parser::initialize_data().await)
+    };
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
@@ -33,4 +40,19 @@ async fn main() {
         });
 
     framework.run().await.unwrap();
+}
+
+async fn initialize_database() -> Pool<Sqlite> {
+    let database = sqlx::sqlite::SqlitePoolOptions::new()
+        .max_connections(5)
+        .connect_with(
+            sqlx::sqlite::SqliteConnectOptions::new()
+                .filename("database.sqlite")
+                .create_if_missing(true),
+        )
+        .await
+        .expect("Couldn't connect to database");
+
+    sqlx::migrate!("./migrations").run(&database).await.expect("Couldn't run database migrations");
+    database
 }

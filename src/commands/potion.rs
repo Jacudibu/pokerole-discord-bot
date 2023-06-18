@@ -10,7 +10,7 @@ pub async fn potion(
     #[autocomplete = "autocomplete_potion"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(potion) = ctx.data().potions.get(&name.to_lowercase()) {
+    if let Some(potion) = ctx.data().game.potions.get(&name.to_lowercase()) {
         ctx.say(potion.build_string()).await?;
     } else {
         ctx.send(|b| {

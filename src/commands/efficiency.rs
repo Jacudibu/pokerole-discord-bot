@@ -59,8 +59,8 @@ pub async fn efficiency(
     #[autocomplete = "autocomplete_pokemon"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(pokemon) = ctx.data().pokemon.get(&name.to_lowercase()) {
-        ctx.say(get_type_resistances_string(pokemon, &ctx.data().type_efficiency)).await?;
+    if let Some(pokemon) = ctx.data().game.pokemon.get(&name.to_lowercase()) {
+        ctx.say(get_type_resistances_string(pokemon, &ctx.data().game.type_efficiency)).await?;
     } else {
         ctx.send(|b| {
             b.content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name));

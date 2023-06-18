@@ -33,6 +33,9 @@ pub struct GameData {
     pub rule_names: Arc<Vec<String>>,
     pub rules: Arc<HashMap<String, Rule>>,
     pub type_efficiency: Arc<TypeEfficiency>,
-    pub database: Pool<Sqlite>,
 }
 
+pub struct Data {
+    pub database: Pool<Sqlite>,
+    pub game: Arc<GameData>,
+}

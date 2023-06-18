@@ -10,7 +10,7 @@ pub async fn rule(
     #[autocomplete = "autocomplete_rule"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(rule) = ctx.data().rules.get(&name.to_lowercase()) {
+    if let Some(rule) = ctx.data().game.rules.get(&name.to_lowercase()) {
         ctx.say(rule.build_string()).await?;
     } else {
         ctx.send(|b| {

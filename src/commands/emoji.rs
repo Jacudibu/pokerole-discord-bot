@@ -44,7 +44,7 @@ pub async fn emoji(
     #[autocomplete = "autocomplete_pokemon"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(pokemon) = ctx.data().pokemon.get(&name.to_lowercase()) {
+    if let Some(pokemon) = ctx.data().game.pokemon.get(&name.to_lowercase()) {
         ctx.say(build_string(pokemon)).await?;
     } else {
         ctx.send(|b| {

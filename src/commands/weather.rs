@@ -10,7 +10,7 @@ pub async fn weather(
     #[autocomplete = "autocomplete_weather"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(weather) = ctx.data().weather.get(&name.to_lowercase()) {
+    if let Some(weather) = ctx.data().game.weather.get(&name.to_lowercase()) {
         ctx.say(weather.build_string()).await?;
     } else {
         ctx.send(|b| {

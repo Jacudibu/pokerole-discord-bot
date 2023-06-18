@@ -18,23 +18,23 @@ pub async fn handle_button_interaction(context: &Context, framework: FrameworkCo
     match command {
         "metronome" => {
             disable_button_on_original_message(context, interaction).await?;
-            interaction.message.reply(context, commands::metronome::get_metronome_text(framework.user_data)).await?;
+            interaction.message.reply(context, commands::metronome::get_metronome_text(&framework.user_data.game)).await?;
         },
         "learns-all" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.pokemon.get(args[0]).unwrap();
+            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
             for response_part in helpers::split_long_messages(pokemon.build_all_learnable_moves_list().into()) {
                 interaction.message.reply(context, response_part).await?;
             }
         },
         "efficiency" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.pokemon.get(args[0]).unwrap();
-            interaction.message.reply(context, efficiency::get_type_resistances_string(pokemon, &framework.user_data.type_efficiency)).await?;
+            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            interaction.message.reply(context, efficiency::get_type_resistances_string(pokemon, &framework.user_data.game.type_efficiency)).await?;
         },
         "moves" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.pokemon.get(args[0]).unwrap();
+            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
             let mut create_reply = CreateReply::default();
             learns::create_reply(&mut create_reply, pokemon);
             interaction.create_followup_message(context, |f| {
@@ -44,8 +44,8 @@ pub async fn handle_button_interaction(context: &Context, framework: FrameworkCo
         },
         "abilities" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.pokemon.get(args[0]).unwrap();
-            interaction.message.reply(context, pokemon.build_ability_string(&framework.user_data.abilities).into()).await?;
+            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            interaction.message.reply(context, pokemon.build_ability_string(&framework.user_data.game.abilities).into()).await?;
         }
         &_ => {}
     }

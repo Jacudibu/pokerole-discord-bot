@@ -44,19 +44,6 @@ pub async fn initialize_data() -> GameData {
     let (item_names, item_hash_map) = parse_items(pokerole_data, &custom_data);
     let (potion_names, potion_hash_map) = parse_potions(&custom_data);
 
-    // Initiate a connection to the database file, creating the file if required.
-    let database = sqlx::sqlite::SqlitePoolOptions::new()
-        .max_connections(5)
-        .connect_with(
-            sqlx::sqlite::SqliteConnectOptions::new()
-                .filename("database.sqlite")
-                .create_if_missing(true),
-        )
-        .await
-        .expect("Couldn't connect to database");
-
-    sqlx::migrate!("./migrations").run(&database).await.expect("Couldn't run database migrations");
-
     GameData {
         abilities: Arc::new(ability_hash_map),
         ability_names: Arc::new(ability_names),
@@ -77,7 +64,6 @@ pub async fn initialize_data() -> GameData {
         weather: Arc::new(weather_hash_map),
         weather_names: Arc::new(weather_names),
         type_efficiency: Arc::new(type_efficiency),
-        database,
     }
 }
 

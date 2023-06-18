@@ -10,7 +10,7 @@ pub async fn status(
     #[autocomplete = "autocomplete_status_effect"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(status_effect) = ctx.data().status_effects.get(&name.to_lowercase()) {
+    if let Some(status_effect) = ctx.data().game.status_effects.get(&name.to_lowercase()) {
         ctx.say(status_effect.build_string()).await?;
     } else {
         ctx.send(|b| {

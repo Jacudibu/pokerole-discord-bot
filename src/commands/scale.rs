@@ -15,7 +15,7 @@ pub async fn scale(
     #[min = 1_u8]
     percent: u8,
 ) -> Result<(), Error> {
-    if let Some(pokemon) = ctx.data().pokemon.get(&name.to_lowercase()) {
+    if let Some(pokemon) = ctx.data().game.pokemon.get(&name.to_lowercase()) {
         let mut builder = MessageBuilder::new();
         builder.push_bold_line(std::format!("{} scaled to {}%", &pokemon.name, percent));
         builder.push_codeblock(std::format!("{}   |   {}",
