@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::Arc;
+use sqlx::{Pool, Sqlite};
 use crate::data::ability::Ability;
 use crate::data::rule::Rule;
 use crate::data::item::Item;
@@ -32,5 +33,6 @@ pub struct GameData {
     pub rule_names: Arc<Vec<String>>,
     pub rules: Arc<HashMap<String, Rule>>,
     pub type_efficiency: Arc<TypeEfficiency>,
+    pub database: Pool<Sqlite>,
 }
 

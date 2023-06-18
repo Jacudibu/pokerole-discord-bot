@@ -15,7 +15,7 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 #[tokio::main]
 async fn main() {
     logger::init_logging();
-    let data = data::parser::initialize_data();
+    let data = data::parser::initialize_data().await;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {
