@@ -28,7 +28,8 @@ pub mod encounter;
 pub mod calculate_hp_damage_modifier;
 pub mod potion;
 mod create_role_reaction_post;
-mod initialize_character;
+
+mod characters;
 
 pub fn get_all_commands() -> Vec<Command<GameData, Error>> {
     vec![
@@ -54,7 +55,17 @@ pub fn get_all_commands() -> Vec<Command<GameData, Error>> {
         potion::potion(),
         calculate_hp_damage_modifier::calculate_hp_damage_modifier(),
         create_role_reaction_post::create_role_reaction_post(),
-        initialize_character::initialize_character(),
+        characters::initialize_character::initialize_character(),
+        characters::reward_money::reward_money(),
         about::about()
     ]
+}
+
+pub async fn send_error<'a>(ctx: &Context<'a>, content: &str) -> Result<(), Error>{
+    ctx.send(|b| b
+        .content(content)
+        .ephemeral(true)
+    ).await?;
+
+    Ok(())
 }
