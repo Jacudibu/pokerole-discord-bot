@@ -9,10 +9,11 @@ pub async fn reward_money(
     #[description = "Which character?"]
     name: String,
 ) -> Result<(), Error> {
+    // TODO: Make this exclusive to Admins and GMs
     // TODO: Autocomplete. Name should also include owner name, in order to reduce the possibility of slip ups.
-    // TODO: Button to undo the transaction which lasts for a minute or so.
-    // TODO: Option to also add the untaxed amount to guild stash.
     // TODO: guild_id
+    // TODO: Option to also add the untaxed amount to guild stash.
+    // TODO: Button to undo the transaction which lasts for a minute or so.
 
     let record = sqlx::query!(
         "SELECT user_id, money FROM characters WHERE name = ?",

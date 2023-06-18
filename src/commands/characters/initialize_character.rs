@@ -15,6 +15,7 @@ pub async fn initialize_character(
     #[min = 0_i64]
     money: i64,
 ) -> Result<(), Error> {
+    // TODO: Make this exclusive to Admins and GMs
     let message = ctx.channel_id().send_message(ctx, |f|
         f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
     ).await?;

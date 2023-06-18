@@ -9,14 +9,13 @@ We poll and combine data from different sources, this allows us to update the da
 - **CSV_DATA** – path to a local clone of the [Pokerole-Discord.py-Base](https://github.com/XShadeSlayerXx/PokeRole-Discord.py-Base) git repository
 - **CUSTOM_DATA** – path to your custom data overrides. In our case, that's https://github.com/Jacudibu/pokerole-custom-data.
 - **DISCORD_TOKEN** – the Discord Token for your bot.
-
+- **DATABASE_URL** – URL to the SQLite database file.
 
 ## TODO
 A small list of ideas which might be useful to explore in the future.
-- Reaction Roles - this would allow us to get rid of Zira.
 - User Leave notifications - might be useful to have, dunno.
-
-### Features requiring a Database
 - Settings: To allow users to set up their timezone for `/timestamp`
 - Economy: Money could be managed through bot commands
 - Weather: Random Weather changes.
+- Move usage tracking: What's a user's most used move?
+- Track how much money the guild currently has
