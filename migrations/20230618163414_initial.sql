@@ -13,5 +13,5 @@ CREATE TABLE character(
 
 CREATE TABLE guild(
     id INTEGER NOT NULL PRIMARY KEY,
-    transaction_channel_id INTEGER NOT NULL
+    action_log_channel_id INTEGER NOT NULL
 );

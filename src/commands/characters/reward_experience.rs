@@ -1,4 +1,3 @@
-use crate::emoji;
 use crate::commands::{Context, Error, send_error};
 use crate::commands::characters::{send_stale_data_error, update_character_post};
 use crate::commands::autocompletion::autocomplete_character_name;
@@ -26,7 +25,7 @@ pub async fn reward_experience(
     match record {
         Ok(record) => {
             let new_value = record.experience + amount as i64;
-            let result = sqlx::query!("UPDATE characters SET experience = ? WHERE id = ? AND experience = ?",
+            let result = sqlx::query!("UPDATE character SET experience = ? WHERE id = ? AND experience = ?",
                 new_value,
                 record.id,
                 record.experience

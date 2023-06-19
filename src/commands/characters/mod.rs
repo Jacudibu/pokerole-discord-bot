@@ -1,4 +1,5 @@
 use poise::Command;
+use serenity::model::id::ChannelId;
 use crate::commands::{Context, send_error};
 use crate::{emoji, Error};
 use crate::data::Data;
@@ -66,13 +67,21 @@ pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) ->
     }
 }
 
-pub async fn log_transaction<'a>(ctx: &Context<'a>, from: &String, to: &String, what: &String) {
+pub async fn log_action<'a>(ctx: &Context<'a>, message: &str) -> Result<(), Error> {
     let guild_id = ctx.guild_id();
     if guild_id.is_none() {
-        return;
+        return Ok(());
     }
 
     let guild_id = guild_id.expect("should only be called in guild_only").0 as i64;
+    let record = sqlx::query!("SELECT action_log_channel_id FROM guild WHERE id = ?", guild_id)
+        .fetch_one(&ctx.data().database)
+        .await;
 
+    if let Ok(record) = record {
+        let channel_id= ChannelId::from(record.action_log_channel_id as u64);
+        channel_id.send_message(ctx, |f| f.content(message)).await?;
+    }
 
+    Ok(())
 }

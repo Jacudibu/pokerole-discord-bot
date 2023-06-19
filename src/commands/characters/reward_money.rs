@@ -27,7 +27,7 @@ pub async fn reward_money(
     match record {
         Ok(record) => {
             let new_value = record.money + amount as i64;
-            let result = sqlx::query!("UPDATE characters SET money = ? WHERE id = ? AND money = ?",
+            let result = sqlx::query!("UPDATE character SET money = ? WHERE id = ? AND money = ?",
                 new_value,
                 record.id,
                 record.money
