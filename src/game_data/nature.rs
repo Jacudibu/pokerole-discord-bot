@@ -1,4 +1,4 @@
-use crate::data::pokerole_data::raw_nature::RawPokeroleNature;
+use crate::game_data::pokerole_data::raw_nature::RawPokeroleNature;
 
 #[derive(Debug)]
 pub struct Nature {
@@ -17,7 +17,7 @@ impl Nature {
 }
 
 impl Nature {
-    pub(in crate::data) fn new(raw: &RawPokeroleNature) -> Self {
+    pub(in crate::game_data) fn new(raw: &RawPokeroleNature) -> Self {
         Nature {
             name: raw.name.clone(),
             keywords: raw.keywords.clone(),

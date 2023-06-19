@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use crate::data::pokemon_api::PokemonApiId;
+use crate::game_data::pokemon_api::PokemonApiId;
 
 #[derive(Debug, Deserialize, Eq, PartialEq, Hash, Copy, Clone)]
 pub struct PokemonSpeciesId(pub u16);

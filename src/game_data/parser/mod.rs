@@ -1,25 +1,25 @@
-pub(in crate::data) mod custom_data;
-pub(in crate::data) mod helpers;
+pub(in crate::game_data) mod custom_data;
+pub(in crate::game_data) mod helpers;
 
 use std::collections::HashMap;
 use std::sync::Arc;
 use log::{info};
-use crate::data::ability::Ability;
-use crate::data::rule::Rule;
-use crate::data::item::Item;
-use crate::data::nature::Nature;
-use crate::data::parser::custom_data::parser::CustomDataParseResult;
-use crate::data::pokemon::Pokemon;
-use crate::data::pokemon_api::pokemon_api_parser;
-use crate::data::pokemon_api::pokemon_api_parser::PokemonApiData;
-use crate::data::pokerole_data;
-use crate::data::pokerole_data::parser::PokeroleParseResult;
-use crate::data::pokerole_discord_py_data::pokerole_discord_py_csv_parser;
-use crate::data::pokerole_discord_py_data::pokerole_discord_py_csv_parser::RawPokeroleDiscordPyCsvData;
-use crate::data::potion::Potion;
-use crate::data::r#move::Move;
-use crate::data::status_effect::StatusEffect;
-use crate::data::weather::Weather;
+use crate::game_data::ability::Ability;
+use crate::game_data::rule::Rule;
+use crate::game_data::item::Item;
+use crate::game_data::nature::Nature;
+use crate::game_data::parser::custom_data::parser::CustomDataParseResult;
+use crate::game_data::pokemon::Pokemon;
+use crate::game_data::pokemon_api::pokemon_api_parser;
+use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
+use crate::game_data::pokerole_data;
+use crate::game_data::pokerole_data::parser::PokeroleParseResult;
+use crate::game_data::pokerole_discord_py_data::pokerole_discord_py_csv_parser;
+use crate::game_data::pokerole_discord_py_data::pokerole_discord_py_csv_parser::RawPokeroleDiscordPyCsvData;
+use crate::game_data::potion::Potion;
+use crate::game_data::r#move::Move;
+use crate::game_data::status_effect::StatusEffect;
+use crate::game_data::weather::Weather;
 use crate::game_data::GameData;
 
 pub async fn initialize_data() -> GameData {

@@ -1,7 +1,7 @@
 use poise::CreateReply;
 use crate::commands::{Context, Error};
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::data::pokemon::Pokemon;
+use crate::game_data::pokemon::Pokemon;
 use crate::helpers;
 
 /// Display Pokemon moves

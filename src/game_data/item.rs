@@ -1,6 +1,6 @@
 use std::str::FromStr;
-use crate::data::parser::custom_data::custom_item::CustomItem;
-use crate::data::pokerole_data::raw_item::RawPokeroleItem;
+use crate::game_data::parser::custom_data::custom_item::CustomItem;
+use crate::game_data::pokerole_data::raw_item::RawPokeroleItem;
 
 #[derive(Debug)]
 pub struct Item {
@@ -25,7 +25,7 @@ impl Item {
 }
 
 impl Item {
-    pub(in crate::data) fn new(raw: RawPokeroleItem) -> Self {
+    pub(in crate::game_data) fn new(raw: RawPokeroleItem) -> Self {
         Item {
             name: raw.name,
             price: Item::parse_price(raw.pmd_price, raw.trainer_price),
@@ -35,7 +35,7 @@ impl Item {
         }
     }
 
-    pub(in crate::data) fn from_custom_data(raw: &CustomItem) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: &CustomItem) -> Self {
         Item {
             name: raw.name.clone(),
             price: Item::parse_price(raw.price, None),

@@ -1,10 +1,10 @@
-use crate::data::parser::custom_data::custom_ability::CustomAbility;
-use crate::data::parser::custom_data::custom_item::CustomItem;
-use crate::data::parser::custom_data::custom_move::CustomMove;
-use crate::data::parser::custom_data::custom_pokemon::CustomPokemon;
-use crate::data::parser::custom_data::custom_potion::CustomPotion;
-use crate::data::parser::custom_data::custom_status_effect::CustomStatusEffect;
-use crate::data::parser::helpers;
+use crate::game_data::parser::custom_data::custom_ability::CustomAbility;
+use crate::game_data::parser::custom_data::custom_item::CustomItem;
+use crate::game_data::parser::custom_data::custom_move::CustomMove;
+use crate::game_data::parser::custom_data::custom_pokemon::CustomPokemon;
+use crate::game_data::parser::custom_data::custom_potion::CustomPotion;
+use crate::game_data::parser::custom_data::custom_status_effect::CustomStatusEffect;
+use crate::game_data::parser::helpers;
 
 pub struct CustomDataParseResult {
     pub abilities: Vec<CustomAbility>,

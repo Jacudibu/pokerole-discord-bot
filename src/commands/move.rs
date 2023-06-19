@@ -1,6 +1,6 @@
 use crate::commands::{Context, Error};
 use crate::commands::autocompletion::autocomplete_move;
-use crate::data::r#move::Move;
+use crate::game_data::r#move::Move;
 use crate::helpers;
 
 /// Display a move

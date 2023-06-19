@@ -1,4 +1,4 @@
-use crate::data::pokerole_discord_py_data::pokerole_discord_py_csv_parser::RawPokeWeather;
+use crate::game_data::pokerole_discord_py_data::pokerole_discord_py_csv_parser::RawPokeWeather;
 
 #[derive(Debug)]
 pub struct Weather {
@@ -8,7 +8,7 @@ pub struct Weather {
 }
 
 impl Weather {
-    pub(in crate::data) fn new(raw: &RawPokeWeather) -> Self {
+    pub(in crate::game_data) fn new(raw: &RawPokeWeather) -> Self {
         Weather {
             name: raw.name.clone(),
             description: raw.description.clone(),

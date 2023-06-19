@@ -3,8 +3,8 @@ use std::fmt::Formatter;
 use strum::IntoEnumIterator;
 use crate::commands::{Context, Error};
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::data::pokemon::Pokemon;
-use crate::data::type_efficiency::{Efficiency, TypeEfficiency};
+use crate::game_data::pokemon::Pokemon;
+use crate::game_data::type_efficiency::{Efficiency, TypeEfficiency};
 use crate::enums::PokemonType;
 
 fn print(result: &mut String, efficiencies: &[EfficiencyMapping], efficiency: Efficiency) {

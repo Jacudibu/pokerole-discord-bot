@@ -1,5 +1,5 @@
-use crate::data::parser::custom_data::custom_status_effect::CustomStatusEffect;
-use crate::data::pokerole_discord_py_data::pokerole_discord_py_csv_parser::RawPokeStatus;
+use crate::game_data::parser::custom_data::custom_status_effect::CustomStatusEffect;
+use crate::game_data::pokerole_discord_py_data::pokerole_discord_py_csv_parser::RawPokeStatus;
 
 pub struct StatusEffect {
     pub name: String,
@@ -10,7 +10,7 @@ pub struct StatusEffect {
 }
 
 impl StatusEffect {
-    pub(in crate::data) fn new(raw: RawPokeStatus) -> Self {
+    pub(in crate::game_data) fn new(raw: RawPokeStatus) -> Self {
         StatusEffect {
             name: raw.name,
             description: raw.description,
@@ -20,7 +20,7 @@ impl StatusEffect {
         }
     }
 
-    pub(in crate::data) fn from_custom_data(raw: &CustomStatusEffect) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: &CustomStatusEffect) -> Self {
         StatusEffect {
             name: raw.name.clone(),
             description: raw.description.clone(),

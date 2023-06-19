@@ -5,12 +5,12 @@ use std::str::FromStr;
 use std::sync::Arc;
 use log::{error, warn};
 use serde::Deserialize;
-use crate::data::ability::Ability;
-use crate::data::enums::poke_role_rank::PokeRoleRank;
-use crate::data::parser::custom_data::custom_pokemon::{CustomPokemon, CustomPokemonMoves};
-use crate::data::pokemon_api::pokemon_api_parser::PokemonApiData;
-use crate::data::pokemon_api::PokemonApiId;
-use crate::data::pokerole_data::raw_pokemon::{RawPokemonMoveLearnedByLevelUp, RawPokerolePokemon};
+use crate::game_data::ability::Ability;
+use crate::game_data::enums::poke_role_rank::PokeRoleRank;
+use crate::game_data::parser::custom_data::custom_pokemon::{CustomPokemon, CustomPokemonMoves};
+use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
+use crate::game_data::pokemon_api::PokemonApiId;
+use crate::game_data::pokerole_data::raw_pokemon::{RawPokemonMoveLearnedByLevelUp, RawPokerolePokemon};
 use crate::enums::{MysteryDungeonRank, PokemonGeneration, PokemonType, RegionalVariant, Stat};
 
 #[derive(Debug)]
@@ -245,7 +245,7 @@ impl Pokemon {
         }
     }
 
-    pub(in crate::data) fn new(raw: &RawPokerolePokemon, api: &HashMap<String, PokemonApiData>) -> Self {
+    pub(in crate::game_data) fn new(raw: &RawPokerolePokemon, api: &HashMap<String, PokemonApiData>) -> Self {
         let regional_variant= Pokemon::parse_variant(&raw.dex_id);
 
         let (api_issue, api_option) = match raw.legendary {
@@ -325,7 +325,7 @@ impl Pokemon {
         result
     }
 
-    pub(in crate::data) fn from_custom_data(raw: &CustomPokemon, api: &HashMap<String, PokemonApiData>) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: &CustomPokemon, api: &HashMap<String, PokemonApiData>) -> Self {
         let regional_variant = raw.variant;
 
         let (api_issue, api_option) = Pokemon::get_api_entry(&raw.name, api, &regional_variant);
@@ -556,7 +556,7 @@ pub struct PokemonMoveLearnedByRank {
 }
 
 impl PokemonMoveLearnedByRank {
-    pub(in crate::data) fn new(raw: &RawPokemonMoveLearnedByLevelUp) -> Self {
+    pub(in crate::game_data) fn new(raw: &RawPokemonMoveLearnedByLevelUp) -> Self {
         let rank = match raw.learned {
             PokeRoleRank::Starter => MysteryDungeonRank::Bronze,
             PokeRoleRank::Beginner => MysteryDungeonRank::Bronze,

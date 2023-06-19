@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
-use crate::data::pokemon::Pokemon;
+use crate::game_data::pokemon::Pokemon;
 use crate::enums::PokemonType;
 
 pub struct TypeEfficiency {

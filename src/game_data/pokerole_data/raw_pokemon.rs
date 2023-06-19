@@ -1,6 +1,6 @@
 use serde::Deserialize;
-use crate::data::enums::poke_role_rank::PokeRoleRank;
-use crate::data::pokemon::{Height, Weight};
+use crate::game_data::enums::poke_role_rank::PokeRoleRank;
+use crate::game_data::pokemon::{Height, Weight};
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "PascalCase")]

@@ -2,11 +2,11 @@ use std::collections::{HashMap};
 use log::error;
 use strum::IntoEnumIterator;
 use crate::csv_utils::load_csv;
-use crate::data::pokemon::{Height, Weight};
-use crate::data::type_efficiency::TypeEfficiency;
+use crate::game_data::pokemon::{Height, Weight};
+use crate::game_data::type_efficiency::TypeEfficiency;
 use crate::enums::{PokemonGeneration, PokemonType};
-use crate::data::pokemon_api::api_types::*;
-use crate::data::pokemon_api::PokemonApiId;
+use crate::game_data::pokemon_api::api_types::*;
+use crate::game_data::pokemon_api::PokemonApiId;
 
 #[derive(Debug)]
 pub struct ApiMoveEntry {

@@ -1,4 +1,4 @@
-use crate::data::parser::custom_data::custom_potion::CustomPotion;
+use crate::game_data::parser::custom_data::custom_potion::CustomPotion;
 
 #[derive(Debug)]
 pub struct Potion {
@@ -15,7 +15,7 @@ impl Potion {
 }
 
 impl Potion {
-    pub(in crate::data) fn from_custom_data(raw: &CustomPotion) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: &CustomPotion) -> Self {
         Potion {
             name: raw.name.clone(),
             description: raw.description.clone(),

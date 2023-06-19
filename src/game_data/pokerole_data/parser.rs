@@ -1,10 +1,10 @@
-use crate::data::parser::helpers;
+use crate::game_data::parser::helpers;
 
-use crate::data::pokerole_data::raw_pokemon::RawPokerolePokemon;
-use crate::data::pokerole_data::raw_ability::RawPokeroleAbility;
-use crate::data::pokerole_data::raw_item::RawPokeroleItem;
-use crate::data::pokerole_data::raw_move::RawPokeroleMove;
-use crate::data::pokerole_data::raw_nature::RawPokeroleNature;
+use crate::game_data::pokerole_data::raw_pokemon::RawPokerolePokemon;
+use crate::game_data::pokerole_data::raw_ability::RawPokeroleAbility;
+use crate::game_data::pokerole_data::raw_item::RawPokeroleItem;
+use crate::game_data::pokerole_data::raw_move::RawPokeroleMove;
+use crate::game_data::pokerole_data::raw_nature::RawPokeroleNature;
 
 pub struct PokeroleParseResult {
     pub abilities: Vec<RawPokeroleAbility>,

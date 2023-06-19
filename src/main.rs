@@ -1,17 +1,18 @@
 mod commands;
-mod data;
+mod game_data;
 mod logger;
 mod csv_utils;
 mod enums;
-mod game_data;
+mod data;
 mod parse_error;
 mod events;
 mod helpers;
+mod cache;
 
 use std::sync::Arc;
 use poise::serenity_prelude as serenity;
 use sqlx::{Pool, Sqlite};
-use crate::game_data::Data;
+use crate::data::Data;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
@@ -21,7 +22,7 @@ async fn main() {
 
     let data = Data::new(
         initialize_database().await,
-        Arc::new(data::parser::initialize_data().await)
+        Arc::new(game_data::parser::initialize_data().await)
     ).await;
 
     let framework = poise::Framework::builder()

@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use log::error;
-use crate::data::parser::custom_data::custom_move::CustomMove;
-use crate::data::pokerole_data::raw_move::RawPokeroleMove;
+use crate::game_data::parser::custom_data::custom_move::CustomMove;
+use crate::game_data::pokerole_data::raw_move::RawPokeroleMove;
 use crate::enums::{CombatOrSocialStat, HappinessDamageModifier, MoveCategory, MoveType, Stat};
 
 pub struct Move {
@@ -36,7 +36,7 @@ fn replace_effect_string(raw: &str) -> Option<String> {
 }
 
 impl Move {
-    pub(in crate::data) fn new(raw: &RawPokeroleMove) -> Self {
+    pub(in crate::game_data) fn new(raw: &RawPokeroleMove) -> Self {
         Move {
             name: raw.name.clone(),
             typing: raw.r#type,
@@ -52,7 +52,7 @@ impl Move {
         }
     }
 
-    pub(in crate::data) fn from_custom(raw: &CustomMove) -> Self {
+    pub(in crate::game_data) fn from_custom(raw: &CustomMove) -> Self {
         Move {
             name: raw.name.clone(),
             typing: raw.r#type,

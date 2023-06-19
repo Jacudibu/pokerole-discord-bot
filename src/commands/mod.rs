@@ -1,6 +1,6 @@
 use poise::Command;
 use crate::Error;
-use crate::game_data::Data;
+use crate::data::Data;
 
 type Context<'a> = poise::Context<'a, Data, Error>;
 

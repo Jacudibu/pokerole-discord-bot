@@ -1,6 +1,6 @@
 use crate::commands::{Context, Error};
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::data::pokemon::Pokemon;
+use crate::game_data::pokemon::Pokemon;
 use crate::enums::PokemonGeneration;
 
 const GEN5_ANIMATED: &str = "https://github.com/PokeAPI/sprites/blob/master/sprites/pokemon/versions/generation-v/black-white/animated/";
