@@ -1,5 +1,6 @@
 use crate::commands::{Context, Error, send_error};
 use crate::commands::characters::update_character_post;
+use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
 #[poise::command(slash_command)]
@@ -7,6 +8,7 @@ pub async fn reward_money(
     ctx: Context<'_>,
     amount: i16,
     #[description = "Which character?"]
+    #[autocomplete = "autocomplete_character_name"]
     name: String,
 ) -> Result<(), Error> {
     // TODO: Make this exclusive to Admins and GMs

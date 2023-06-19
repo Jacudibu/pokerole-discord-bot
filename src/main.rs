@@ -19,10 +19,10 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 async fn main() {
     logger::init_logging();
 
-    let data = Data {
-        database: initialize_database().await,
-        game: Arc::new(data::parser::initialize_data().await)
-    };
+    let data = Data::new(
+        initialize_database().await,
+        Arc::new(data::parser::initialize_data().await)
+    ).await;
 
     let framework = poise::Framework::builder()
         .options(poise::FrameworkOptions {

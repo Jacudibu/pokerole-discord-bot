@@ -81,3 +81,10 @@ pub async fn autocomplete_potion<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
 ) -> Vec<String> { autocomplete(partial, &_ctx.data().game.potion_names, 0) }
+
+pub async fn autocomplete_character_name<'a>(
+    _ctx: Context<'a>,
+    partial: &'a str,
+) -> Vec<String> {
+    autocomplete(partial, _ctx.data().get_character_name_cache(), 0)
+}
