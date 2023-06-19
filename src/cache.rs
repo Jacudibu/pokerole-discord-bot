@@ -18,7 +18,7 @@ impl Cache {
     }
 
     pub async fn update_character_names(&self, db: &Pool<Sqlite>) {
-        let entries = sqlx::query("SELECT name FROM characters")
+        let entries = sqlx::query("SELECT name FROM character")
             .fetch_all(db).await;
 
         if let Ok(entries) = entries {

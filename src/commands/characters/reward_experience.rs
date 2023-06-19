@@ -17,7 +17,7 @@ pub async fn reward_experience(
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
 
     let record = sqlx::query!(
-        "SELECT id, user_id, name, experience FROM characters WHERE name = ? AND guild_id = ?",
+        "SELECT id, user_id, name, experience FROM character WHERE name = ? AND guild_id = ?",
         name,
         guild_id
     ).fetch_one(&ctx.data().database)

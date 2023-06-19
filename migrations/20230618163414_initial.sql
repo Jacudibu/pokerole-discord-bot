@@ -1,4 +1,4 @@
-CREATE TABLE characters(
+CREATE TABLE character(
     id INTEGER NOT NULL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     guild_id INTEGER NOT NULL,
@@ -9,4 +9,9 @@ CREATE TABLE characters(
     money INTEGER NOT NULL,
 
     UNIQUE(user_id, guild_id, name)
-)
+);
+
+CREATE TABLE guild(
+    id INTEGER NOT NULL PRIMARY KEY,
+    transaction_channel_id INTEGER NOT NULL
+);

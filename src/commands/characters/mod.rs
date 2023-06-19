@@ -7,10 +7,12 @@ use crate::enums::MysteryDungeonRank;
 mod initialize_character;
 mod reward_money;
 mod reward_experience;
+mod initialize_guild;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec!(
         initialize_character::initialize_character(),
+        initialize_guild::initialize_guild(),
         reward_experience::reward_experience(),
         reward_money::reward_money(),
     )
@@ -40,7 +42,7 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) -> Result<(),
 pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) -> Option<(String, i64, i64)> {
     let entry = sqlx::query!(
                 "SELECT name, experience, money, stat_message_id, stat_channel_id \
-                FROM characters WHERE id = ? \
+                FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
                 character_id,
@@ -62,4 +64,15 @@ pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) ->
         }
         Err(_) => None,
     }
+}
+
+pub async fn log_transaction<'a>(ctx: &Context<'a>, from: &String, to: &String, what: &String) {
+    let guild_id = ctx.guild_id();
+    if guild_id.is_none() {
+        return;
+    }
+
+    let guild_id = guild_id.expect("should only be called in guild_only").0 as i64;
+
+
 }
