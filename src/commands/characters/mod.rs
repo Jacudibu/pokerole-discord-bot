@@ -10,17 +10,18 @@ mod reward_money;
 mod reward_experience;
 mod initialize_guild;
 mod complete_quest;
+mod initialize_character_post;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec!(
         complete_quest::complete_quest(),
         initialize_character::initialize_character(),
+        initialize_character_post::initialize_character_post(),
         initialize_guild::initialize_guild(),
         reward_experience::reward_experience(),
         reward_money::reward_money(),
     )
 }
-
 
 pub async fn send_stale_data_error<'a>(ctx: &Context<'a>) -> Result<(), Error> {
     send_error(ctx, "Something went wrong!
@@ -99,7 +100,7 @@ pub struct CharacterWithNumericValue {
     value: i64
 }
 
-pub async fn increase_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64) -> Result<(), Error> {
+pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64) -> Result<(), Error> {
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
 
     let record = sqlx::query_as::<_, CharacterWithNumericValue>(
