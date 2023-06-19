@@ -12,9 +12,10 @@ pub async fn initialize_guild(
     let action_log_channel_id = action_log_channel.id().0 as i64;
 
     let record = sqlx::query!(
-        "INSERT INTO guild (id, action_log_channel_id) VALUES (?, ?)",
+        "INSERT INTO guild (id, action_log_channel_id, money) VALUES (?, ?, ?)",
         guild_id,
-        action_log_channel_id
+        action_log_channel_id,
+        0
     ).execute(&ctx.data().database)
         .await;
 
