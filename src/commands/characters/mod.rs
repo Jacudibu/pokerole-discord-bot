@@ -1,5 +1,5 @@
 use crate::commands::Context;
-use crate::Error;
+use crate::{emoji, Error};
 
 pub mod initialize_character;
 pub mod reward_money;
@@ -36,8 +36,8 @@ pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) ->
             Some((format!("\
 ### Stats for {}
 **Level**: {} `({} / 100)`
-**Poke**: {}",
-                         entry.name, level, experience, entry.money), entry.stat_channel_id, entry.stat_message_id))
+{} {}",
+                         entry.name, level, experience, entry.money, emoji::POKE_COIN), entry.stat_channel_id, entry.stat_message_id))
         }
         Err(_) => None,
     }

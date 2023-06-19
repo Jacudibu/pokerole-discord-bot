@@ -8,6 +8,7 @@ mod parse_error;
 mod events;
 mod helpers;
 mod cache;
+mod emoji;
 
 use std::sync::Arc;
 use poise::serenity_prelude as serenity;

@@ -1,5 +1,6 @@
+use crate::emoji;
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::update_character_post;
+use crate::commands::characters::{update_character_post};
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
@@ -40,7 +41,7 @@ pub async fn reward_money(
                 You can copy the command string either by just pressing the up key inside the text field on pc.").await;
             }
 
-            ctx.say(format!("{} received {} Poke!", name, amount)).await?;
+            ctx.say(format!("{} received {} {}!", name, amount, emoji::POKE_COIN)).await?;
             update_character_post(&ctx, record.id).await
         }
         Err(_) => {
