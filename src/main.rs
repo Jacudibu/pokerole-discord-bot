@@ -10,6 +10,7 @@ mod helpers;
 mod cache;
 mod emoji;
 
+use std::str::FromStr;
 use std::sync::Arc;
 use poise::serenity_prelude as serenity;
 use sqlx::{Pool, Sqlite};
@@ -45,12 +46,11 @@ async fn main() {
 }
 
 async fn initialize_database() -> Pool<Sqlite> {
+    let url = std::env::var("DATABASE_URL").expect("missing DATABASE_URL");
     let database = sqlx::sqlite::SqlitePoolOptions::new()
         .max_connections(5)
         .connect_with(
-            sqlx::sqlite::SqliteConnectOptions::new()
-                .filename("database.sqlite")
-                .create_if_missing(true),
+            sqlx::sqlite::SqliteConnectOptions::from_str(url.as_str()).expect("Unable to parse DATABASE_URL")
         )
         .await
         .expect("Couldn't connect to database");
