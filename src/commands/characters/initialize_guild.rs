@@ -18,7 +18,8 @@ pub async fn initialize_guild(
         .await;
 
     if let Ok(record) = record {
-        send_ephemeral_reply(&ctx, "Guild has been successfully created!").await?;
+        send_ephemeral_reply(&ctx, "Guild has been successfully initialized!").await?;
+        transaction_channel.id().send_message(ctx, |f| f.content("Guild has been initialized. I recommend muting this channel, lul."));
         return Ok(());
     }
 
