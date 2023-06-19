@@ -7,6 +7,7 @@ CREATE TABLE character(
     stat_channel_id INTEGER NOT NULL,
     experience INTEGER NOT NULL,
     money INTEGER NOT NULL,
+    completed_quest_count INTEGER NOT NULL,
 
     UNIQUE(user_id, guild_id, name)
 );

@@ -9,9 +9,11 @@ mod initialize_character;
 mod reward_money;
 mod reward_experience;
 mod initialize_guild;
+mod complete_quest;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec!(
+        complete_quest::complete_quest(),
         initialize_character::initialize_character(),
         initialize_guild::initialize_guild(),
         reward_experience::reward_experience(),
@@ -42,7 +44,7 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) -> Result<(),
 // TODO: we really should just change this to a query_as thingy...
 pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) -> Option<(String, i64, i64)> {
     let entry = sqlx::query!(
-                "SELECT name, experience, money, stat_message_id, stat_channel_id \
+                "SELECT name, experience, money, completed_quest_count, stat_message_id, stat_channel_id \
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -59,9 +61,12 @@ pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) ->
 
             Some((format!("\
 ## {} {}
+{} {}
 **Level**: {} `({} / 100)`
-{} {}",
-                         rank.emoji_string(), entry.name, level, experience, entry.money, emoji::POKE_COIN), entry.stat_channel_id, entry.stat_message_id))
+Completed Quests: {}
+",
+                         rank.emoji_string(), entry.name, entry.money, emoji::POKE_COIN, level, experience, entry.completed_quest_count)
+                  , entry.stat_channel_id, entry.stat_message_id))
         }
         Err(_) => None,
     }

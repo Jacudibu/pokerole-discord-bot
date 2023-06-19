@@ -26,14 +26,15 @@ pub async fn initialize_character(
     let stat_channel_id = message.channel_id.0 as i64;
 
     let record = sqlx::query!(
-        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, experience, money) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, experience, money, completed_quest_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         user_id,
         guild_id,
         name,
         stat_message_id,
         stat_channel_id,
         exp,
-        money
+        money,
+        0
     ).fetch_one(&ctx.data().database)
         .await;
 
