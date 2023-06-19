@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc};
+use log::{error};
 use sqlx::{Pool, Row, Sqlite};
 use tokio::sync::Mutex;
 use crate::data::ability::Ability;
@@ -37,13 +38,30 @@ pub struct GameData {
 }
 
 pub struct Cache {
-    pub character_names: Arc<Vec<String>>,
+    character_names: Mutex<Vec<String>>,
 }
 
 impl Cache {
     fn new() -> Cache {
         Cache {
-            character_names: Arc::new(Vec::new()),
+            character_names: Mutex::new(Vec::new()),
+        }
+    }
+
+    pub async fn get_character_names(&self) -> Vec<String> {
+        self.character_names.lock().await.clone()
+    }
+
+    pub async fn update_character_names(&self, db: &Pool<Sqlite>) {
+        let entries = sqlx::query("SELECT name FROM characters")
+            .fetch_all(db).await;
+
+        if let Ok(entries) = entries {
+            let mut names = self.character_names.lock().await;
+            names.clear();
+            names.extend(entries.iter().map(|x| x.get::<String, usize>(0)));
+        } else {
+            error!("Was unable to update character names!");
         }
     }
 }
@@ -51,31 +69,24 @@ impl Cache {
 pub struct Data {
     pub database: Pool<Sqlite>,
     pub game: Arc<GameData>,
-    pub cache: Mutex<Cache>,
+    pub cache: Arc<Cache>,
 }
 
 impl Data {
     pub async fn new(database: Pool<Sqlite>, game: Arc<GameData>) -> Self {
         let result = Data {
             database, game,
-            cache: Mutex::new(Cache::new()),
+            cache: Arc::new(Cache::new()),
         };
 
-        result.cache.lock().await.update_character_names(&result.database).await;
+        result.cache.update_character_names(&result.database).await;
 
         result
     }
 }
 
 impl Cache {
-    pub async fn update_character_names(&mut self, db: &Pool<Sqlite>) {
-        let entries = sqlx::query("SELECT name FROM characters")
-            .fetch_all(db).await;
 
-        if let Ok(entries) = entries {
-            self.character_names = Arc::new(entries.iter().map(|x| x.get::<String, usize>(0)).collect())
-        }
-    }
 
 
 }

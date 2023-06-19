@@ -1,8 +1,7 @@
 use std::cmp::Ordering;
-use std::sync::Arc;
 use crate::commands::Context;
 
-fn autocomplete(partial: &str, commands: &Arc<Vec<String>>, minimum_query_length : usize) -> Vec<String> {
+fn autocomplete(partial: &str, commands: &Vec<String>, minimum_query_length : usize) -> Vec<String> {
     if partial.len() < minimum_query_length {
         return Vec::default();
     }
@@ -86,5 +85,5 @@ pub async fn autocomplete_character_name<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
 ) -> Vec<String> {
-    autocomplete(partial, &_ctx.data().cache.lock().await.character_names, 0)
+    autocomplete(partial, &_ctx.data().cache.get_character_names().await, 0)
 }
