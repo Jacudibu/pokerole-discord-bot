@@ -44,7 +44,7 @@ pub async fn initialize_character(
         return Ok(());
     }
 
-    send_error(&ctx, "Something went wrong!").await?;
+    send_error(&ctx, "Something went wrong! Does a character with this name already exist for this specific player?").await?;
     message.delete(ctx).await?;
 
     Ok(())
