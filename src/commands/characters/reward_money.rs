@@ -1,6 +1,6 @@
 use crate::emoji;
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::{update_character_post};
+use crate::commands::characters::{send_stale_data_error, update_character_post};
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
@@ -35,10 +35,7 @@ pub async fn reward_money(
             ).execute(&ctx.data().database).await?;
 
             if result.rows_affected() != 1 {
-                return send_error(&ctx, "Something went wrong!\n\
-                You hit an absolute edge case where the value has been updated by someone else while this command has been running. \
-                If this seriously ever happens and/or turns into a problem, let me know. For now... try again? :'D\n\
-                You can copy the command string either by just pressing the up key inside the text field on pc.").await;
+                return send_stale_data_error(&ctx).await;
             }
 
             ctx.say(format!("{} received {} {}!", name, amount, emoji::POKE_COIN)).await?;

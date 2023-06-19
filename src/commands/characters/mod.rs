@@ -1,9 +1,17 @@
-use crate::commands::Context;
+use crate::commands::{Context, send_error};
 use crate::{emoji, Error};
 use crate::enums::MysteryDungeonRank;
 
 pub mod initialize_character;
 pub mod reward_money;
+
+pub async fn send_stale_data_error<'a>(ctx: &Context<'a>) -> Result<(), Error> {
+    send_error(ctx, "Something went wrong!
+You hit an absolute edge case where the value has been updated by someone else while this command has been running.
+If this seriously ever happens and/or turns into a problem, let me know. For now... try again? :'D
+You can copy the command string either by just pressing the up key inside the text field on pc."
+    ).await
+}
 
 pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) -> Result<(), Error> {
     if let Some(result) = build_character_string(ctx, id).await {
