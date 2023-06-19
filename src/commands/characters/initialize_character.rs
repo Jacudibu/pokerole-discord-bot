@@ -3,7 +3,7 @@ use crate::commands::{Context, Error, send_ephemeral_reply, send_error};
 use crate::commands::characters::update_character_post;
 
 /// Create a new character within the database.
-#[poise::command(slash_command, guild_only)]
+#[poise::command(slash_command, guild_only, default_member_permissions = "ADMINISTRATOR")]
 pub async fn initialize_character(
     ctx: Context<'_>,
     #[description = "Who owns the character?"]
@@ -15,7 +15,6 @@ pub async fn initialize_character(
     #[min = 0_i64]
     money: i64,
 ) -> Result<(), Error> {
-    // TODO: Make this exclusive to Admins and GMs
     let message = ctx.channel_id().send_message(ctx, |f|
         f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
     ).await?;

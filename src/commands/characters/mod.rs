@@ -1,9 +1,21 @@
+use poise::Command;
 use crate::commands::{Context, send_error};
 use crate::{emoji, Error};
+use crate::data::Data;
 use crate::enums::MysteryDungeonRank;
 
-pub mod initialize_character;
-pub mod reward_money;
+mod initialize_character;
+mod reward_money;
+mod reward_experience;
+
+pub fn get_all_commands() -> Vec<Command<Data, Error>> {
+    vec!(
+        initialize_character::initialize_character(),
+        reward_experience::reward_experience(),
+        reward_money::reward_money(),
+    )
+}
+
 
 pub async fn send_stale_data_error<'a>(ctx: &Context<'a>) -> Result<(), Error> {
     send_error(ctx, "Something went wrong!

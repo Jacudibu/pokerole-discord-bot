@@ -32,7 +32,7 @@ mod create_role_reaction_post;
 mod characters;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
-    vec![
+    let mut result = vec![
         roll::roll(),
         roll::r(),
         r#move::poke_move(),
@@ -55,10 +55,14 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         potion::potion(),
         calculate_hp_damage_modifier::calculate_hp_damage_modifier(),
         create_role_reaction_post::create_role_reaction_post(),
-        characters::initialize_character::initialize_character(),
-        characters::reward_money::reward_money(),
         about::about()
-    ]
+    ];
+
+    for x in characters::get_all_commands() {
+        result.push(x);
+    }
+
+    result
 }
 
 pub async fn send_error<'a>(ctx: &Context<'a>, content: &str) -> Result<(), Error>{
