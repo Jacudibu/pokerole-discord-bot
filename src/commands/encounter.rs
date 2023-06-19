@@ -82,7 +82,7 @@ impl EncounterMon {
             type1: pokemon.type1,
             type2: pokemon.type2,
             level,
-            rank: EncounterMon::get_rank_from_level(level),
+            rank: MysteryDungeonRank::from_level(level),
             ability: EncounterMon::get_random_ability(pokemon),
             hp: 0,
             will: 0,
@@ -212,16 +212,6 @@ impl EncounterMon {
         };
     }
 
-    fn get_rank_from_level(level: u8) -> MysteryDungeonRank {
-        match level {
-            1 => MysteryDungeonRank::Bronze,
-            2..=3 => MysteryDungeonRank::Silver,
-            4..=7 => MysteryDungeonRank::Gold,
-            8..=15 => MysteryDungeonRank::Platinum,
-            _ => MysteryDungeonRank::Diamond,
-        }
-    }
-
     fn get_stat(&self, stat: &Stat) -> u8 {
         match stat {
             Stat::Strength => self.strength,
@@ -251,7 +241,7 @@ impl EncounterMon {
     }
 
     pub fn build_string(&self, pokemon: &Pokemon, data: &GameData) -> String{
-        let mut result = std::format!("{} ({}) | **Lv.{} ({:?})**\n", self.name, self.gender, self.level, self.rank);
+        let mut result = std::format!("{} ({}) | **Lv.{} ({})**\n", self.name, self.gender, self.level, self.rank.emoji_string());
         if let Some(type2) = self.type2 {
             result.push_str(std::format!("**Types**: {} / {}\n", self.type1, type2).as_str());
         } else {

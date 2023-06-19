@@ -5,6 +5,7 @@ use std::str::FromStr;
 use std::sync::Arc;
 use log::{error, warn};
 use serde::Deserialize;
+use crate::emoji;
 use crate::game_data::ability::Ability;
 use crate::game_data::enums::poke_role_rank::PokeRoleRank;
 use crate::game_data::parser::custom_data::custom_pokemon::{CustomPokemon, CustomPokemonMoves};
@@ -131,20 +132,14 @@ impl Pokemon {
     }
 }
 
-const BRONZE: &str = "<:badge_bronze:1119186018793435177>";
-const SILVER: &str = "<:badge_silver:1119185975545954314>";
-const GOLD: &str = "<:badge_gold:1119185974149251092>";
-const PLATINUM: &str = "<:badge_platinum:1119185972635107378>";
-const DIAMOND: &str = "<:badge_diamond:1119185970374389760>";
-
 impl Pokemon {
     pub(crate) fn build_move_string(&self) -> impl Into<String> + Sized {
         let mut result = std::format!("### {} [#{}]\n", self.name, self.number);
-        self.filter_moves(&mut result, BRONZE, "Bronze", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Bronze);
-        self.filter_moves(&mut result, SILVER, "Silver", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Silver);
-        self.filter_moves(&mut result, GOLD, "Gold", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Gold);
-        self.filter_moves(&mut result, PLATINUM, "Platinum", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Platinum);
-        self.filter_moves(&mut result, DIAMOND, "Diamond", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Diamond);
+        self.filter_moves(&mut result, emoji::RANK_BRONZE, "Bronze", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Bronze);
+        self.filter_moves(&mut result, emoji::RANK_SILVER, "Silver", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Silver);
+        self.filter_moves(&mut result, emoji::RANK_GOLD, "Gold", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Gold);
+        self.filter_moves(&mut result, emoji::RANK_PLATINUM, "Platinum", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Platinum);
+        self.filter_moves(&mut result, emoji::RANK_DIAMOND, "Diamond", |x:&PokemonMoveLearnedByRank| x.rank == MysteryDungeonRank::Diamond);
 
         result
     }

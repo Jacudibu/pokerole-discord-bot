@@ -2,6 +2,7 @@ use std::fmt;
 use std::fmt::{Formatter};
 use serde::Deserialize;
 use strum_macros::{EnumIter, EnumString};
+use crate::emoji;
 
 #[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, EnumString, Hash, EnumIter)]
 pub enum PokemonType {
@@ -171,6 +172,26 @@ impl MysteryDungeonRank {
             MysteryDungeonRank::Gold => 3,
             MysteryDungeonRank::Platinum => 4,
             MysteryDungeonRank::Diamond => 5,
+        }
+    }
+
+    pub fn from_level(level: u8) -> Self {
+        match level {
+            1 => MysteryDungeonRank::Bronze,
+            2..=3 => MysteryDungeonRank::Silver,
+            4..=7 => MysteryDungeonRank::Gold,
+            8..=15 => MysteryDungeonRank::Platinum,
+            _ => MysteryDungeonRank::Diamond,
+        }
+    }
+
+    pub fn emoji_string(&self) -> &str {
+        match self {
+            MysteryDungeonRank::Bronze => emoji::RANK_BRONZE,
+            MysteryDungeonRank::Silver => emoji::RANK_SILVER,
+            MysteryDungeonRank::Gold => emoji::RANK_GOLD,
+            MysteryDungeonRank::Platinum => emoji::RANK_PLATINUM,
+            MysteryDungeonRank::Diamond => emoji::RANK_DIAMOND,
         }
     }
 }

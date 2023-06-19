@@ -1,5 +1,6 @@
 use crate::commands::Context;
 use crate::{emoji, Error};
+use crate::enums::MysteryDungeonRank;
 
 pub mod initialize_character;
 pub mod reward_money;
@@ -31,13 +32,13 @@ pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) ->
         Ok(entry) => {
             let level = entry.experience / 100 + 1;
             let experience = entry.experience % 100;
-            // TODO: Rank Emoji
+            let rank = MysteryDungeonRank::from_level(level as u8);
 
             Some((format!("\
-### Stats for {}
+## {} {}
 **Level**: {} `({} / 100)`
 {} {}",
-                         entry.name, level, experience, entry.money, emoji::POKE_COIN), entry.stat_channel_id, entry.stat_message_id))
+                         rank.emoji_string(), entry.name, level, experience, entry.money, emoji::POKE_COIN), entry.stat_channel_id, entry.stat_message_id))
         }
         Err(_) => None,
     }
