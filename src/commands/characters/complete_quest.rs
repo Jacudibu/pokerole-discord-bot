@@ -2,7 +2,7 @@ use crate::commands::{Context, Error};
 use crate::commands::characters::{increase_character_stat};
 use crate::commands::autocompletion::autocomplete_character_name;
 
-/// Reward players with cash.
+/// Use this to increase the quest completion counter.
 #[poise::command(slash_command, guild_only, default_member_permissions = "ADMINISTRATOR")]
 pub async fn complete_quest(
     ctx: Context<'_>,
