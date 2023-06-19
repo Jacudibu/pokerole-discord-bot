@@ -1,6 +1,6 @@
 use crate::emoji;
 use crate::commands::{Context, Error};
-use crate::commands::characters::increase_character_stat;
+use crate::commands::characters::change_character_stat;
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
@@ -15,7 +15,7 @@ pub async fn reward_money(
     // TODO: Option to also add the untaxed amount to guild stash.
     // TODO: Button to undo the transaction which lasts for a minute or so.
 
-    if let Ok(result) = increase_character_stat(&ctx, "money", &name, amount as i64).await {
+    if let Ok(result) = change_character_stat(&ctx, "money", &name, amount as i64).await {
         ctx.say(format!("{} received {} {}!", name, amount, emoji::POKE_COIN)).await?;
     }
 
