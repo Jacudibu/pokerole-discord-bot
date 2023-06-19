@@ -90,3 +90,44 @@ pub async fn log_action<'a>(ctx: &Context<'a>, message: &str) -> Result<(), Erro
 
     Ok(())
 }
+
+#[derive(sqlx::FromRow)]
+pub struct CharacterWithNumericValue {
+    id: i64,
+    user_id: i64,
+    name: String,
+    value: i64
+}
+
+pub async fn increase_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64) -> Result<(), Error> {
+    let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
+
+    let record = sqlx::query_as::<_, CharacterWithNumericValue>(
+        format!("SELECT id, user_id, name, {} as value FROM character WHERE name = ? AND guild_id = ?", database_column).as_str())
+        .bind(name)
+        .bind(guild_id)
+        .fetch_one(&ctx.data().database)
+        .await;
+
+    match record {
+        Ok(record) => {
+            let new_value = record.value + amount;
+            let result = sqlx::query(
+                format!("UPDATE character SET {} = ? WHERE id = ? AND {} = ?", database_column, database_column).as_str())
+                .bind(new_value)
+                .bind(record.id)
+                .bind(record.value)
+                .execute(&ctx.data().database).await?;
+
+            if result.rows_affected() != 1 {
+                return send_stale_data_error(ctx).await;
+            }
+
+            update_character_post(ctx, record.id).await?;
+            log_action(ctx, format!("{} added {} {} for {}", ctx.author().name, amount, database_column, record.name).as_str()).await
+        }
+        Err(_) => {
+            send_error(ctx, format!("Unable to find a character named {}", name).as_str()).await
+        },
+    }
+}
