@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc};
 use sqlx::{Pool, Row, Sqlite};
+use tokio::sync::Mutex;
 use crate::data::ability::Ability;
 use crate::data::rule::Rule;
 use crate::data::item::Item;
@@ -35,37 +36,44 @@ pub struct GameData {
     pub type_efficiency: Arc<TypeEfficiency>,
 }
 
+pub struct Cache {
+    pub character_names: Arc<Vec<String>>,
+}
+
+impl Cache {
+    fn new() -> Cache {
+        Cache {
+            character_names: Arc::new(Vec::new()),
+        }
+    }
+}
+
 pub struct Data {
     pub database: Pool<Sqlite>,
     pub game: Arc<GameData>,
-
-    character_name_cache: Arc<Vec<String>>,
+    pub cache: Mutex<Cache>,
 }
 
 impl Data {
     pub async fn new(database: Pool<Sqlite>, game: Arc<GameData>) -> Self {
-        let mut result = Data {
+        let result = Data {
             database, game,
-            character_name_cache: Arc::new(Vec::default())
+            cache: Mutex::new(Cache::new()),
         };
 
-        result.update_character_name_cache().await;
+        result.cache.lock().await.update_character_names(&result.database).await;
 
         result
     }
 }
 
-impl Data {
-    pub fn get_character_name_cache(&self) -> &Arc<Vec<String>> {
-        &self.character_name_cache
-    }
-
-    pub async fn update_character_name_cache(&mut self) {
+impl Cache {
+    pub async fn update_character_names(&mut self, db: &Pool<Sqlite>) {
         let entries = sqlx::query("SELECT name FROM characters")
-            .fetch_all(&self.database).await;
+            .fetch_all(db).await;
 
         if let Ok(entries) = entries {
-            self.character_name_cache = Arc::new(entries.iter().map(|x| x.get::<String, usize>(0)).collect())
+            self.character_names = Arc::new(entries.iter().map(|x| x.get::<String, usize>(0)).collect())
         }
     }
 

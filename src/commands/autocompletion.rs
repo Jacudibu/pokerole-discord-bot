@@ -86,5 +86,5 @@ pub async fn autocomplete_character_name<'a>(
     _ctx: Context<'a>,
     partial: &'a str,
 ) -> Vec<String> {
-    autocomplete(partial, _ctx.data().get_character_name_cache(), 0)
+    autocomplete(partial, &_ctx.data().cache.lock().await.character_names, 0)
 }

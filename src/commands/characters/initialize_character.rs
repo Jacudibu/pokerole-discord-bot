@@ -47,6 +47,7 @@ pub async fn initialize_character(
         }
 
         update_character_post(&ctx, user_id, name).await?;
+        ctx.data().cache.lock().await.update_character_names(&ctx.data().database).await;
         return Ok(());
     }
 
