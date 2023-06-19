@@ -2,7 +2,7 @@ use crate::commands::{Context, Error, send_ephemeral_reply, send_error};
 use crate::commands::characters::{update_character_post};
 use crate::commands::autocompletion::autocomplete_character_name;
 
-/// Posts a new character stat post and sets it as the.
+/// Posts a new character stat post in case the old one got lost or deleted.
 #[poise::command(slash_command, guild_only, default_member_permissions = "ADMINISTRATOR")]
 pub async fn initialize_character_post(
     ctx: Context<'_>,
