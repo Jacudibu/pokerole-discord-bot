@@ -62,6 +62,10 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
 }
 
 pub async fn send_error<'a>(ctx: &Context<'a>, content: &str) -> Result<(), Error>{
+    send_ephemeral_reply(ctx, content).await
+}
+
+pub async fn send_ephemeral_reply<'a>(ctx: &Context<'a>, content: &str) -> Result<(), Error>{
     ctx.send(|b| b
         .content(content)
         .ephemeral(true)

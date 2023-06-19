@@ -4,8 +4,8 @@ use crate::Error;
 pub mod initialize_character;
 pub mod reward_money;
 
-pub async fn update_character_post<'a>(ctx: &Context<'a>, user_id: i64, name: String) -> Result<(), Error> {
-    if let Some(result) = build_character_string(ctx, user_id, name).await {
+pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) -> Result<(), Error> {
+    if let Some(result) = build_character_string(ctx, id).await {
         let message = ctx.serenity_context().http.get_message(result.1 as u64, result.2 as u64).await;
         if let Ok(mut message) = message {
             message.edit(ctx, |f| f.content(result.0)).await?;
@@ -16,15 +16,13 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, user_id: i64, name: St
 }
 
 // TODO: we really should just change this to a query_as thingy...
-pub async fn build_character_string<'a>(ctx: &Context<'a>, user_id: i64, name: String) -> Option<(String, i64, i64)> {
-    // TODO: Add guild_id into the mix
+pub async fn build_character_string<'a>(ctx: &Context<'a>, character_id: i64) -> Option<(String, i64, i64)> {
     let entry = sqlx::query!(
-                "SELECT experience, money, stat_message_id, stat_channel_id \
-                FROM characters WHERE user_id = ? AND name = ? \
+                "SELECT name, experience, money, stat_message_id, stat_channel_id \
+                FROM characters WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
-                user_id,
-                name,
+                character_id,
             )
         .fetch_one(&ctx.data().database)
         .await;
@@ -39,7 +37,7 @@ pub async fn build_character_string<'a>(ctx: &Context<'a>, user_id: i64, name: S
 ### Stats for {}
 **Level**: {} `({} / 100)`
 **Poke**: {}",
-                         name, level, experience, entry.money), entry.stat_channel_id, entry.stat_message_id))
+                         entry.name, level, experience, entry.money), entry.stat_channel_id, entry.stat_message_id))
         }
         Err(_) => None,
     }
