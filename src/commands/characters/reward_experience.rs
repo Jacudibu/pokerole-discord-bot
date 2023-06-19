@@ -1,5 +1,5 @@
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::{send_stale_data_error, update_character_post};
+use crate::commands::characters::{log_action, send_stale_data_error, update_character_post};
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
@@ -36,7 +36,8 @@ pub async fn reward_experience(
             }
 
             ctx.say(format!("{} received {} experience points!", record.name, amount)).await?;
-            update_character_post(&ctx, record.id).await
+            update_character_post(&ctx, record.id).await?;
+            log_action(&ctx, format!("{} rewarded {} with {} experience points.", ctx.author().name, record.name, amount).as_str()).await
         }
         Err(_) => {
             send_error(&ctx, format!("Unable to find a character named {}", name).as_str()).await

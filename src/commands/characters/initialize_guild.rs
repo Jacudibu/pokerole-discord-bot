@@ -15,10 +15,10 @@ pub async fn initialize_guild(
         "INSERT INTO guild (id, action_log_channel_id) VALUES (?, ?)",
         guild_id,
         action_log_channel_id
-    ).fetch_one(&ctx.data().database)
+    ).execute(&ctx.data().database)
         .await;
 
-    if let Ok(_) = record {
+    if record.is_ok() {
         send_ephemeral_reply(&ctx, "Guild has been successfully initialized!").await?;
         log_action(&ctx, "Guild has been initialized. I recommend muting this channel, lul.").await?;
         return Ok(());

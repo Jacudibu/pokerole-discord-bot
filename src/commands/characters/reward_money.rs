@@ -1,6 +1,6 @@
 use crate::emoji;
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::{send_stale_data_error, update_character_post};
+use crate::commands::characters::{log_action, send_stale_data_error, update_character_post};
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
@@ -38,7 +38,8 @@ pub async fn reward_money(
             }
 
             ctx.say(format!("{} received {} {}!", record.name, amount, emoji::POKE_COIN)).await?;
-            update_character_post(&ctx, record.id).await
+            update_character_post(&ctx, record.id).await?;
+            log_action(&ctx, format!("{} rewarded {} with {} {}.", ctx.author().name, record.name, amount, emoji::POKE_COIN).as_str()).await
         }
         Err(_) => {
             send_error(&ctx, format!("Unable to find a character named {}", name).as_str()).await
