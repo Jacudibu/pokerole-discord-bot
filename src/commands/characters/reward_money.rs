@@ -19,7 +19,7 @@ pub async fn reward_money(
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
 
     let record = sqlx::query!(
-        "SELECT id, user_id, money FROM characters WHERE name = ? AND guild_id = ?",
+        "SELECT id, user_id, name, money FROM characters WHERE name = ? AND guild_id = ?",
         name,
         guild_id
     ).fetch_one(&ctx.data().database)
@@ -38,7 +38,7 @@ pub async fn reward_money(
                 return send_stale_data_error(&ctx).await;
             }
 
-            ctx.say(format!("{} received {} {}!", name, amount, emoji::POKE_COIN)).await?;
+            ctx.say(format!("{} received {} {}!", record.name, amount, emoji::POKE_COIN)).await?;
             update_character_post(&ctx, record.id).await
         }
         Err(_) => {
