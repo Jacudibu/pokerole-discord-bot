@@ -11,10 +11,12 @@ mod reward_experience;
 mod initialize_guild;
 mod complete_quest;
 mod initialize_character_post;
+mod give_money;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec!(
         complete_quest::complete_quest(),
+        give_money::give_money(),
         initialize_character::initialize_character(),
         initialize_character_post::initialize_character_post(),
         initialize_guild::initialize_guild(),
