@@ -1,6 +1,6 @@
 use crate::emoji;
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::{change_character_stat, validate_user_input};
+use crate::commands::characters::{ActionType, change_character_stat, validate_user_input};
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_owned_character_name;
 
@@ -65,12 +65,13 @@ pub async fn give_money(
     }
 
     // TODO: Potential flaw: Money gets transferred by someone else in between this might not be detected.
-    if let Ok(_) = change_character_stat(&ctx, "money", &giver, -amount).await {
-        if let Ok(_) = change_character_stat(&ctx, "money", &receiver, amount).await {
+    // For now, it should be fine if we only subtract the money - people are way more likely in that case. :'D
+    if let Ok(_) = change_character_stat(&ctx, "money", &giver, -amount, ActionType::TradeOutgoing).await {
+        if let Ok(_) = change_character_stat(&ctx, "money", &receiver, amount, ActionType::TradeIncoming).await {
             ctx.say(format!("{} gave {} {} to {}!", giver, amount, emoji::POKE_COIN, receiver)).await?;
         } else {
             // TODO: The undo might fail.
-            change_character_stat(&ctx, "money", &giver, amount).await?;
+            change_character_stat(&ctx, "money", &giver, amount, ActionType::Undo).await?;
         }
     }
 

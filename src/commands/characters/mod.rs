@@ -1,3 +1,5 @@
+use core::fmt;
+use std::fmt::{Formatter};
 use poise::Command;
 use regex::Regex;
 use serenity::model::id::ChannelId;
@@ -76,7 +78,28 @@ Completed Quests: {}
     }
 }
 
-pub async fn log_action<'a>(ctx: &Context<'a>, message: &str) -> Result<(), Error> {
+
+pub enum ActionType {
+    Initialization,
+    Reward,
+    TradeOutgoing,
+    TradeIncoming,
+    Undo,
+}
+
+impl fmt::Display for ActionType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            ActionType::Initialization => "🌟 [Init]",
+            ActionType::Reward => "✨ [Reward]",
+            ActionType::TradeOutgoing => "➡️ [Trade]",
+            ActionType::TradeIncoming => "⬅️ [Trade]",
+            ActionType::Undo => "↩️ [Undo]",
+        })
+    }
+}
+
+pub async fn log_action<'a>(action_type: ActionType, ctx: &Context<'a>, message: &str) -> Result<(), Error> {
     let guild_id = ctx.guild_id();
     if guild_id.is_none() {
         return Ok(());
@@ -90,7 +113,7 @@ pub async fn log_action<'a>(ctx: &Context<'a>, message: &str) -> Result<(), Erro
     if let Ok(record) = record {
         let channel_id= ChannelId::from(record.action_log_channel_id as u64);
         channel_id.send_message(ctx, |f| f
-            .content(std::format!("{} (triggered by {})", message, ctx.author()))
+            .content(std::format!("{} {} (triggered by {})", action_type, message, ctx.author()))
             .allowed_mentions(|mentions| mentions.empty_users())
         ).await?;
     }
@@ -106,7 +129,7 @@ pub struct CharacterWithNumericValue {
     value: i64
 }
 
-pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64) -> Result<(), Error> {
+pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64, action_type: ActionType) -> Result<(), Error> {
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
 
     let record = sqlx::query_as::<_, CharacterWithNumericValue>(
@@ -146,7 +169,7 @@ pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str,
                 to_or_from = "from";
             }
 
-            log_action(ctx, format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
+            log_action(action_type, ctx, format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
         }
         Err(_) => {
             send_error(ctx, format!("Unable to find a character named {}", name).as_str()).await

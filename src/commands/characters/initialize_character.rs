@@ -1,6 +1,6 @@
 use serenity::model::user::User;
 use crate::commands::{Context, Error, send_ephemeral_reply, send_error};
-use crate::commands::characters::{log_action, update_character_post, validate_user_input};
+use crate::commands::characters::{ActionType, log_action, update_character_post, validate_user_input};
 use crate::emoji;
 
 /// Create a new character within the database.
@@ -45,7 +45,7 @@ pub async fn initialize_character(
     if let Ok(record) = record {
         send_ephemeral_reply(&ctx, "Character has been successfully created!").await?;
         update_character_post(&ctx, record.id).await?;
-        log_action(&ctx, &format!("Initialized character {} with {} {} and {} exp.", name, money, emoji::POKE_COIN, exp)).await?;
+        log_action(ActionType::Initialization, &ctx, &format!("Initialized character {} with {} {} and {} exp.", name, money, emoji::POKE_COIN, exp)).await?;
         ctx.data().cache.update_character_names(&ctx.data().database).await;
         return Ok(());
     }

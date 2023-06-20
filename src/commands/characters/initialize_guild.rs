@@ -1,6 +1,6 @@
 use serenity::model::channel::Channel;
 use crate::commands::{Context, Error, send_ephemeral_reply, send_error};
-use crate::commands::characters::log_action;
+use crate::commands::characters::{ActionType, log_action};
 
 /// Create a new guild within the database.
 #[poise::command(slash_command, guild_only, default_member_permissions = "ADMINISTRATOR")]
@@ -21,7 +21,7 @@ pub async fn initialize_guild(
 
     if record.is_ok() {
         send_ephemeral_reply(&ctx, "Guild has been successfully initialized!").await?;
-        log_action(&ctx, "Guild has been initialized. I recommend muting this channel, lul.").await?;
+        log_action(ActionType::Initialization, &ctx, "Guild has been initialized. I recommend muting this channel, lul.").await?;
         return Ok(());
     }
 

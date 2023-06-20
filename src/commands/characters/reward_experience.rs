@@ -1,5 +1,5 @@
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::{change_character_stat, validate_user_input};
+use crate::commands::characters::{ActionType, change_character_stat, validate_user_input};
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Reward players with cash.
@@ -16,7 +16,7 @@ pub async fn reward_experience(
         return send_error(&ctx, e).await;
     }
 
-    if let Ok(result) = change_character_stat(&ctx, "experience", &name, amount as i64).await {
+    if let Ok(result) = change_character_stat(&ctx, "experience", &name, amount as i64, ActionType::Reward).await {
         ctx.say(format!("{} received {} experience points!", name, amount)).await?;
     }
 
