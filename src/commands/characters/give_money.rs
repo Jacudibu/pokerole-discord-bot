@@ -28,21 +28,21 @@ pub async fn give_money(
     ).fetch_one(&ctx.data().database)
         .await;
 
-    if let Ok(record) = sender_record {
-        if record.money < amount {
+    if let Ok(sender_record) = sender_record {
+        if sender_record.money < amount {
             return send_error(&ctx, format!("**Unable to send {}.**\n*You only own {} {}.*",
-                                            amount, record.money, emoji::POKE_COIN).as_str()
+                                            amount, sender_record.money, emoji::POKE_COIN).as_str()
             ).await;
         }
 
         let receiver_record = sqlx::query!("SELECT id FROM character WHERE name = ? AND guild_id = ?",
-            giver,
+            receiver,
             guild_id,
         ).fetch_one(&ctx.data().database)
             .await;
 
         if let Ok(receiver_record) = receiver_record {
-            if receiver_record.id == record.id {
+            if receiver_record.id == sender_record.id {
                 return send_error(&ctx, format!("*You successfully transferred {} {} from your left to your right hand. Ha. Ha.*",
                                                 amount, emoji::POKE_COIN).as_str()
                 ).await;
