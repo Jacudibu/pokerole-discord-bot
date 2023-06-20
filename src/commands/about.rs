@@ -5,8 +5,10 @@ use crate::commands::{Context, Error};
 pub async fn about(
     ctx: Context<'_>,
 ) -> Result<(), Error> {
+    // TODO: Might be funny to add an actual version string here once we use proper tags and git actions and such :>
     ctx.say("\
-Made with love and 🦀!
+```k4rpOS v0x3b```
+Made with love, cookies and <:ferris_happy:1120237205013663804>!
 ## Data Sources:
 - **Original Pokerole System**: <https://www.pokeroleproject.com>
 - Weather & Status Effects taken from **Pokerole-Discord.py-Base** [[Link](<https://github.com/XShadeSlayerXx/PokeRole-Discord.py-Base>)]
