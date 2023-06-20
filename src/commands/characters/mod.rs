@@ -89,7 +89,10 @@ pub async fn log_action<'a>(ctx: &Context<'a>, message: &str) -> Result<(), Erro
 
     if let Ok(record) = record {
         let channel_id= ChannelId::from(record.action_log_channel_id as u64);
-        channel_id.send_message(ctx, |f| f.content(message)).await?;
+        channel_id.send_message(ctx, |f| f
+            .content(std::format!("{} (triggered by {})", message, ctx.author()))
+            .allowed_mentions(|mentions| mentions.empty_users())
+        ).await?;
     }
 
     Ok(())
@@ -104,10 +107,6 @@ pub struct CharacterWithNumericValue {
 }
 
 pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64) -> Result<(), Error> {
-    if let Err(e) = validate_user_input(name.as_str()) {
-        return send_error(&ctx, e).await;
-    }
-
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
 
     let record = sqlx::query_as::<_, CharacterWithNumericValue>(
@@ -132,7 +131,22 @@ pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str,
             }
 
             update_character_post(ctx, record.id).await?;
-            log_action(ctx, format!("{} added {} {} for {}", ctx.author().name, amount, database_column, record.name).as_str()).await
+            let action= if database_column == "money" {
+                emoji::POKE_COIN
+            } else {
+                database_column
+            };
+            let added_or_removed: &str;
+            let to_or_from: &str;
+            if amount > 0 {
+                added_or_removed = "Added";
+                to_or_from = "to";
+            } else {
+                added_or_removed = "Removed";
+                to_or_from = "from";
+            }
+
+            log_action(ctx, format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
         }
         Err(_) => {
             send_error(ctx, format!("Unable to find a character named {}", name).as_str()).await

@@ -11,6 +11,7 @@ pub async fn give_money(
     #[description = "Who gives the money?"]
     #[autocomplete = "autocomplete_owned_character_name"]
     giver: String,
+    #[min = 1_u32]
     amount: u32,
     #[description = "To whom?"]
     #[autocomplete = "autocomplete_character_name"]
