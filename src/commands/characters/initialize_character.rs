@@ -45,7 +45,7 @@ pub async fn initialize_character(
     if let Ok(record) = record {
         send_ephemeral_reply(&ctx, "Character has been successfully created!").await?;
         update_character_post(&ctx, record.id).await?;
-        log_action(&ctx, &format!("{} initialized character {} with {} {} and {} exp.", ctx.author().name, name, money, emoji::POKE_COIN, exp)).await?;
+        log_action(&ctx, &format!("Initialized character {} with {} {} and {} exp.", name, money, emoji::POKE_COIN, exp)).await?;
         ctx.data().cache.update_character_names(&ctx.data().database).await;
         return Ok(());
     }
