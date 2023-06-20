@@ -1,5 +1,5 @@
 use crate::commands::{Context, Error, send_ephemeral_reply, send_error};
-use crate::commands::characters::{update_character_post};
+use crate::commands::characters::{update_character_post, validate_user_input};
 use crate::commands::autocompletion::autocomplete_character_name;
 
 /// Posts a new character stat post in case the old one got lost or deleted.
@@ -10,6 +10,10 @@ pub async fn initialize_character_post(
     #[autocomplete = "autocomplete_character_name"]
     name: String,
 ) -> Result<(), Error> {
+    if let Err(e) = validate_user_input(name.as_str()) {
+        return send_error(&ctx, e).await;
+    }
+
     let message = ctx.channel_id().send_message(ctx, |f|
         f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
     ).await?;

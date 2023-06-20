@@ -1,4 +1,5 @@
 use poise::Command;
+use regex::Regex;
 use serenity::model::id::ChannelId;
 use crate::commands::{Context, send_error};
 use crate::{emoji, Error};
@@ -103,6 +104,10 @@ pub struct CharacterWithNumericValue {
 }
 
 pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str, name: &String, amount: i64) -> Result<(), Error> {
+    if let Err(e) = validate_user_input(name.as_str()) {
+        return send_error(&ctx, e).await;
+    }
+
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
 
     let record = sqlx::query_as::<_, CharacterWithNumericValue>(
@@ -132,5 +137,19 @@ pub async fn change_character_stat<'a>(ctx: &Context<'a>, database_column: &str,
         Err(_) => {
             send_error(ctx, format!("Unable to find a character named {}", name).as_str()).await
         },
+    }
+}
+
+pub fn validate_user_input<'a>(text: &str) -> Result<(), &'a str> {
+    if text.len() > 30 {
+        return Err("Query string too long!");
+    }
+
+    // TODO: Move that thing into some static context
+    let regex = Regex::new("^[a-zA-Z0-9]$").unwrap();
+    if regex.is_match(text) {
+        Ok(())
+    } else {
+        Err("Failed to validate input!")
     }
 }

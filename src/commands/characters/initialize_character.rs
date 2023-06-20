@@ -1,6 +1,6 @@
 use serenity::model::user::User;
 use crate::commands::{Context, Error, send_ephemeral_reply, send_error};
-use crate::commands::characters::{log_action, update_character_post};
+use crate::commands::characters::{log_action, update_character_post, validate_user_input};
 use crate::emoji;
 
 /// Create a new character within the database.
@@ -16,6 +16,10 @@ pub async fn initialize_character(
     #[min = 0_i64]
     money: i64,
 ) -> Result<(), Error> {
+    if let Err(e) = validate_user_input(name.as_str()) {
+        return send_error(&ctx, e).await;
+    }
+
     let message = ctx.channel_id().send_message(ctx, |f|
         f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
     ).await?;

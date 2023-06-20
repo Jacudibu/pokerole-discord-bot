@@ -1,6 +1,6 @@
 use crate::emoji;
 use crate::commands::{Context, Error, send_error};
-use crate::commands::characters::change_character_stat;
+use crate::commands::characters::{change_character_stat, validate_user_input};
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_owned_character_name;
 
@@ -17,6 +17,14 @@ pub async fn give_money(
     receiver: String,
 ) -> Result<(), Error> {
     // TODO: Button to undo the transaction which lasts for a minute or so.
+
+    if let Err(e) = validate_user_input(giver.as_str()) {
+        return send_error(&ctx, e).await;
+    }
+    if let Err(e) = validate_user_input(receiver.as_str()) {
+        return send_error(&ctx, e).await;
+    }
+
     let amount = amount as i64;
     let user_id = ctx.author().id.0 as i64;
     let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
