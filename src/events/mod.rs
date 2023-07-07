@@ -1,4 +1,5 @@
 mod button_interaction;
+mod quests;
 mod role_reaction;
 
 use crate::data::Data;

@@ -15,7 +15,7 @@ CREATE TABLE quest_signup(
     creation_timestamp INTEGER NOT NULL,
     PRIMARY KEY (character_id, quest_id),
     FOREIGN KEY (character_id) REFERENCES character(id),
-    FOREIGN KEY (quest_id) REFERENCES quest(id)
+    FOREIGN KEY (quest_id) REFERENCES quest(channel_id)
 );
 
 CREATE TABLE quest_completion(
@@ -24,5 +24,5 @@ CREATE TABLE quest_completion(
     creation_timestamp INTEGER NOT NULL,
     PRIMARY KEY (character_id, quest_id),
     FOREIGN KEY (character_id) REFERENCES character(id),
-    FOREIGN KEY (quest_id) REFERENCES quest(id)
+    FOREIGN KEY (quest_id) REFERENCES quest(channel_id)
 );

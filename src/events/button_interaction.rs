@@ -1,5 +1,5 @@
 use crate::commands::{efficiency, learns};
-use crate::events::FrameworkContext;
+use crate::events::{quests, FrameworkContext};
 use crate::{commands, helpers, Error};
 use poise::CreateReply;
 use serenity::builder::{CreateActionRow, CreateButton, CreateComponents};
@@ -94,6 +94,9 @@ pub async fn handle_button_interaction(
                     f.interaction_response_data(|f| f.content(message))
                 })
                 .await?;
+        }
+        "quest-sign-up" => {
+            quests::quest_sign_up::quest_sign_up(context, interaction, framework.user_data).await?;
         }
         &_ => {}
     }

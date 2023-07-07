@@ -92,6 +92,7 @@ mod tests {
             .execute(db)
             .await;
     }
+
     async fn create_mock_guild(db: &Pool<Sqlite>, guild_id: i64) {
         let _ = sqlx::query!(
             "INSERT INTO guild (id, money, action_log_channel_id) VALUES (?, ?, ?)",
