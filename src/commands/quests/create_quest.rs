@@ -1,4 +1,4 @@
-use crate::commands::{send_error, Context, Error};
+use crate::commands::{Context, Error};
 use crate::data::Data;
 use chrono::Utc;
 
@@ -8,20 +8,27 @@ use chrono::Utc;
     default_member_permissions = "ADMINISTRATOR"
 )]
 pub async fn create_quest(ctx: Context<'_>) -> Result<(), Error> {
+    let reply = ctx.send(|f| f.content("Creating Quest...")).await?;
+    let message_id = reply.message().await?.id;
+
     let result = create_quest_impl(
         ctx.data(),
         ctx.guild_id().expect("Command is guild_only").0 as i64,
         ctx.channel_id().0 as i64,
         ctx.author().id.0 as i64,
+        message_id.0 as i64,
     )
     .await;
 
     match result {
         Ok(_) => {
-            ctx.say("Quest created!").await?;
+            reply.edit(ctx, |f| f.content("Quest created!")).await?;
             Ok(())
         }
-        Err(e) => send_error(&ctx, e.as_str()).await,
+        Err(e) => {
+            reply.edit(ctx, |f| f.content(e.as_str())).await?;
+            Ok(())
+        }
     }
 }
 
@@ -30,10 +37,11 @@ async fn create_quest_impl(
     guild_id: i64,
     channel_id: i64,
     creator_id: i64,
+    bot_message_id: i64,
 ) -> Result<(), String> {
     let timestamp = Utc::now().timestamp();
 
-    let result = sqlx::query!("INSERT INTO quest (guild_id, channel_id, creator_id, creation_timestamp) VALUES (?, ?, ?, ?)", guild_id, channel_id, creator_id, timestamp)
+    let result = sqlx::query!("INSERT INTO quest (guild_id, channel_id, creator_id, bot_message_id, creation_timestamp) VALUES (?, ?, ?, ?, ?)", guild_id, channel_id, creator_id, bot_message_id, timestamp)
         .execute(&data.database).await;
 
     match result {
@@ -44,7 +52,7 @@ async fn create_quest_impl(
                 Err(String::from("Unable to persist quest entry!"))
             }
         }
-        Err(e) => Err(format!("Something went wrong: {}", e)),
+        Err(e) => Err(format!("**Something went wrong!**\n{}", e)),
     }
 }
 

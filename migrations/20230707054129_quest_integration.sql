@@ -3,6 +3,7 @@ CREATE TABLE quest(
     guild_id INTEGER NOT NULL,
     channel_id INTEGER NOT NULL UNIQUE,
     creator_id INTEGER NOT NULL,
+    bot_message_id INTEGER NOT NULL,
     creation_timestamp INTEGER NOT NULL,
     completion_timestamp INTEGER,
     FOREIGN KEY (guild_id) REFERENCES guild(id),
