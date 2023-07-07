@@ -3,8 +3,6 @@ use crate::data::Data;
 use crate::enums::QuestParticipantSelectionMechanism;
 use crate::helpers;
 use chrono::Utc;
-use serenity::model::prelude::component::ButtonStyle;
-use strum_macros::FromRepr;
 
 #[poise::command(
     slash_command,
@@ -33,19 +31,16 @@ pub async fn create_quest(
 
     match result {
         Ok(_) => {
-            let text = helpers::generate_quest_post_message_content(ctx.data(), channel_id).await?;
+            let text = helpers::generate_quest_post_message_content(
+                ctx.data(),
+                channel_id,
+                selection_mechanism,
+            )
+            .await?;
             reply
                 .edit(ctx, |edit| {
-                    edit.content(text).components(|components| {
-                        components.create_action_row(|action_row| {
-                            action_row.add_button(helpers::create_styled_button(
-                                "Sign up!",
-                                "quest-sign-up",
-                                false,
-                                ButtonStyle::Success,
-                            ))
-                        })
-                    })
+                    edit.content(text)
+                        .components(|components| helpers::create_quest_signup_buttons(components))
                 })
                 .await?;
             Ok(())

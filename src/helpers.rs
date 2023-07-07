@@ -1,6 +1,7 @@
 use crate::data::Data;
+use crate::enums::QuestParticipantSelectionMechanism;
 use crate::Error;
-use serenity::builder::CreateButton;
+use serenity::builder::{CreateButton, CreateComponents};
 use serenity::model::application::component::ButtonStyle;
 
 pub fn create_styled_button(
@@ -76,9 +77,10 @@ fn find_best_split_pos(message: &str) -> usize {
 pub async fn generate_quest_post_message_content(
     data: &Data,
     channel_id: i64,
+    selection_mechanism: QuestParticipantSelectionMechanism,
 ) -> Result<String, Error> {
     let quest_signups = sqlx::query!(
-        "SELECT character.name as character_name
+        "SELECT character.name as character_name, quest_signup.timestamp as timestamp
 FROM quest_signup
 INNER JOIN character ON
     quest_signup.character_id = character.id
@@ -100,6 +102,24 @@ WHERE quest_id = ?
         }
     }
 
+    text.push_str(
+        format!(
+            "Participant Selection Method: **{}**\n",
+            selection_mechanism
+        )
+        .as_str(),
+    );
     text.push_str("\nUse the buttons below to sign up!");
     Ok(text)
+}
+
+pub fn create_quest_signup_buttons(components: &mut CreateComponents) -> &mut CreateComponents {
+    components.create_action_row(|action_row| {
+        action_row.add_button(create_styled_button(
+            "Sign up!",
+            "quest-sign-up",
+            false,
+            ButtonStyle::Success,
+        ))
+    })
 }

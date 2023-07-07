@@ -1,4 +1,5 @@
 use crate::data::Data;
+use crate::enums::QuestParticipantSelectionMechanism;
 use crate::{helpers, Error};
 use chrono::Utc;
 use serenity::client::Context;
@@ -99,29 +100,41 @@ async fn process_signup(
     interaction
         .create_interaction_response(context, |response| {
             response
-                .kind(InteractionResponseType::UpdateMessage)
+                .kind(InteractionResponseType::ChannelMessageWithSource)
                 .interaction_response_data(|data| {
-                    data.content("Successfully signed up!")
+                    data.ephemeral(true)
+                        .content("Successfully signed up!")
                         .components(|components| components)
                 })
         })
         .await?;
 
     let quest_record = sqlx::query!(
-        "SELECT bot_message_id FROM quest WHERE channel_id = ?",
+        "SELECT bot_message_id, participant_selection_mechanism FROM quest WHERE channel_id = ?",
         channel_id
     )
     .fetch_one(&data.database)
     .await?;
 
-    let text = helpers::generate_quest_post_message_content(data, channel_id).await?;
+    let text = helpers::generate_quest_post_message_content(
+        data,
+        channel_id,
+        QuestParticipantSelectionMechanism::from_repr(quest_record.participant_selection_mechanism)
+            .expect("Should always be valid!"),
+    )
+    .await?;
 
     let message = context
         .http
         .get_message(channel_id as u64, quest_record.bot_message_id as u64)
         .await;
     if let Ok(mut message) = message {
-        message.edit(context, |edit| edit.content(text)).await?;
+        message
+            .edit(context, |edit| {
+                edit.content(text)
+                    .components(|components| helpers::create_quest_signup_buttons(components))
+            })
+            .await?;
     }
 
     Ok(())
@@ -134,7 +147,7 @@ async fn persist_signup(
     timestamp: i64,
 ) -> Result<(), String> {
     let result = sqlx::query!(
-        "INSERT INTO quest_signup (quest_id, character_id, creation_timestamp) VALUES (?, ?, ?)",
+        "INSERT INTO quest_signup (quest_id, character_id, timestamp) VALUES (?, ?, ?)",
         channel_id,
         character_id,
         timestamp
@@ -196,15 +209,14 @@ mod tests {
         let timestamp = Utc::now().timestamp();
         persist_signup(&data, channel_id, character_id, timestamp).await?;
 
-        let signups =
-            sqlx::query!("SELECT quest_id, character_id, creation_timestamp FROM quest_signup")
-                .fetch_all(&data.database)
-                .await?;
+        let signups = sqlx::query!("SELECT quest_id, character_id, timestamp FROM quest_signup")
+            .fetch_all(&data.database)
+            .await?;
 
         let signup = signups.first().unwrap();
         assert_eq!(channel_id, signup.quest_id);
         assert_eq!(character_id, signup.character_id);
-        assert_eq!(timestamp, signup.creation_timestamp);
+        assert_eq!(timestamp, signup.timestamp);
 
         Ok(())
     }
