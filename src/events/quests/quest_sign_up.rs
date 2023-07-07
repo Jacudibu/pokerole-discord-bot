@@ -1,23 +1,176 @@
 use crate::data::Data;
-use crate::Error;
+use crate::{helpers, Error};
+use chrono::Utc;
 use serenity::client::Context;
 use serenity::model::prelude::message_component::MessageComponentInteraction;
+use serenity::model::prelude::InteractionResponseType;
+use std::str::FromStr;
 
 pub async fn quest_sign_up(
     context: &Context,
     interaction: &&MessageComponentInteraction,
     data: &Data,
+    args: Vec<&str>,
 ) -> Result<(), Error> {
+    let guild_id = interaction
+        .guild_id
+        .expect("Command should be guild_only")
+        .0 as i64;
+    let user_id = interaction.user.id.0 as i64;
     let channel_id = interaction.channel_id.0 as i64;
+
+    let available_characters = sqlx::query!(
+        "SELECT id, name FROM character WHERE user_id = ? AND guild_id = ?",
+        user_id,
+        guild_id
+    )
+    .fetch_all(&data.database)
+    .await?;
+
+    if args.len() == 2 {
+        let character_id = i64::from_str(args[0])?;
+        let timestamp = i64::from_str(args[1])?;
+
+        if available_characters.iter().all(|x| x.id != character_id) {
+            // TODO: Handle Invalid button input. That's a biiiig red flag!
+            return Ok(());
+        }
+
+        return process_signup(
+            context,
+            interaction,
+            data,
+            channel_id,
+            character_id,
+            timestamp,
+        )
+        .await;
+    }
+
+    let timestamp = Utc::now().timestamp();
+    if available_characters.len() == 1 {
+        return process_signup(
+            context,
+            interaction,
+            data,
+            channel_id,
+            available_characters[0].id,
+            timestamp,
+        )
+        .await;
+    }
+
     interaction
-        .create_interaction_response(context, |f| f)
+        .create_interaction_response(context, |interaction_response| {
+            interaction_response
+                .kind(InteractionResponseType::ChannelMessageWithSource)
+                .interaction_response_data(|data| {
+                    data.ephemeral(true)
+                        .content("Which character would you like to sign up?")
+                        .components(|components| {
+                            components.create_action_row(|row| {
+                                for x in available_characters {
+                                    row.add_button(helpers::create_button(
+                                        x.name.as_str(),
+                                        &format!("quest-sign-up_{}_{}", x.id, timestamp),
+                                        false,
+                                    ));
+                                }
+                                row
+                            })
+                        })
+                })
+        })
         .await?;
+    Ok(())
+}
+
+async fn process_signup(
+    context: &Context,
+    interaction: &&MessageComponentInteraction,
+    data: &Data,
+    channel_id: i64,
+    character_id: i64,
+    timestamp: i64,
+) -> Result<(), Error> {
+    let result = persist_signup(data, channel_id, character_id, timestamp).await;
+    // TODO: Error Handling
+
+    interaction
+        .create_interaction_response(context, |response| {
+            response
+                .kind(InteractionResponseType::UpdateMessage)
+                .interaction_response_data(|data| {
+                    data.content("Successfully signed up!")
+                        .components(|components| components)
+                })
+        })
+        .await?;
+
+    let quest_record = sqlx::query!(
+        "SELECT bot_message_id FROM quest WHERE channel_id = ?",
+        channel_id
+    )
+    .fetch_one(&data.database)
+    .await?;
+
+    let quest_signups = sqlx::query!(
+        "SELECT character.name as character_name
+FROM quest_signup
+INNER JOIN character ON
+    quest_signup.character_id = character.id
+WHERE quest_id = ?
+",
+        channel_id
+    )
+    .fetch_all(&data.database)
+    .await?;
+
+    let mut text = String::from("**Signups:**\n");
+    for record in quest_signups {
+        text.push_str("- ");
+        text.push_str(record.character_name.as_str());
+        text.push('\n');
+    }
+
+    text.push_str("\nUse the buttons below to sign up!");
+
+    let message = context
+        .http
+        .get_message(channel_id as u64, quest_record.bot_message_id as u64)
+        .await;
+    if let Ok(mut message) = message {
+        message.edit(context, |edit| edit.content(text)).await?;
+    }
 
     Ok(())
 }
 
-async fn persist_signup(data: &Data, channel_id: i64, character_id: i64) -> Result<(), String> {
-    Ok(())
+async fn persist_signup(
+    data: &Data,
+    channel_id: i64,
+    character_id: i64,
+    timestamp: i64,
+) -> Result<(), String> {
+    let result = sqlx::query!(
+        "INSERT INTO quest_signup (quest_id, character_id, creation_timestamp) VALUES (?, ?, ?)",
+        channel_id,
+        character_id,
+        timestamp
+    )
+    .execute(&data.database)
+    .await;
+
+    match result {
+        Ok(result) => {
+            if result.rows_affected() > 0 {
+                Ok(())
+            } else {
+                Err(String::from("Unable to persist quest signup!"))
+            }
+        }
+        Err(e) => Err(format!("**Something went wrong!**\n{}", e)),
+    }
 }
 
 #[cfg(test)]
@@ -25,7 +178,6 @@ mod tests {
     use crate::events::quests::quest_sign_up::persist_signup;
     use crate::{database_helpers, Error};
     use chrono::Utc;
-    use more_asserts::{assert_ge, assert_le};
     use sqlx::{Pool, Sqlite};
 
     #[sqlx::test]
@@ -57,9 +209,8 @@ mod tests {
         )
         .await;
 
-        let timestamp_before = Utc::now().timestamp();
-        persist_signup(&data, guild_id, character_id).await?;
-        let timestamp_after = Utc::now().timestamp();
+        let timestamp = Utc::now().timestamp();
+        persist_signup(&data, channel_id, character_id, timestamp).await?;
 
         let signups =
             sqlx::query!("SELECT quest_id, character_id, creation_timestamp FROM quest_signup")
@@ -69,8 +220,7 @@ mod tests {
         let signup = signups.first().unwrap();
         assert_eq!(channel_id, signup.quest_id);
         assert_eq!(character_id, signup.character_id);
-        assert_le!(timestamp_before, signup.creation_timestamp);
-        assert_ge!(timestamp_after, signup.creation_timestamp);
+        assert_eq!(timestamp, signup.creation_timestamp);
 
         Ok(())
     }

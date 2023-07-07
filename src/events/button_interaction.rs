@@ -96,7 +96,8 @@ pub async fn handle_button_interaction(
                 .await?;
         }
         "quest-sign-up" => {
-            quests::quest_sign_up::quest_sign_up(context, interaction, framework.user_data).await?;
+            quests::quest_sign_up::quest_sign_up(context, interaction, framework.user_data, args)
+                .await?;
         }
         &_ => {}
     }
