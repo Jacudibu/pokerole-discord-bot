@@ -109,4 +109,22 @@ mod tests {
 
         Ok(())
     }
+
+    #[sqlx::test]
+    async fn create_quest_called_twice(db: Pool<Sqlite>) -> Result<(), Error> {
+        let data = create_mock_data(db).await;
+        let channel_id = 100;
+        let creator_id = 200;
+        let guild_id = 300;
+
+        create_mock_guild(&data.database, guild_id).await;
+        create_mock_user(&data.database, creator_id).await;
+
+        create_quest_impl(&data, guild_id, channel_id, creator_id).await?;
+        let result = create_quest_impl(&data, guild_id, channel_id, creator_id).await;
+
+        assert!(result.is_err());
+
+        Ok(())
+    }
 }
