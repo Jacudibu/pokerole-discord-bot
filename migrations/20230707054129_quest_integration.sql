@@ -1,6 +1,7 @@
 CREATE TABLE quest(
     id INTEGER NOT NULL PRIMARY KEY,
     guild_id INTEGER NOT NULL,
+    channel_id INTEGER NOT NULL UNIQUE,
     creator_id INTEGER NOT NULL,
     creation_timestamp INTEGER NOT NULL,
     completion_timestamp INTEGER,
