@@ -156,6 +156,7 @@ async fn persist_signup(
 
 #[cfg(test)]
 mod tests {
+    use crate::enums::QuestParticipantSelectionMechanism;
     use crate::events::quests::quest_sign_up::persist_signup;
     use crate::{database_helpers, Error};
     use chrono::Utc;
@@ -179,6 +180,8 @@ mod tests {
             guild_id,
             creator_id,
             bot_message_id,
+            5,
+            QuestParticipantSelectionMechanism::Random,
         )
         .await;
         database_helpers::create_mock::character(

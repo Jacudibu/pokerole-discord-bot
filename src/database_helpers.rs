@@ -1,6 +1,7 @@
 #[cfg(test)]
 pub mod create_mock {
     use crate::data::Data;
+    use crate::enums::QuestParticipantSelectionMechanism;
     use crate::game_data;
     use chrono::Utc;
     use sqlx::{Pool, Sqlite};
@@ -35,14 +36,18 @@ pub mod create_mock {
         guild_id: i64,
         creator_id: i64,
         bot_message_id: i64,
+        max_participants: i64,
+        mechanism: QuestParticipantSelectionMechanism,
     ) {
         let timestamp = Utc::now().timestamp();
-        let _ = sqlx::query!("INSERT INTO quest (guild_id, channel_id, creator_id, bot_message_id, creation_timestamp) VALUES (?, ?, ?, ?, ?)",
+        let _ = sqlx::query!("INSERT INTO quest (guild_id, channel_id, creator_id, bot_message_id, creation_timestamp, maximum_participant_count, participant_selection_mechanism) VALUES (?, ?, ?, ?, ?, ?, ?)",
             guild_id,
             channel_id,
             creator_id,
             bot_message_id,
-            timestamp
+            timestamp,
+            max_participants,
+            mechanism
         )
         .execute(db)
         .await;

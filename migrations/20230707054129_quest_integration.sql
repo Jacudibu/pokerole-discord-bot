@@ -5,6 +5,8 @@ CREATE TABLE quest(
     bot_message_id INTEGER NOT NULL,
     creation_timestamp INTEGER NOT NULL,
     completion_timestamp INTEGER,
+    maximum_participant_count INTEGER NOT NULL,
+    participant_selection_mechanism INTEGER NOT NULL,
     FOREIGN KEY (guild_id) REFERENCES guild(id),
     FOREIGN KEY (creator_id) REFERENCES user(id)
 );

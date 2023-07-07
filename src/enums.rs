@@ -1,8 +1,13 @@
 use crate::emoji;
 use serde::Deserialize;
+use sqlx::database::{HasArguments, HasValueRef};
+use sqlx::encode::IsNull;
+use sqlx::error::BoxDynError;
+use sqlx::Sqlite;
 use std::fmt;
-use std::fmt::Formatter;
-use strum_macros::{EnumIter, EnumString};
+use std::fmt::{Display, Formatter};
+use std::str::FromStr;
+use strum_macros::{EnumIter, EnumString, FromRepr};
 
 #[derive(Debug, Clone, Copy, Deserialize, PartialEq, Eq, EnumString, Hash, EnumIter)]
 pub enum PokemonType {
@@ -359,4 +364,22 @@ pub enum PokemonGeneration {
     Seven,
     Eight,
     Nine,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Deserialize,
+    PartialOrd,
+    PartialEq,
+    poise::ChoiceParameter,
+    sqlx::Type,
+    FromRepr,
+)]
+#[repr(i64)]
+pub enum QuestParticipantSelectionMechanism {
+    #[name = "First Come First Serve"]
+    FirstComeFirstServe = 1,
+    Random = 2,
 }
