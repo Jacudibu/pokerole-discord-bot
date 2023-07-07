@@ -74,46 +74,21 @@ async fn create_quest_impl(
 #[cfg(test)]
 mod tests {
     use crate::commands::quests::create_quest::create_quest_impl;
-    use crate::data::Data;
-    use crate::{game_data, Error};
+    use crate::{database_helpers, Error};
     use chrono::Utc;
     use more_asserts::{assert_ge, assert_le};
     use sqlx::{Pool, Sqlite};
-    use std::sync::Arc;
-
-    async fn create_mock_data(db: Pool<Sqlite>) -> Data {
-        // TODO: Only initialize game data once every cargo test run
-        let game_data = game_data::parser::initialize_data().await;
-        Data::new(db, Arc::new(game_data)).await
-    }
-
-    async fn create_mock_user(db: &Pool<Sqlite>, user_id: i64) {
-        let _ = sqlx::query!("INSERT INTO user (id) VALUES (?)", user_id)
-            .execute(db)
-            .await;
-    }
-
-    async fn create_mock_guild(db: &Pool<Sqlite>, guild_id: i64) {
-        let _ = sqlx::query!(
-            "INSERT INTO guild (id, money, action_log_channel_id) VALUES (?, ?, ?)",
-            guild_id,
-            0,
-            0
-        )
-        .execute(db)
-        .await;
-    }
 
     #[sqlx::test]
     async fn create_quest(db: Pool<Sqlite>) -> Result<(), Error> {
-        let data = create_mock_data(db).await;
+        let data = database_helpers::create_mock::data(db).await;
         let channel_id = 100;
         let creator_id = 200;
         let guild_id = 300;
         let bot_message_id = 400;
 
-        create_mock_guild(&data.database, guild_id).await;
-        create_mock_user(&data.database, creator_id).await;
+        database_helpers::create_mock::guild(&data.database, guild_id).await;
+        database_helpers::create_mock::user(&data.database, creator_id).await;
         let timestamp_before = Utc::now().timestamp();
         create_quest_impl(&data, guild_id, channel_id, creator_id, bot_message_id).await?;
         let timestamp_after = Utc::now().timestamp();
@@ -137,14 +112,14 @@ mod tests {
 
     #[sqlx::test]
     async fn create_quest_called_twice(db: Pool<Sqlite>) -> Result<(), Error> {
-        let data = create_mock_data(db).await;
+        let data = database_helpers::create_mock::data(db).await;
         let channel_id = 100;
         let creator_id = 200;
         let guild_id = 300;
         let bot_message_id = 400;
 
-        create_mock_guild(&data.database, guild_id).await;
-        create_mock_user(&data.database, creator_id).await;
+        database_helpers::create_mock::guild(&data.database, guild_id).await;
+        database_helpers::create_mock::user(&data.database, creator_id).await;
 
         create_quest_impl(&data, guild_id, channel_id, creator_id, bot_message_id).await?;
         let result =

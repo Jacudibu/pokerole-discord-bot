@@ -2,6 +2,7 @@ mod cache;
 mod commands;
 mod csv_utils;
 mod data;
+mod database_helpers;
 mod emoji;
 mod enums;
 mod events;
