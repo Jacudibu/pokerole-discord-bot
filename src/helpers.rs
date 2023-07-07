@@ -77,6 +77,7 @@ fn find_best_split_pos(message: &str) -> usize {
 pub async fn generate_quest_post_message_content(
     data: &Data,
     channel_id: i64,
+    maximum_participants: i64,
     selection_mechanism: QuestParticipantSelectionMechanism,
 ) -> Result<String, Error> {
     let quest_signups = sqlx::query!(
@@ -85,6 +86,7 @@ FROM quest_signup
 INNER JOIN character ON
     quest_signup.character_id = character.id
 WHERE quest_id = ?
+ORDER BY quest_signup.timestamp ASC
 ",
         channel_id
     )
@@ -104,8 +106,8 @@ WHERE quest_id = ?
 
     text.push_str(
         format!(
-            "Participant Selection Method: **{}**\n",
-            selection_mechanism
+            "Participant Selection Method: **{}**\nMaximum Participants: **{}**",
+            selection_mechanism, maximum_participants,
         )
         .as_str(),
     );

@@ -34,6 +34,7 @@ pub async fn create_quest(
             let text = helpers::generate_quest_post_message_content(
                 ctx.data(),
                 channel_id,
+                max_participants,
                 selection_mechanism,
             )
             .await?;

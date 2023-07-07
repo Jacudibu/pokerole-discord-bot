@@ -40,6 +40,7 @@ pub async fn quest_sign_up(
         return process_signup(
             context,
             interaction,
+            InteractionResponseType::UpdateMessage,
             data,
             channel_id,
             character_id,
@@ -53,6 +54,7 @@ pub async fn quest_sign_up(
         return process_signup(
             context,
             interaction,
+            InteractionResponseType::ChannelMessageWithSource,
             data,
             channel_id,
             available_characters[0].id,
@@ -89,6 +91,7 @@ pub async fn quest_sign_up(
 async fn process_signup(
     context: &Context,
     interaction: &&MessageComponentInteraction,
+    response_type: InteractionResponseType,
     data: &Data,
     channel_id: i64,
     character_id: i64,
@@ -100,7 +103,7 @@ async fn process_signup(
     interaction
         .create_interaction_response(context, |response| {
             response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
+                .kind(response_type)
                 .interaction_response_data(|data| {
                     data.ephemeral(true)
                         .content("Successfully signed up!")
@@ -110,7 +113,7 @@ async fn process_signup(
         .await?;
 
     let quest_record = sqlx::query!(
-        "SELECT bot_message_id, participant_selection_mechanism FROM quest WHERE channel_id = ?",
+        "SELECT bot_message_id, maximum_participant_count, participant_selection_mechanism FROM quest WHERE channel_id = ?",
         channel_id
     )
     .fetch_one(&data.database)
@@ -119,6 +122,7 @@ async fn process_signup(
     let text = helpers::generate_quest_post_message_content(
         data,
         channel_id,
+        quest_record.maximum_participant_count,
         QuestParticipantSelectionMechanism::from_repr(quest_record.participant_selection_mechanism)
             .expect("Should always be valid!"),
     )
