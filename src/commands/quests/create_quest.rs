@@ -12,11 +12,12 @@ use serenity::model::prelude::component::ButtonStyle;
 pub async fn create_quest(ctx: Context<'_>) -> Result<(), Error> {
     let reply = ctx.send(|f| f.content("Creating Quest...")).await?;
     let message_id = reply.message().await?.id;
+    let channel_id = ctx.channel_id().0 as i64;
 
     let result = create_quest_impl(
         ctx.data(),
         ctx.guild_id().expect("Command is guild_only").0 as i64,
-        ctx.channel_id().0 as i64,
+        channel_id,
         ctx.author().id.0 as i64,
         message_id.0 as i64,
     )
@@ -24,9 +25,10 @@ pub async fn create_quest(ctx: Context<'_>) -> Result<(), Error> {
 
     match result {
         Ok(_) => {
+            let text = helpers::generate_quest_post_message_content(ctx.data(), channel_id).await?;
             reply
                 .edit(ctx, |edit| {
-                    edit.content("Quest created!").components(|components| {
+                    edit.content(text).components(|components| {
                         components.create_action_row(|action_row| {
                             action_row.add_button(helpers::create_styled_button(
                                 "Sign up!",

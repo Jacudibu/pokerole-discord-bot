@@ -114,26 +114,7 @@ async fn process_signup(
     .fetch_one(&data.database)
     .await?;
 
-    let quest_signups = sqlx::query!(
-        "SELECT character.name as character_name
-FROM quest_signup
-INNER JOIN character ON
-    quest_signup.character_id = character.id
-WHERE quest_id = ?
-",
-        channel_id
-    )
-    .fetch_all(&data.database)
-    .await?;
-
-    let mut text = String::from("**Signups:**\n");
-    for record in quest_signups {
-        text.push_str("- ");
-        text.push_str(record.character_name.as_str());
-        text.push('\n');
-    }
-
-    text.push_str("\nUse the buttons below to sign up!");
+    let text = helpers::generate_quest_post_message_content(data, channel_id).await?;
 
     let message = context
         .http

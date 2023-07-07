@@ -1,3 +1,5 @@
+use crate::data::Data;
+use crate::Error;
 use serenity::builder::CreateButton;
 use serenity::model::application::component::ButtonStyle;
 
@@ -69,4 +71,35 @@ fn find_best_split_pos(message: &str) -> usize {
     }
 
     2000
+}
+
+pub async fn generate_quest_post_message_content(
+    data: &Data,
+    channel_id: i64,
+) -> Result<String, Error> {
+    let quest_signups = sqlx::query!(
+        "SELECT character.name as character_name
+FROM quest_signup
+INNER JOIN character ON
+    quest_signup.character_id = character.id
+WHERE quest_id = ?
+",
+        channel_id
+    )
+    .fetch_all(&data.database)
+    .await?;
+
+    let mut text = String::new();
+
+    if !quest_signups.is_empty() {
+        text.push_str("**Signups:**\n");
+        for record in quest_signups {
+            text.push_str("- ");
+            text.push_str(record.character_name.as_str());
+            text.push('\n');
+        }
+    }
+
+    text.push_str("\nUse the buttons below to sign up!");
+    Ok(text)
 }
