@@ -1,6 +1,8 @@
 use crate::commands::{Context, Error};
 use crate::data::Data;
+use crate::helpers;
 use chrono::Utc;
+use serenity::model::prelude::component::ButtonStyle;
 
 #[poise::command(
     slash_command,
@@ -22,7 +24,20 @@ pub async fn create_quest(ctx: Context<'_>) -> Result<(), Error> {
 
     match result {
         Ok(_) => {
-            reply.edit(ctx, |f| f.content("Quest created!")).await?;
+            reply
+                .edit(ctx, |edit| {
+                    edit.content("Quest created!").components(|components| {
+                        components.create_action_row(|action_row| {
+                            action_row.add_button(helpers::create_styled_button(
+                                "Sign up!",
+                                "quest-sign-up",
+                                false,
+                                ButtonStyle::Success,
+                            ))
+                        })
+                    })
+                })
+                .await?;
             Ok(())
         }
         Err(e) => {
@@ -94,11 +109,12 @@ mod tests {
         let channel_id = 100;
         let creator_id = 200;
         let guild_id = 300;
+        let bot_message_id = 400;
 
         create_mock_guild(&data.database, guild_id).await;
         create_mock_user(&data.database, creator_id).await;
         let timestamp_before = Utc::now().timestamp();
-        create_quest_impl(&data, guild_id, channel_id, creator_id).await?;
+        create_quest_impl(&data, guild_id, channel_id, creator_id, bot_message_id).await?;
         let timestamp_after = Utc::now().timestamp();
 
         let quests = sqlx::query!(
@@ -124,12 +140,14 @@ mod tests {
         let channel_id = 100;
         let creator_id = 200;
         let guild_id = 300;
+        let bot_message_id = 400;
 
         create_mock_guild(&data.database, guild_id).await;
         create_mock_user(&data.database, creator_id).await;
 
-        create_quest_impl(&data, guild_id, channel_id, creator_id).await?;
-        let result = create_quest_impl(&data, guild_id, channel_id, creator_id).await;
+        create_quest_impl(&data, guild_id, channel_id, creator_id, bot_message_id).await?;
+        let result =
+            create_quest_impl(&data, guild_id, channel_id, creator_id, bot_message_id).await;
 
         assert!(result.is_err());
 
