@@ -30,6 +30,7 @@ pub mod timestamp;
 pub mod weather;
 
 mod characters;
+mod quests;
 mod say;
 mod setting_time_offset;
 mod update_user_names;
@@ -66,6 +67,9 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     ];
 
     for x in characters::get_all_commands() {
+        result.push(x);
+    }
+    for x in quests::get_all_commands() {
         result.push(x);
     }
 
