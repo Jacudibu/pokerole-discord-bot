@@ -105,12 +105,12 @@ ORDER BY quest_signup.timestamp ASC
             QuestParticipantSelectionMechanism::FirstComeFirstServe => {
                 if quest_signups.len() > maximum_participants as usize {
                     let (inside, queue) = quest_signups.split_at(maximum_participants as usize);
-                    text.push_str("**Signups:**\n");
+                    text.push_str("**Participants:**\n");
                     add_character_names(&mut text, inside);
                     text.push_str("\n**Waiting Queue:**\n");
                     add_character_names(&mut text, queue);
                 } else {
-                    text.push_str("**Signups:**\n");
+                    text.push_str("**Participants:**\n");
                     add_character_names(&mut text, quest_signups.as_slice());
                 }
             }
