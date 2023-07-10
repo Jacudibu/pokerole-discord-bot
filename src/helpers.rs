@@ -76,6 +76,7 @@ fn find_best_split_pos(message: &str) -> usize {
 
 struct Signup {
     character_name: String,
+    user_id: i64,
 }
 
 pub async fn generate_quest_post_message_content(
@@ -86,7 +87,7 @@ pub async fn generate_quest_post_message_content(
 ) -> Result<String, Error> {
     let quest_signups = sqlx::query_as!(
         Signup,
-        "SELECT character.name as character_name
+        "SELECT character.name as character_name, character.user_id as user_id
 FROM quest_signup
 INNER JOIN character ON
     quest_signup.character_id = character.id
@@ -134,9 +135,7 @@ ORDER BY quest_signup.timestamp ASC
 
 fn add_character_names(text: &mut String, quest_signups: &[Signup]) {
     for record in quest_signups {
-        text.push_str("- ");
-        text.push_str(record.character_name.as_str());
-        text.push('\n');
+        text.push_str(format!("- {} (<@{}>)\n", record.character_name, record.user_id).as_str());
     }
 }
 
