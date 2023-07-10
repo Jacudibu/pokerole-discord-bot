@@ -100,7 +100,11 @@ async fn process_signup(
     let result = persist_signup(data, channel_id, character_id, timestamp).await;
 
     let text = if let Some(error) = result.err() {
-        error
+        if error.contains("UNIQUE constraint failed") {
+            String::from("Seems like you are already signed up!")
+        } else {
+            error
+        }
     } else {
         String::from("Successfully signed up!")
     };

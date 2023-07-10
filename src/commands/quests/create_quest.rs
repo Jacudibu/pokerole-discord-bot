@@ -47,7 +47,13 @@ pub async fn create_quest(
             Ok(())
         }
         Err(e) => {
-            reply.edit(ctx, |f| f.content(e.as_str())).await?;
+            let text = if e.contains("UNIQUE constraint failed") {
+                "A quest was already created for this channel!"
+            } else {
+                e.as_str()
+            };
+
+            reply.edit(ctx, |f| f.content(text)).await?;
             Ok(())
         }
     }
