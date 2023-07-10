@@ -74,14 +74,19 @@ fn find_best_split_pos(message: &str) -> usize {
     2000
 }
 
+struct Signup {
+    character_name: String,
+}
+
 pub async fn generate_quest_post_message_content(
     data: &Data,
     channel_id: i64,
     maximum_participants: i64,
     selection_mechanism: QuestParticipantSelectionMechanism,
 ) -> Result<String, Error> {
-    let quest_signups = sqlx::query!(
-        "SELECT character.name as character_name, quest_signup.timestamp as timestamp
+    let quest_signups = sqlx::query_as!(
+        Signup,
+        "SELECT character.name as character_name
 FROM quest_signup
 INNER JOIN character ON
     quest_signup.character_id = character.id
@@ -96,23 +101,43 @@ ORDER BY quest_signup.timestamp ASC
     let mut text = String::new();
 
     if !quest_signups.is_empty() {
-        text.push_str("**Signups:**\n");
-        for record in quest_signups {
-            text.push_str("- ");
-            text.push_str(record.character_name.as_str());
-            text.push('\n');
+        match selection_mechanism {
+            QuestParticipantSelectionMechanism::FirstComeFirstServe => {
+                if quest_signups.len() > maximum_participants as usize {
+                    let (inside, queue) = quest_signups.split_at(maximum_participants as usize);
+                    text.push_str("**Signups:**\n");
+                    add_character_names(&mut text, inside);
+                    text.push_str("\n**Waiting Queue:**\n");
+                    add_character_names(&mut text, queue);
+                } else {
+                    text.push_str("**Signups:**\n");
+                    add_character_names(&mut text, quest_signups.as_slice());
+                }
+            }
+            QuestParticipantSelectionMechanism::Random => {
+                text.push_str("**Signups:**\n");
+                add_character_names(&mut text, quest_signups.as_slice());
+            }
         }
     }
 
     text.push_str(
         format!(
-            "Participant Selection Method: **{}**\nMaximum Participants: **{}**",
+            "\nParticipant Selection Method: **{}**\nMaximum Participants: **{}**",
             selection_mechanism, maximum_participants,
         )
         .as_str(),
     );
-    text.push_str("\nUse the buttons below to sign up!");
+    text.push_str("\n**Use the buttons below to sign up!**");
     Ok(text)
+}
+
+fn add_character_names(text: &mut String, quest_signups: &[Signup]) {
+    for record in quest_signups {
+        text.push_str("- ");
+        text.push_str(record.character_name.as_str());
+        text.push('\n');
+    }
 }
 
 pub fn create_quest_signup_buttons(components: &mut CreateComponents) -> &mut CreateComponents {
