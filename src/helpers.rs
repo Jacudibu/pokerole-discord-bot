@@ -117,11 +117,18 @@ ORDER BY quest_signup.timestamp ASC
 
 pub fn create_quest_signup_buttons(components: &mut CreateComponents) -> &mut CreateComponents {
     components.create_action_row(|action_row| {
-        action_row.add_button(create_styled_button(
-            "Sign up!",
-            "quest-sign-up",
-            false,
-            ButtonStyle::Success,
-        ))
+        action_row
+            .add_button(create_styled_button(
+                "Sign up!",
+                "quest-sign-up",
+                false,
+                ButtonStyle::Success,
+            ))
+            .add_button(create_styled_button(
+                "Sign out",
+                "quest-sign-out",
+                false,
+                ButtonStyle::Danger,
+            ))
     })
 }

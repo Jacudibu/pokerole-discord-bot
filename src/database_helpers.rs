@@ -76,4 +76,16 @@ pub mod create_mock {
         ).fetch_one(db)
         .await;
     }
+
+    pub(crate) async fn quest_signup(db: &Pool<Sqlite>, quest_id: i64, character_id: i64) {
+        let timestamp = Utc::now().timestamp();
+        let _ = sqlx::query!(
+            "INSERT INTO quest_signup (quest_id, character_id, timestamp) VALUES (?, ?, ?)",
+            quest_id,
+            character_id,
+            timestamp
+        )
+        .execute(db)
+        .await;
+    }
 }

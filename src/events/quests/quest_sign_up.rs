@@ -1,5 +1,5 @@
 use crate::data::Data;
-use crate::enums::QuestParticipantSelectionMechanism;
+use crate::events::quests::update_quest_message;
 use crate::{helpers, Error};
 use chrono::Utc;
 use serenity::client::Context;
@@ -9,7 +9,7 @@ use std::str::FromStr;
 
 pub async fn quest_sign_up(
     context: &Context,
-    interaction: &&MessageComponentInteraction,
+    interaction: &MessageComponentInteraction,
     data: &Data,
     args: Vec<&str>,
 ) -> Result<(), Error> {
@@ -90,7 +90,7 @@ pub async fn quest_sign_up(
 
 async fn process_signup(
     context: &Context,
-    interaction: &&MessageComponentInteraction,
+    interaction: &MessageComponentInteraction,
     response_type: InteractionResponseType,
     data: &Data,
     channel_id: i64,
@@ -98,7 +98,12 @@ async fn process_signup(
     timestamp: i64,
 ) -> Result<(), Error> {
     let result = persist_signup(data, channel_id, character_id, timestamp).await;
-    // TODO: Error Handling
+
+    let text = if let Some(error) = result.err() {
+        error
+    } else {
+        String::from("Successfully signed up!")
+    };
 
     interaction
         .create_interaction_response(context, |response| {
@@ -106,40 +111,13 @@ async fn process_signup(
                 .kind(response_type)
                 .interaction_response_data(|data| {
                     data.ephemeral(true)
-                        .content("Successfully signed up!")
+                        .content(text)
                         .components(|components| components)
                 })
         })
         .await?;
 
-    let quest_record = sqlx::query!(
-        "SELECT bot_message_id, maximum_participant_count, participant_selection_mechanism FROM quest WHERE channel_id = ?",
-        channel_id
-    )
-    .fetch_one(&data.database)
-    .await?;
-
-    let text = helpers::generate_quest_post_message_content(
-        data,
-        channel_id,
-        quest_record.maximum_participant_count,
-        QuestParticipantSelectionMechanism::from_repr(quest_record.participant_selection_mechanism)
-            .expect("Should always be valid!"),
-    )
-    .await?;
-
-    let message = context
-        .http
-        .get_message(channel_id as u64, quest_record.bot_message_id as u64)
-        .await;
-    if let Ok(mut message) = message {
-        message
-            .edit(context, |edit| {
-                edit.content(text)
-                    .components(|components| helpers::create_quest_signup_buttons(components))
-            })
-            .await?;
-    }
+    update_quest_message(context, data, channel_id).await?;
 
     Ok(())
 }

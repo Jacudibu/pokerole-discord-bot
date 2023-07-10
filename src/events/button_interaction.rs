@@ -99,6 +99,10 @@ pub async fn handle_button_interaction(
             quests::quest_sign_up::quest_sign_up(context, interaction, framework.user_data, args)
                 .await?;
         }
+        "quest-sign-out" => {
+            quests::quest_sign_out::quest_sign_out(context, interaction, framework.user_data)
+                .await?;
+        }
         &_ => {}
     }
 
