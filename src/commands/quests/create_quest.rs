@@ -40,8 +40,9 @@ pub async fn create_quest(
             .await?;
             reply
                 .edit(ctx, |edit| {
-                    edit.content(text)
-                        .components(|components| helpers::create_quest_signup_buttons(components))
+                    edit.content(text).components(|components| {
+                        helpers::create_quest_signup_buttons(components, selection_mechanism)
+                    })
                 })
                 .await?;
             Ok(())

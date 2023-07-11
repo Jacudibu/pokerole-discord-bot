@@ -160,7 +160,10 @@ fn add_character_names(text: &mut String, quest_signups: Vec<&Signup>) {
     }
 }
 
-pub fn create_quest_signup_buttons(components: &mut CreateComponents) -> &mut CreateComponents {
+pub fn create_quest_signup_buttons(
+    components: &mut CreateComponents,
+    signup_mechanism: QuestParticipantSelectionMechanism,
+) -> &mut CreateComponents {
     components.create_action_row(|action_row| {
         action_row
             .add_button(create_styled_button(
@@ -174,6 +177,16 @@ pub fn create_quest_signup_buttons(components: &mut CreateComponents) -> &mut Cr
                 "quest-sign-out",
                 false,
                 ButtonStyle::Danger,
-            ))
+            ));
+        if signup_mechanism == QuestParticipantSelectionMechanism::Random {
+            action_row.add_button(create_styled_button(
+                "Select Random Participants",
+                "quest-add-random-participants",
+                false,
+                ButtonStyle::Secondary,
+            ));
+        }
+
+        action_row
     })
 }

@@ -103,6 +103,14 @@ pub async fn handle_button_interaction(
             quests::quest_sign_out::quest_sign_out(context, interaction, framework.user_data)
                 .await?;
         }
+        "quest-add-random-participants" => {
+            quests::quest_add_random_participants::quest_add_random_participants(
+                context,
+                interaction,
+                framework.user_data,
+            )
+            .await?;
+        }
         &_ => {}
     }
 
