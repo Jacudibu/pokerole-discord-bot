@@ -15,6 +15,7 @@ CREATE TABLE quest_signup(
     quest_id INTEGER NOT NULL,
     character_id INTEGER NOT NULL,
     timestamp INTEGER NOT NULL,
+    accepted BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (character_id, quest_id),
     FOREIGN KEY (character_id) REFERENCES character(id),
     FOREIGN KEY (quest_id) REFERENCES quest(channel_id)

@@ -77,6 +77,7 @@ fn find_best_split_pos(message: &str) -> usize {
 struct Signup {
     character_name: String,
     user_id: i64,
+    accepted: bool,
 }
 
 pub async fn generate_quest_post_message_content(
@@ -87,12 +88,12 @@ pub async fn generate_quest_post_message_content(
 ) -> Result<String, Error> {
     let quest_signups = sqlx::query_as!(
         Signup,
-        "SELECT character.name as character_name, character.user_id as user_id
+        "SELECT character.name as character_name, character.user_id as user_id, quest_signup.accepted as accepted
 FROM quest_signup
 INNER JOIN character ON
     quest_signup.character_id = character.id
 WHERE quest_id = ?
-ORDER BY quest_signup.timestamp ASC
+ORDER BY quest_signup.accepted DESC, quest_signup.timestamp ASC
 ",
         channel_id
     )
@@ -102,22 +103,42 @@ ORDER BY quest_signup.timestamp ASC
     let mut text = String::new();
 
     if !quest_signups.is_empty() {
+        let mut accepted_participants: Vec<&Signup> = quest_signups
+            .iter()
+            .filter(|x| x.accepted)
+            .collect::<Vec<&Signup>>();
+        let mut floating_participants: Vec<&Signup> = quest_signups
+            .iter()
+            .filter(|x| !x.accepted)
+            .collect::<Vec<&Signup>>();
+
         match selection_mechanism {
             QuestParticipantSelectionMechanism::FirstComeFirstServe => {
-                if quest_signups.len() > maximum_participants as usize {
-                    let (inside, queue) = quest_signups.split_at(maximum_participants as usize);
-                    text.push_str("**Participants:**\n");
-                    add_character_names(&mut text, inside);
+                let mut i = 0;
+                while i < maximum_participants && !floating_participants.is_empty() {
+                    accepted_participants.push(floating_participants.remove(0));
+                    i += 1;
+                }
+
+                text.push_str("**Participants:**\n");
+                add_character_names(&mut text, accepted_participants);
+
+                if !floating_participants.is_empty() {
                     text.push_str("\n**Waiting Queue:**\n");
-                    add_character_names(&mut text, queue);
-                } else {
-                    text.push_str("**Participants:**\n");
-                    add_character_names(&mut text, quest_signups.as_slice());
+                    add_character_names(&mut text, floating_participants);
                 }
             }
-            QuestParticipantSelectionMechanism::Random => {
-                text.push_str("**Signups:**\n");
-                add_character_names(&mut text, quest_signups.as_slice());
+            QuestParticipantSelectionMechanism::Random
+            | QuestParticipantSelectionMechanism::GMPicks => {
+                if accepted_participants.is_empty() {
+                    text.push_str("**Signups:**\n");
+                    add_character_names(&mut text, floating_participants);
+                } else {
+                    text.push_str("**Participants:**\n");
+                    add_character_names(&mut text, accepted_participants);
+                    text.push_str("\n**Waiting Queue:**\n");
+                    add_character_names(&mut text, floating_participants);
+                }
             }
         }
     }
@@ -133,7 +154,7 @@ ORDER BY quest_signup.timestamp ASC
     Ok(text)
 }
 
-fn add_character_names(text: &mut String, quest_signups: &[Signup]) {
+fn add_character_names(text: &mut String, quest_signups: Vec<&Signup>) {
     for record in quest_signups {
         text.push_str(format!("- {} (<@{}>)\n", record.character_name, record.user_id).as_str());
     }

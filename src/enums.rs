@@ -376,5 +376,7 @@ pub enum PokemonGeneration {
 pub enum QuestParticipantSelectionMechanism {
     #[name = "First Come First Serve"]
     FirstComeFirstServe = 1,
-    Random = 2,
+    #[name = "GM Picks"]
+    GMPicks = 2,
+    Random = 3,
 }
