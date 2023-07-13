@@ -1,5 +1,4 @@
 use crate::data::Data;
-use crate::events::quests::update_quest_message;
 use crate::{helpers, Error};
 use chrono::Utc;
 use serenity::client::Context;
@@ -121,7 +120,7 @@ async fn process_signup(
         })
         .await?;
 
-    update_quest_message(context, data, channel_id).await?;
+    helpers::update_quest_message(context, data, channel_id).await?;
 
     Ok(())
 }

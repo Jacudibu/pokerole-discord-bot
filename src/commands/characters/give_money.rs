@@ -1,10 +1,8 @@
 use crate::cache::CharacterCacheItem;
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_owned_character_name;
-use crate::commands::characters::{
-    change_character_stat_after_validation, parse_user_input_to_character, ActionType,
-};
-use crate::commands::{send_error, Context, Error};
+use crate::commands::characters::{change_character_stat_after_validation, ActionType};
+use crate::commands::{parse_user_input_to_character, send_error, Context, Error};
 use crate::emoji;
 
 async fn transfer_money_between_characters<'a>(

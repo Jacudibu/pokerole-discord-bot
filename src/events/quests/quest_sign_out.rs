@@ -1,6 +1,5 @@
 use crate::data::Data;
-use crate::events::quests::update_quest_message;
-use crate::Error;
+use crate::{helpers, Error};
 use serenity::client::Context;
 use serenity::model::prelude::message_component::MessageComponentInteraction;
 use serenity::model::prelude::InteractionResponseType;
@@ -38,7 +37,7 @@ pub async fn quest_sign_out(
         .await?;
 
     if rows_affected > 0 {
-        update_quest_message(context, data, channel_id).await?;
+        helpers::update_quest_message(context, data, channel_id).await?;
     }
 
     Ok(())

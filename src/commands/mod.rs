@@ -1,3 +1,4 @@
+use crate::cache::CharacterCacheItem;
 use crate::data::Data;
 use crate::Error;
 use poise::{Command, ReplyHandle};
@@ -117,4 +118,60 @@ fn add_if_some<T>(vec: &mut Vec<T>, option: Option<T>) {
     if let Some(x) = option {
         vec.push(x);
     }
+}
+
+pub async fn parse_user_input_to_character<'a>(
+    ctx: &Context<'a>,
+    guild_id: u64,
+    text: &str,
+) -> Option<CharacterCacheItem> {
+    let characters = ctx.data().cache.get_characters().await;
+    for x in &characters {
+        if x.guild_id == guild_id && text == x.get_autocomplete_name() {
+            return Some(x.clone());
+        }
+    }
+
+    // User didn't use an autocomplete name :<
+    let lowercase_input = text.to_lowercase();
+    let name_matches: Vec<&CharacterCacheItem> = characters
+        .iter()
+        .filter(|x| x.guild_id == guild_id && x.name.to_lowercase() == lowercase_input)
+        .collect();
+
+    if name_matches.len() != 1 {
+        None
+    } else {
+        name_matches.get(0).cloned().cloned()
+    }
+}
+
+async fn parse_character_names<'a>(
+    ctx: &Context<'a>,
+    guild_id: u64,
+    names: &Vec<String>,
+) -> Result<Vec<CharacterCacheItem>, String> {
+    let mut result: Vec<CharacterCacheItem> = Vec::new();
+
+    for x in names {
+        if let Some(character) = parse_user_input_to_character(ctx, guild_id, x).await {
+            result.push(character);
+        } else {
+            return Err(format!("Unable to find a character named {}", x));
+        }
+    }
+
+    let mut ids = Vec::new();
+    for x in &result {
+        if ids.contains(&x.id) {
+            return Err(format!(
+                "Duplicate character: {}",
+                x.get_autocomplete_name()
+            ));
+        }
+
+        ids.push(x.id);
+    }
+
+    Ok(result)
 }

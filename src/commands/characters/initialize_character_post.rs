@@ -1,7 +1,9 @@
 use crate::cache::CharacterCacheItem;
 use crate::commands::autocompletion::autocomplete_character_name;
-use crate::commands::characters::{parse_user_input_to_character, update_character_post};
-use crate::commands::{send_ephemeral_reply, send_error, Context, Error};
+use crate::commands::characters::update_character_post;
+use crate::commands::{
+    parse_user_input_to_character, send_ephemeral_reply, send_error, Context, Error,
+};
 
 async fn post_character_post<'a>(
     ctx: &Context<'a>,
