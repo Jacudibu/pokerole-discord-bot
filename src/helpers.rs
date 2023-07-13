@@ -137,8 +137,10 @@ ORDER BY quest_signup.accepted DESC, quest_signup.timestamp ASC
                 } else {
                     text.push_str("**Participants:**\n");
                     add_character_names(&mut text, accepted_participants);
-                    text.push_str("\n**Waiting Queue:**\n");
-                    add_character_names(&mut text, floating_participants);
+                    if !floating_participants.is_empty() {
+                        text.push_str("\n**Waiting Queue:**\n");
+                        add_character_names(&mut text, floating_participants);
+                    }
                 }
             }
         }
