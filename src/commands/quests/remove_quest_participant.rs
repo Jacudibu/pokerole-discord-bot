@@ -1,16 +1,15 @@
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::{parse_character_names, parse_variadic_args, send_error, Context, Error};
 use crate::helpers;
-use chrono::Utc;
 
-/// Manually add a character to the quest, skipping any waiting queue.
+/// Manually remove a character to the quest.
 #[allow(clippy::too_many_arguments)]
 #[poise::command(
     slash_command,
     guild_only,
     default_member_permissions = "ADMINISTRATOR"
 )]
-pub async fn add_quest_participant(
+pub async fn remove_quest_participant(
     ctx: Context<'_>,
     #[autocomplete = "autocomplete_character_name"] character1: String,
     #[autocomplete = "autocomplete_character_name"] character2: Option<String>,
@@ -44,17 +43,15 @@ pub async fn add_quest_participant(
 
     let characters = parse_character_names(&ctx, guild_id.0, &args).await?;
 
-    let timestamp = Utc::now().timestamp();
-    let mut result =
-        String::from("Manually signed up the following character(s) for this quest:\n");
+    let mut result = String::from("Manually removed the following signups for this quest:\n");
     for x in characters {
-        sqlx::query!("INSERT INTO quest_signup (quest_id, character_id, timestamp, accepted) VALUES (?, ?, ?, ?)
-ON CONFLICT (quest_id, character_id) DO UPDATE SET accepted = true WHERE quest_id = excluded.quest_id AND character_id = excluded.character_id", 
+        sqlx::query!(
+            "DELETE FROM quest_signup WHERE quest_id = ? AND character_id = ?",
             channel_id,
             x.id,
-            timestamp,
-            true,
-        ).execute(&ctx.data().database).await?;
+        )
+        .execute(&ctx.data().database)
+        .await?;
         result.push_str(format!("- {} (<@{}>)\n", x.name, x.user_id).as_str())
     }
 
