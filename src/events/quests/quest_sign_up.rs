@@ -96,6 +96,12 @@ async fn process_signup(
     character_id: i64,
     timestamp: i64,
 ) -> Result<(), Error> {
+    let timestamp = if Utc::now().timestamp() - timestamp > 60 {
+        Utc::now().timestamp()
+    } else {
+        timestamp
+    };
+
     let result = persist_signup(data, channel_id, character_id, timestamp).await;
 
     let text = if let Some(error) = result.err() {
