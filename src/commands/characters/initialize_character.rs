@@ -41,7 +41,7 @@ pub async fn initialize_character(
     let creation_date = chrono::Utc::now().date_naive();
 
     let record = sqlx::query!(
-        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money, completed_quest_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         user_id,
         guild_id,
         name,
@@ -49,8 +49,7 @@ pub async fn initialize_character(
         stat_channel_id,
         creation_date,
         exp,
-        money,
-        0
+        money
     ).fetch_one(&ctx.data().database)
         .await;
 

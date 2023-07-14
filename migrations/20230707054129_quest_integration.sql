@@ -24,8 +24,9 @@ CREATE TABLE quest_signup(
 CREATE TABLE quest_completion(
     quest_id INTEGER NOT NULL,
     character_id INTEGER NOT NULL,
-    timestamp INTEGER NOT NULL,
     PRIMARY KEY (character_id, quest_id),
     FOREIGN KEY (character_id) REFERENCES character(id),
     FOREIGN KEY (quest_id) REFERENCES quest(channel_id)
 );
+
+ALTER TABLE character DROP COLUMN completed_quest_count;

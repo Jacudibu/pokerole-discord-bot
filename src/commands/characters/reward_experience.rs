@@ -35,7 +35,7 @@ pub async fn reward_experience(
         Ok(characters) => {
             ctx.say(format!(
                 "{} received {} experience points!",
-                build_character_list(characters),
+                build_character_list(&characters),
                 amount
             ))
             .await?;

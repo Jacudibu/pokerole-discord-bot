@@ -62,7 +62,7 @@ pub mod create_mock {
     ) {
         let timestamp = Utc::now().timestamp();
         let _ = sqlx::query!(
-            "INSERT INTO character (id, user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money, completed_quest_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+            "INSERT INTO character (id, user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
             character_id,
             user_id,
             guild_id,
@@ -70,7 +70,6 @@ pub mod create_mock {
             0,
             0,
             timestamp,
-            0,
             0,
             0
         ).fetch_one(db)

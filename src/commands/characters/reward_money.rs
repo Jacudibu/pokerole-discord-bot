@@ -35,7 +35,7 @@ pub async fn reward_money(
         Ok(characters) => {
             ctx.say(format!(
                 "{} received {} {}!",
-                build_character_list(characters),
+                build_character_list(&characters),
                 amount,
                 emoji::POKE_COIN
             ))

@@ -9,7 +9,6 @@ use regex::Regex;
 use serenity::model::id::ChannelId;
 use std::fmt::Formatter;
 
-mod complete_quest;
 mod give_money;
 mod initialize_character;
 mod initialize_character_post;
@@ -22,7 +21,6 @@ const DEFAULT_BACKPACK_SLOTS: i64 = 6;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec![
-        complete_quest::complete_quest(),
         give_money::give_money(),
         initialize_character::initialize_character(),
         initialize_character_post::initialize_character_post(),
@@ -56,13 +54,31 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) -> Result<(),
     Ok(())
 }
 
+async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32 {
+    let result = sqlx::query!(
+        "SELECT COUNT(*) as count FROM quest_completion WHERE character_id = ?",
+        character_id
+    )
+    .fetch_optional(&ctx.data().database)
+    .await;
+
+    if let Ok(result) = result {
+        match result {
+            Some(record) => record.count,
+            None => 0,
+        }
+    } else {
+        0
+    }
+}
+
 // TODO: we really should just change this to a query_as thingy...
 pub async fn build_character_string<'a>(
     ctx: &Context<'a>,
     character_id: i64,
 ) -> Option<(String, i64, i64)> {
     let entry = sqlx::query!(
-        "SELECT name, experience, money, completed_quest_count, stat_message_id, stat_channel_id, backpack_upgrade_count \
+        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count \
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -70,6 +86,8 @@ pub async fn build_character_string<'a>(
     )
     .fetch_one(&ctx.data().database)
     .await;
+
+    let completed_quest_count = count_completed_quests(&ctx, character_id).await;
 
     match entry {
         Ok(entry) => {
@@ -92,7 +110,7 @@ Backpack Slots: {}
                     emoji::POKE_COIN,
                     level,
                     experience,
-                    entry.completed_quest_count,
+                    completed_quest_count,
                     entry.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
                 ),
                 entry.stat_channel_id,
@@ -274,7 +292,7 @@ pub fn validate_user_input<'a>(text: &str) -> Result<(), &'a str> {
     }
 }
 
-fn build_character_list(characters: Vec<CharacterCacheItem>) -> String {
+pub fn build_character_list(characters: &Vec<CharacterCacheItem>) -> String {
     characters
         .iter()
         .map(|x| x.name.as_str())
