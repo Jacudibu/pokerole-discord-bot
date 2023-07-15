@@ -19,7 +19,7 @@ pub async fn quest_sign_out(
     let rows_affected = execute_sign_out(data, guild_id, user_id, channel_id).await?;
 
     let text = if rows_affected > 0 {
-        "Removed your sing ups!"
+        "Removed your signups!"
     } else {
         "Seems like you weren't signed up for this quest in the first place!"
     };
