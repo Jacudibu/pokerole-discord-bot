@@ -80,10 +80,10 @@ async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32
 }
 
 pub struct BuildCharacterStringResult {
-    message: String,
-    name: String,
-    stat_channel_id: i64,
-    stat_message_id: i64,
+    pub message: String,
+    pub name: String,
+    pub stat_channel_id: i64,
+    pub stat_message_id: i64,
 }
 
 // TODO: we really should just change this to a query_as thingy...

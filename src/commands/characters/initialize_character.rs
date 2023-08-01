@@ -1,9 +1,10 @@
 use crate::commands::characters::{
     log_action, update_character_post, validate_user_input, ActionType,
 };
-use crate::commands::{send_ephemeral_reply, send_error, Context, Error};
+use crate::commands::{
+    ensure_guild_exists, ensure_user_exists, send_ephemeral_reply, send_error, Context, Error,
+};
 use crate::emoji;
-use serenity::model::id::{GuildId, UserId};
 use serenity::model::user::User;
 
 /// Create a new character within the database.
@@ -79,32 +80,4 @@ pub async fn initialize_character(
     message.delete(ctx).await?;
 
     Ok(())
-}
-
-async fn ensure_guild_exists<'a>(ctx: &Context<'a>, guild_id: i64) {
-    let _ = sqlx::query!("INSERT OR IGNORE INTO guild (id) VALUES (?)", guild_id)
-        .execute(&ctx.data().database)
-        .await;
-}
-
-async fn ensure_user_exists<'a>(ctx: &Context<'a>, user_id: i64, guild_id: i64) {
-    let _ = sqlx::query!("INSERT OR IGNORE INTO user (id) VALUES (?)", user_id)
-        .execute(&ctx.data().database)
-        .await;
-
-    let user = UserId::from(user_id as u64).to_user(ctx).await;
-    if let Ok(user) = user {
-        let nickname = user
-            .nick_in(ctx, GuildId::from(guild_id as u64))
-            .await
-            .unwrap_or(user.name.clone());
-        let _ = sqlx::query!(
-            "INSERT OR IGNORE INTO user_in_guild (user_id, guild_id, name) VALUES (?, ?, ?)",
-            user_id,
-            guild_id,
-            nickname
-        )
-        .execute(&ctx.data().database)
-        .await;
-    }
 }

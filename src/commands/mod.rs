@@ -3,6 +3,7 @@ use crate::data::Data;
 use crate::parse_error::ParseError;
 use crate::Error;
 use poise::{Command, ReplyHandle};
+use serenity::model::id::{GuildId, UserId};
 
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -35,6 +36,7 @@ mod characters;
 mod quests;
 mod say;
 mod setting_time_offset;
+mod shops;
 mod update_user_names;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
@@ -69,6 +71,9 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     ];
 
     for x in characters::get_all_commands() {
+        result.push(x);
+    }
+    for x in shops::get_all_commands() {
         result.push(x);
     }
     for x in quests::get_all_commands() {
@@ -189,4 +194,32 @@ async fn parse_character_names<'a>(
     }
 
     Ok(result)
+}
+
+async fn ensure_guild_exists<'a>(ctx: &Context<'a>, guild_id: i64) {
+    let _ = sqlx::query!("INSERT OR IGNORE INTO guild (id) VALUES (?)", guild_id)
+        .execute(&ctx.data().database)
+        .await;
+}
+
+async fn ensure_user_exists<'a>(ctx: &Context<'a>, user_id: i64, guild_id: i64) {
+    let _ = sqlx::query!("INSERT OR IGNORE INTO user (id) VALUES (?)", user_id)
+        .execute(&ctx.data().database)
+        .await;
+
+    let user = UserId::from(user_id as u64).to_user(ctx).await;
+    if let Ok(user) = user {
+        let nickname = user
+            .nick_in(ctx, GuildId::from(guild_id as u64))
+            .await
+            .unwrap_or(user.name.clone());
+        let _ = sqlx::query!(
+            "INSERT OR IGNORE INTO user_in_guild (user_id, guild_id, name) VALUES (?, ?, ?)",
+            user_id,
+            guild_id,
+            nickname
+        )
+        .execute(&ctx.data().database)
+        .await;
+    }
 }
