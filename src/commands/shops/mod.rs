@@ -1,5 +1,4 @@
-use crate::commands::characters::BuildCharacterStringResult;
-use crate::commands::Context;
+use crate::commands::{BuildUpdatedStatMessageStringResult, Context};
 use crate::data::Data;
 use crate::{emoji, Error};
 use poise::Command;
@@ -38,7 +37,7 @@ pub async fn update_shop_post<'a>(ctx: &Context<'a>, shop_id: i64) {
 async fn build_shop_string<'a>(
     ctx: &Context<'a>,
     shop_id: i64,
-) -> Option<BuildCharacterStringResult> {
+) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
         "SELECT name, money, bot_message_id, bot_message_channel_id, creation_timestamp \
             FROM shop WHERE id = ? ORDER BY rowid LIMIT 1",
@@ -48,7 +47,7 @@ async fn build_shop_string<'a>(
     .await;
 
     match entry {
-        Ok(entry) => Some(BuildCharacterStringResult {
+        Ok(entry) => Some(BuildUpdatedStatMessageStringResult {
             message: format!(
                 "\
 ## {}

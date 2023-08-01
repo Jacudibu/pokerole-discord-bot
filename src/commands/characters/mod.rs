@@ -1,5 +1,7 @@
 use crate::cache::CharacterCacheItem;
-use crate::commands::{parse_character_names, send_error, Context};
+use crate::commands::{
+    parse_character_names, send_error, BuildUpdatedStatMessageStringResult, Context,
+};
 use crate::data::Data;
 use crate::enums::MysteryDungeonRank;
 use crate::{emoji, Error};
@@ -79,18 +81,11 @@ async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32
     }
 }
 
-pub struct BuildCharacterStringResult {
-    pub message: String,
-    pub name: String,
-    pub stat_channel_id: i64,
-    pub stat_message_id: i64,
-}
-
 // TODO: we really should just change this to a query_as thingy...
 pub async fn build_character_string<'a>(
     ctx: &Context<'a>,
     character_id: i64,
-) -> Option<BuildCharacterStringResult> {
+) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
         "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count \
                 FROM character WHERE id = ? \
@@ -109,7 +104,7 @@ pub async fn build_character_string<'a>(
             let experience = entry.experience % 100;
             let rank = MysteryDungeonRank::from_level(level as u8);
 
-            Some(BuildCharacterStringResult {
+            Some(BuildUpdatedStatMessageStringResult {
                 message: format!(
                     "\
 ## {} {}

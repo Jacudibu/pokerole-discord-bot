@@ -223,3 +223,10 @@ async fn ensure_user_exists<'a>(ctx: &Context<'a>, user_id: i64, guild_id: i64) 
         .await;
     }
 }
+
+pub struct BuildUpdatedStatMessageStringResult {
+    pub message: String,
+    pub name: String,
+    pub stat_channel_id: i64,
+    pub stat_message_id: i64,
+}
