@@ -16,7 +16,7 @@ use std::fmt::Formatter;
 use std::str::FromStr;
 use std::sync::Arc;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PokemonSpeciesData {
     pub has_gender_differences: bool,
     pub generation: PokemonGeneration,
@@ -44,10 +44,17 @@ impl PokemonSpeciesData {
     }
 }
 
-#[derive(Debug)]
+#[derive(Eq, PartialEq, Debug, Copy, Clone)]
+pub enum DataSource {
+    Custom,
+    PokeRole,
+}
+
+#[derive(Debug, Clone)]
 pub struct Pokemon {
     pub number: u16,
     pub poke_api_id: PokemonApiId,
+    pub data_source: DataSource,
     pub species_data: PokemonSpeciesData,
     pub regional_variant: Option<RegionalVariant>,
     pub evolves_from: Option<PokemonApiId>,
@@ -284,6 +291,37 @@ pub enum ApiIssueType {
     IsLegendary,
 }
 
+fn special_mon_to_api_id(name: &str) -> Option<PokemonApiId> {
+    match name {
+        "Greninja" => Some(PokemonApiId(658)),
+        "Greninja (BBF Form)" => Some(PokemonApiId(10116)),
+        "Darumaka" => Some(PokemonApiId(554)),
+        "Aegislash" => Some(PokemonApiId(681)),
+        "Aegislash (Blade Form)" => Some(PokemonApiId(10026)),
+        "Basculin" => Some(PokemonApiId(550)),
+        "Florges" => Some(PokemonApiId(671)),
+        "Eiscue" => Some(PokemonApiId(875)),
+        "Eiscue (No Ice Form)" => Some(PokemonApiId(10185)),
+        "Wormadam (Grass Form)" => Some(PokemonApiId(413)),
+        "Wormadam (Ground Form)" => Some(PokemonApiId(10004)),
+        "Wormadam (Steel Form)" => Some(PokemonApiId(10005)),
+        "Rotom (Dex Form)" => Some(PokemonApiId(479)),
+        "Wishiwashi" => Some(PokemonApiId(746)),
+        "Wishiwashi (Swarm Form)" => Some(PokemonApiId(10127)),
+        "Flabebe" => Some(PokemonApiId(669)),
+        "Floette" => Some(PokemonApiId(670)),
+        "Minior" => Some(PokemonApiId(774)),
+        "Minior Core" => Some(PokemonApiId(10136)),
+        "Darmanitan" => Some(PokemonApiId(555)),
+        "Darmanitan (Zen Form)" => Some(PokemonApiId(10017)),
+        "Galarian Darmanitan" => Some(PokemonApiId(10177)),
+        "Galarian Darmanitan (Galarian Zen Form)" => Some(PokemonApiId(10178)),
+        "Charizard (Mega X Form)" => Some(PokemonApiId(10034)),
+        "Charizard (Mega Y Form)" => Some(PokemonApiId(10035)),
+        _ => None,
+    }
+}
+
 impl Pokemon {
     fn try_find<'a>(
         name: &str,
@@ -292,15 +330,17 @@ impl Pokemon {
         if let Some(value) = api.get(name) {
             return (None, Some(value));
         }
+
+        if let Some(api_id) = special_mon_to_api_id(name) {
+            return (None, api.values().find(|x| x.pokemon_id == api_id));
+        }
+
         let fixed_name = name
             .replace('\'', "’") // Fixes Farfetch'd and Sirfetch'd
             .replace("Nidoran M", "Nidoran♂")
             .replace("Nidoran F", "Nidoran♀")
             .replace("Mime Jr", "Mime Jr.")
             .replace("Ho-oh", "Ho-Oh")
-            .replace("Flabebe", "Red Flabébé")
-            .replace("Floette", "Red Floette")
-            .replace("Florges", "Red Florges")
             .replace("Pumpkaboo", "Average Pumpkaboo")
             .replace("Gourgeist", "Average Gourgeist");
         if let Some(value) = api.get(&fixed_name) {
@@ -444,6 +484,7 @@ impl Pokemon {
         Pokemon {
             number: raw.number,
             poke_api_id: api_id,
+            data_source: DataSource::PokeRole,
             name: raw.name.clone(),
             species_data: PokemonSpeciesData::from_option(&api_option),
             evolves_from: evolves_from_api_id,
@@ -510,7 +551,15 @@ impl Pokemon {
     ) -> Self {
         let regional_variant = raw.variant;
 
-        let (api_issue, api_option) = Pokemon::get_api_entry(&raw.name, api, &regional_variant);
+        let api_issue;
+        let api_option;
+        if let Some(api_id) = raw.api_id {
+            api_issue = None;
+            api_option = api.values().find(|x| x.pokemon_id == api_id);
+        } else {
+            (api_issue, api_option) = Pokemon::get_api_entry(&raw.name, api, &regional_variant);
+        }
+
         let api_data = api_option.unwrap_or_else(|| {
             panic!(
                 "API Data should ALWAYS be found for custom mons. {}",
@@ -549,6 +598,7 @@ impl Pokemon {
         Pokemon {
             number: raw.number,
             poke_api_id: PokemonApiId(api_data.pokemon_id.0),
+            data_source: DataSource::Custom,
             name: raw.name.clone(),
             species_data: PokemonSpeciesData::from(api_data),
             regional_variant,
@@ -641,7 +691,7 @@ impl Pokemon {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct PokemonStat {
     pub min: u8,
     pub max: u8,

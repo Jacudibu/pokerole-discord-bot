@@ -1,3 +1,4 @@
+use crate::game_data::pokemon_api::PokemonApiId;
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -33,6 +34,7 @@ pub struct GameData {
     pub natures: Arc<HashMap<String, nature::Nature>>,
     pub nature_names: Arc<Vec<String>>,
     pub pokemon: Arc<HashMap<String, pokemon::Pokemon>>,
+    pub pokemon_by_api_id: Arc<HashMap<PokemonApiId, pokemon::Pokemon>>,
     pub pokemon_names: Arc<Vec<String>>,
     pub status_effects: Arc<HashMap<String, status_effect::StatusEffect>>,
     pub status_effects_names: Arc<Vec<String>>,
