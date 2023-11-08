@@ -293,6 +293,11 @@ pub enum ApiIssueType {
 
 fn special_mon_to_api_id(name: &str) -> Option<PokemonApiId> {
     match name {
+        "Alcremie" => Some(PokemonApiId(869)),
+        "Meowstic" => Some(PokemonApiId(678)), // TODO: Maybe differentiate between male and female
+        "Indeedee" => Some(PokemonApiId(876)), // TODO: Maybe differentiate between male and female
+        "Mimikyu" => Some(PokemonApiId(778)),
+        "Morpeko" => Some(PokemonApiId(877)),
         "Greninja" => Some(PokemonApiId(658)),
         "Greninja (BBF Form)" => Some(PokemonApiId(10116)),
         "Darumaka" => Some(PokemonApiId(554)),
