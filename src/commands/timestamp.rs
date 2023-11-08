@@ -54,7 +54,7 @@ async fn send_settings_hint<'a>(ctx: &Context<'a>) -> Result<ReplyHandle<'a>, se
         format!(
             "Looks like you don't have your timezone set up!
 Right now, the time you need to enter is in UTC, which means **right now it is {}**.
-In order to change this, use `/setting_time_offset`.",
+In order to change this, use `/setting_time_offset` and select your local time from the list there.",
             current_datetime.format("%Y-%m-%d %H:%M")
         )
         .as_str(),
