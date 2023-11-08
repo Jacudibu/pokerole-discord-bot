@@ -151,6 +151,10 @@ fn parse_pokemon(
             // Skip the egg!
             continue;
         }
+        if x.name == "Meowstic" {
+            // Custom overrides for male & female variations
+            continue;
+        }
         pokemon_names.push(x.name.clone());
 
         let pokemon = Pokemon::from_pokerole_data(x, pokemon_api_data);
