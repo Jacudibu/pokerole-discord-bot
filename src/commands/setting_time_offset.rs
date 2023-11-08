@@ -17,7 +17,7 @@ fn build_select_menu_option(
     option
 }
 
-/// Set an offset for the timestamp command.
+/// Open a dialogue to select your local timezone.
 #[poise::command(slash_command)]
 pub async fn setting_time_offset(ctx: Context<'_>) -> Result<(), Error> {
     let user_id = ctx.author().id.0 as i64;
