@@ -1,5 +1,5 @@
-use crate::commands::{send_ephemeral_reply, send_error, Context, Error};
-use chrono::{FixedOffset, Timelike, Utc};
+use crate::commands::{Context, Error};
+use chrono::{FixedOffset, Utc};
 use serenity::builder::CreateSelectMenuOption;
 
 fn build_select_menu_option(
@@ -12,8 +12,8 @@ fn build_select_menu_option(
         .expect("Should never be out of bounds");
 
     let result = now + offset;
-    option.label(result.format("%m-%d %H:%M"));
-    option.value(format!("timestamp_{}_{}", hours, minutes));
+    option.label(result.format("%v  |  %H:%M or %I:%M%P"));
+    option.value(format!("{}_{}", hours, minutes));
     option
 }
 
@@ -42,10 +42,11 @@ pub async fn setting_time_offset(ctx: Context<'_>) -> Result<(), Error> {
     }
 
     ctx.send(|create_reply| {
+        create_reply.ephemeral(true);
         create_reply.content(content).components(|components| {
             components.create_action_row(|row| {
                 row.create_select_menu(|menu| {
-                    menu.custom_id("timestamp-selection-behind")
+                    menu.custom_id("timestamp-offset_UTC-X")
                         .placeholder("Select your local time here (UTC-X)")
                         .options(|f| {
                             f.create_option(|o| build_select_menu_option(o, -12, 0));
@@ -69,7 +70,7 @@ pub async fn setting_time_offset(ctx: Context<'_>) -> Result<(), Error> {
             });
             components.create_action_row(|row| {
                 row.create_select_menu(|menu| {
-                    menu.custom_id("timestamp-selection-ahead")
+                    menu.custom_id("timestamp-offset_UTC+X")
                         .placeholder("Select your local time here (UTC+X)")
                         .options(|f| {
                             f.create_option(|o| build_select_menu_option(o, 0, 0));
@@ -105,39 +106,4 @@ pub async fn setting_time_offset(ctx: Context<'_>) -> Result<(), Error> {
     .await?;
 
     Ok(())
-
-    // match user {
-    //     Ok(_) => {
-    //         let result = sqlx::query!(
-    //             "UPDATE user SET setting_time_offset_hours = ?, setting_time_offset_minutes = ? WHERE id = ?",
-    //             hours,
-    //             minutes,
-    //             user_id
-    //         ).execute(&ctx.data().database).await;
-    //
-    //         if result.is_ok() && result.unwrap().rows_affected() == 1 {
-    //             send_ephemeral_reply(&ctx, "Successfully set your local time!").await?;
-    //             Ok(())
-    //         } else {
-    //             send_error(&ctx, "Unable to update your time offsets. Mh! Weird.").await?;
-    //             Ok(())
-    //         }
-    //     }
-    //     Err(_) => {
-    //         let result = sqlx::query!(
-    //             "INSERT INTO user (id, setting_time_offset_hours, setting_time_offset_minutes) VALUES (?, ?, ?) RETURNING id",
-    //             user_id,
-    //             hours,
-    //             minutes,
-    //         ).fetch_one(&ctx.data().database).await;
-    //
-    //         if result.is_ok() {
-    //             send_ephemeral_reply(&ctx, "Successfully set your local time!").await?;
-    //             Ok(())
-    //         } else {
-    //             send_error(&ctx, "Unable to create a user entry for you. Mh! Weird.").await?;
-    //             Ok(())
-    //         }
-    //     }
-    //}
 }

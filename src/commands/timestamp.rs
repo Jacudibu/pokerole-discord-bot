@@ -49,12 +49,17 @@ pub async fn timestamp(
 
 async fn send_settings_hint<'a>(ctx: &Context<'a>) -> Result<ReplyHandle<'a>, serenity::Error> {
     let current_datetime = Utc::now().naive_utc();
-    send_ephemeral_reply(ctx, format!("Looks like you don't have your timezone set up!
+    send_ephemeral_reply(
+        ctx,
+        format!(
+            "Looks like you don't have your timezone set up!
 Right now, the time you need to enter is in UTC, which means **right now it is {}**.
-In order to change this, use `/setting_time_offset`, and provide the difference in hours and minutes to the time shown here.
-
-> **Example**: If this command says it is {} 12:30 right now, but it is 14:30 at your location, use `/setting_time_offset hours:2 minutes:0` since you are two hours ahead!",
-    current_datetime.format("%Y-%m-%d %H:%M"), current_datetime.format("%Y-%m-%d")).as_str()).await
+In order to change this, use `/setting_time_offset`.",
+            current_datetime.format("%Y-%m-%d %H:%M")
+        )
+        .as_str(),
+    )
+    .await
 }
 
 #[allow(clippy::too_many_arguments)]

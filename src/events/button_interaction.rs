@@ -1,5 +1,5 @@
 use crate::commands::{efficiency, learns};
-use crate::events::{quests, FrameworkContext};
+use crate::events::{parse_interaction_command, quests, FrameworkContext};
 use crate::{commands, helpers, Error};
 use poise::CreateReply;
 use serenity::builder::{CreateActionRow, CreateButton, CreateComponents};
@@ -18,7 +18,7 @@ pub async fn handle_button_interaction(
         return Ok(());
     }
 
-    let (command, args) = parse_command(interaction.data.custom_id.as_str());
+    let (command, args) = parse_interaction_command(interaction.data.custom_id.as_str());
     match command {
         "metronome" => {
             disable_button_on_original_message(context, interaction).await?;
@@ -115,17 +115,6 @@ pub async fn handle_button_interaction(
     }
 
     Ok(())
-}
-
-fn parse_command(custom_id: &str) -> (&str, Vec<&str>) {
-    let mut split = custom_id.split('_');
-    let command = split.next();
-    let args: Vec<&str> = split.collect();
-
-    (
-        command.expect("Commands should never be empty at this point!"),
-        args,
-    )
 }
 
 async fn disable_button_on_original_message(
