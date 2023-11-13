@@ -112,8 +112,8 @@ pub async fn give_money(
 ) -> Result<(), Error> {
     // TODO: Button to undo the transaction which lasts for a minute or so.
     let guild_id = ctx.guild_id().expect("Command is guild_only").0;
-    let giver = find_character(&ctx.data(), guild_id, &giver).await?;
-    let receiver = find_character(&ctx.data(), guild_id, &receiver).await?;
+    let giver = find_character(ctx.data(), guild_id, &giver).await?;
+    let receiver = find_character(ctx.data(), guild_id, &receiver).await?;
 
     transfer_money_between_characters(&ctx, giver, receiver, amount as i64).await
 }
