@@ -1,12 +1,14 @@
+use crate::commands::shops::add_shop_owner::add_shop_owner;
 use crate::commands::{BuildUpdatedStatMessageStringResult, Context};
 use crate::data::Data;
 use crate::{emoji, Error};
 use poise::Command;
 
+mod add_shop_owner;
 mod initialize_shop;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
-    vec![initialize_shop::initialize_shop()]
+    vec![initialize_shop::initialize_shop(), add_shop_owner()]
 }
 
 pub async fn update_shop_post<'a>(ctx: &Context<'a>, shop_id: i64) {

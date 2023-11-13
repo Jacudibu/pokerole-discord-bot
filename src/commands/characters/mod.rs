@@ -138,6 +138,7 @@ pub enum ActionType {
     BackpackUpgrade,
     TradeOutgoing,
     TradeIncoming,
+    ShopChange,
     Undo,
 }
 
@@ -150,6 +151,7 @@ impl fmt::Display for ActionType {
             ActionType::Payment => "💰 [Payment]",
             ActionType::TradeOutgoing => "➡️ [Trade]",
             ActionType::TradeIncoming => "⬅️ [Trade]",
+            ActionType::ShopChange => "🏪 [Shop]",
             ActionType::Undo => "↩️ [Undo]",
         })
     }

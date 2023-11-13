@@ -58,7 +58,7 @@ pub mod create_mock {
         guild_id: i64,
         user_id: i64,
         character_id: i64,
-        name: String,
+        name: &String,
     ) {
         let timestamp = Utc::now().timestamp();
         let _ = sqlx::query!(
@@ -73,7 +73,21 @@ pub mod create_mock {
             0,
             0
         ).fetch_one(db)
-        .await;
+            .await;
+    }
+
+    pub async fn shop(db: &Pool<Sqlite>, guild_id: i64, shop_id: i64, name: &String) {
+        let timestamp = Utc::now().timestamp();
+        let _ = sqlx::query!("INSERT INTO shop (id, name, guild_id, bot_message_channel_id, bot_message_id, creation_timestamp, money) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id", 
+            shop_id,
+            name,
+            guild_id,
+            0,
+            0,
+            timestamp,
+            0
+        ).fetch_one(db)
+            .await;
     }
 
     pub(crate) async fn quest_signup(db: &Pool<Sqlite>, quest_id: i64, character_id: i64) {

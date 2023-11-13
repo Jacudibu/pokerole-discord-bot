@@ -21,7 +21,7 @@ pub async fn upgrade_backpack(
     character: String,
 ) -> Result<(), Error> {
     let guild_id = ctx.guild_id().expect("Command is guild_only").0;
-    let character = find_character(&ctx, guild_id, &character).await?;
+    let character = find_character(ctx.data(), guild_id, &character).await?;
     let character_record = sqlx::query!(
         "SELECT money, backpack_upgrade_count FROM character WHERE id = ?",
         character.id

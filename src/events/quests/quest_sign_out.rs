@@ -101,7 +101,7 @@ mod tests {
             guild_id,
             user1_id,
             character11_id,
-            character11_name,
+            &character11_name,
         )
         .await;
         database_helpers::create_mock::character(
@@ -109,7 +109,7 @@ mod tests {
             guild_id,
             user1_id,
             character12_id,
-            character12_name,
+            &character12_name,
         )
         .await;
         database_helpers::create_mock::character(
@@ -117,7 +117,7 @@ mod tests {
             guild_id,
             user2_id,
             character21_id,
-            character21_name,
+            &character21_name,
         )
         .await;
         database_helpers::create_mock::quest_signup(&data.database, channel_id, character11_id)

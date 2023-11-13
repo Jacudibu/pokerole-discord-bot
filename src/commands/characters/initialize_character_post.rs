@@ -57,7 +57,7 @@ pub async fn initialize_character_post(
     name: String,
 ) -> Result<(), Error> {
     let guild_id = ctx.guild_id().expect("Command is guild_only").0;
-    let character = find_character(&ctx, guild_id, &name).await?;
+    let character = find_character(ctx.data(), guild_id, &name).await?;
 
     post_character_post(&ctx, character).await
 }

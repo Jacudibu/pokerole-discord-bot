@@ -193,7 +193,7 @@ mod tests {
             guild_id,
             creator_id,
             character_id,
-            character_name,
+            &character_name,
         )
         .await;
 

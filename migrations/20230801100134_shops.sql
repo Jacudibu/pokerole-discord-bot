@@ -13,7 +13,7 @@ CREATE TABLE shop(
 CREATE TABLE shop_owner(
     shop_id INTEGER NOT NULL,
     character_id INTEGER NOT NULL,
-    FOREIGN KEY (shop_id) REFERENCES guild(id),
-    FOREIGN KEY (character_id) REFERENCES character(id),
-    PRIMARY KEY (shop_id, character_id)
+    PRIMARY KEY (shop_id, character_id),
+    FOREIGN KEY (shop_id) REFERENCES shop(id),
+    FOREIGN KEY (character_id) REFERENCES character(id)
 );

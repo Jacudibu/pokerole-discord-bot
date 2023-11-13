@@ -31,6 +31,13 @@ impl CharacterCacheItem {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct ShopCacheItem {
+    pub id: i64,
+    pub name: String,
+    pub guild_id: u64,
+}
+
 pub struct Cache {
     character_cache: Mutex<Vec<CharacterCacheItem>>,
 }
