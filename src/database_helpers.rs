@@ -54,7 +54,7 @@ pub mod create_mock {
     }
 
     pub(crate) async fn character(
-        db: &Pool<Sqlite>,
+        data: &Data,
         guild_id: i64,
         user_id: i64,
         character_id: i64,
@@ -72,8 +72,10 @@ pub mod create_mock {
             timestamp,
             0,
             0
-        ).fetch_one(db)
+        ).fetch_one(&data.database)
             .await;
+
+        data.cache.update_character_names(&data.database).await;
     }
 
     pub async fn shop(db: &Pool<Sqlite>, guild_id: i64, shop_id: i64, name: &String) {

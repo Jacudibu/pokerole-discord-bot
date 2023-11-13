@@ -106,14 +106,13 @@ mod tests {
         database_helpers::create_mock::user(&data.database, user_id).await;
         database_helpers::create_mock::shop(&data.database, guild_id, shop_id, &shop_name).await;
         database_helpers::create_mock::character(
-            &data.database,
+            &data,
             guild_id,
             user_id,
             character_id,
             &character_name,
         )
         .await;
-        data.cache.update_character_names(&data.database).await;
 
         add_shop_owner_impl(&data, &shop_name, &character_name, guild_id as u64).await?;
 
@@ -142,14 +141,13 @@ mod tests {
         database_helpers::create_mock::user(&data.database, user_id).await;
         database_helpers::create_mock::shop(&data.database, guild_id, shop_id, &shop_name).await;
         database_helpers::create_mock::character(
-            &data.database,
+            &data,
             guild_id,
             user_id,
             character_id,
             &character_name,
         )
         .await;
-        data.cache.update_character_names(&data.database).await;
 
         add_shop_owner_impl(&data, &shop_name, &character_name, guild_id as u64).await?;
         let result = add_shop_owner_impl(&data, &shop_name, &character_name, guild_id as u64).await;

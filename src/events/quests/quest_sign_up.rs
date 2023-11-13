@@ -189,7 +189,7 @@ mod tests {
         )
         .await;
         database_helpers::create_mock::character(
-            &data.database,
+            &data,
             guild_id,
             creator_id,
             character_id,
