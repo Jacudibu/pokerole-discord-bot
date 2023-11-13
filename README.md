@@ -13,9 +13,8 @@ We poll and combine data from different sources, this allows us to update the da
 
 ## TODO
 A small list of ideas which might be useful to explore in the future.
+- Auto Backup DB nightly to discord channel on dev server.
 - User Leave notifications - might be useful to have, dunno.
-- Settings: To allow users to set up their timezone for `/timestamp`
-- Economy: Money could be managed through bot commands
 - Weather: Random Weather changes.
 - Move usage tracking: What's a user's most used move?
 - Track how much money the guild currently has
