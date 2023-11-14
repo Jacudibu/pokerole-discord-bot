@@ -12,7 +12,7 @@ mod logger;
 mod parse_error;
 
 use crate::data::Data;
-use poise::samples::on_error;
+use poise::builtins::on_error;
 use poise::{serenity_prelude as serenity, FrameworkError};
 use sqlx::{Pool, Sqlite};
 use std::str::FromStr;
