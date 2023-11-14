@@ -15,7 +15,7 @@ async fn transfer_money_from_character_to_shop<'a>(
     amount: i64,
 ) -> Result<(), Error> {
     ensure_user_owns_character(ctx.author(), &character)?;
-    ensure_character_has_money(ctx, &character, amount).await?;
+    ensure_character_has_money(ctx, &character, amount, "pay").await?;
 
     // TODO: Potential flaw: Money gets transferred by someone else in between, this might not be detected. Figure out how to use sqlx transactions instead.
     // For now, it should be fine if we only subtract the money - people are way more likely to complain in that case. :'D

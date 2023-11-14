@@ -2,8 +2,11 @@ use crate::cache::CharacterCacheItem;
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_owned_character_name;
 use crate::commands::characters::{change_character_stat_after_validation, ActionType};
-use crate::commands::{find_character, send_error, Context, Error};
+use crate::commands::{
+    ensure_character_has_money, ensure_user_owns_character, find_character, Context, Error,
+};
 use crate::emoji;
+use crate::parse_error::ParseError;
 
 async fn transfer_money_between_characters<'a>(
     ctx: &Context<'a>,
@@ -11,54 +14,16 @@ async fn transfer_money_between_characters<'a>(
     receiver: CharacterCacheItem,
     amount: i64,
 ) -> Result<(), Error> {
-    if giver.user_id != ctx.author().id.0 {
-        return send_error(
-            ctx,
-            &format!(
-                "You don't seem to own a character named {} on this server.",
-                giver.name
-            ),
-        )
-        .await;
-    }
-
+    ensure_user_owns_character(ctx.author(), &giver)?;
     if giver.id == receiver.id {
-        return send_error(
-            ctx,
-            &format!(
-                "*You successfully transferred {} {} from your left to your right hand. Ha. Ha.*",
-                amount,
-                emoji::POKE_COIN
-            ),
-        )
-        .await;
+        return Err(Box::new(ParseError::new(&format!(
+            "*You successfully transferred {} {} from your left to your right hand. Ha. Ha.*",
+            amount,
+            emoji::POKE_COIN
+        ))));
     }
 
-    let giver_record = sqlx::query!("SELECT money FROM character WHERE id = ?", giver.id)
-        .fetch_one(&ctx.data().database)
-        .await;
-
-    if let Ok(giver_record) = giver_record {
-        if giver_record.money < amount {
-            return send_error(
-                ctx,
-                format!(
-                    "**Unable to send {} {}.**\n*{} only owns {} {}.*",
-                    amount,
-                    emoji::POKE_COIN,
-                    giver.name,
-                    giver_record.money,
-                    emoji::POKE_COIN
-                )
-                .as_str(),
-            )
-            .await;
-        }
-    } else {
-        return send_error(ctx, format!("**Something went wrong when checking how much money {} has. Please try again. Let me know if this ever happens.**",
-                                        giver.name).as_str()
-        ).await;
-    }
+    ensure_character_has_money(ctx, &giver, amount, "give").await?;
 
     // TODO: Potential flaw: Money gets transferred by someone else in between this might not be detected.
     // For now, it should be fine if we only subtract the money - people are way more likely to complain in that case. :'D

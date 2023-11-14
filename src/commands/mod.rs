@@ -284,6 +284,7 @@ pub async fn ensure_character_has_money(
     ctx: &Context<'_>,
     character: &CharacterCacheItem,
     amount: i64,
+    verb: &str,
 ) -> Result<(), ParseError> {
     let character_record = sqlx::query!("SELECT money FROM character WHERE id = ?", character.id)
         .fetch_one(&ctx.data().database)
@@ -294,7 +295,8 @@ pub async fn ensure_character_has_money(
             Ok(())
         } else {
             Err(ParseError::new(&format!(
-                "**Unable to pay {} {}.**\n*{} only owns {} {}.*",
+                "**Unable to {} {} {}.**\n*{} only owns {} {}.*",
+                verb,
                 amount,
                 crate::emoji::POKE_COIN,
                 character.name,
