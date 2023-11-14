@@ -1,6 +1,6 @@
 use crate::cache::{CharacterCacheItem, ShopCacheItem};
 use crate::data::Data;
-use crate::parse_error::ParseError;
+use crate::errors::{ParseError, ValidationError};
 use crate::Error;
 use poise::{Command, ReplyHandle};
 use serenity::model::id::{GuildId, UserId};
@@ -285,7 +285,7 @@ pub async fn ensure_character_has_money(
     character: &CharacterCacheItem,
     amount: i64,
     verb: &str,
-) -> Result<(), ParseError> {
+) -> Result<(), ValidationError> {
     let character_record = sqlx::query!("SELECT money FROM character WHERE id = ?", character.id)
         .fetch_one(&ctx.data().database)
         .await;
@@ -294,7 +294,7 @@ pub async fn ensure_character_has_money(
         if character_record.money >= amount {
             Ok(())
         } else {
-            Err(ParseError::new(&format!(
+            Err(ValidationError::new(&format!(
                 "**Unable to {} {} {}.**\n*{} only owns {} {}.*",
                 verb,
                 amount,
@@ -305,7 +305,7 @@ pub async fn ensure_character_has_money(
             )))
         }
     } else {
-        Err(ParseError::new(format!("**Something went wrong when checking how much money {} has. Please try again. Let me know if this ever happens.**",
+        Err(ValidationError::new(format!("**Something went wrong when checking how much money {} has. Please try again. Let me know if this ever happens.**",
                                     character.name).as_str()
         ))
     }
@@ -314,11 +314,11 @@ pub async fn ensure_character_has_money(
 pub fn ensure_user_owns_character(
     user: &User,
     giver: &CharacterCacheItem,
-) -> Result<(), ParseError> {
+) -> Result<(), ValidationError> {
     if giver.user_id == user.id.0 {
         Ok(())
     } else {
-        Err(ParseError::new(&format!(
+        Err(ValidationError::new(&format!(
             "You don't seem to own a character named {} on this server.",
             giver.name
         )))

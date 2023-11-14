@@ -6,7 +6,7 @@ use crate::commands::{
     ensure_character_has_money, ensure_user_owns_character, find_character, Context, Error,
 };
 use crate::emoji;
-use crate::parse_error::ParseError;
+use crate::errors::ValidationError;
 
 async fn transfer_money_between_characters<'a>(
     ctx: &Context<'a>,
@@ -16,7 +16,7 @@ async fn transfer_money_between_characters<'a>(
 ) -> Result<(), Error> {
     ensure_user_owns_character(ctx.author(), &giver)?;
     if giver.id == receiver.id {
-        return Err(Box::new(ParseError::new(&format!(
+        return Err(Box::new(ValidationError::new(&format!(
             "*You successfully transferred {} {} from your left to your right hand. Ha. Ha.*",
             amount,
             emoji::POKE_COIN

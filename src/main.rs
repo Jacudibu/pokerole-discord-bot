@@ -5,11 +5,11 @@ mod data;
 mod database_helpers;
 mod emoji;
 mod enums;
+mod errors;
 mod events;
 mod game_data;
 mod helpers;
 mod logger;
-mod parse_error;
 
 use crate::data::Data;
 use poise::builtins::on_error;

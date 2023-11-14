@@ -1,11 +1,14 @@
 use std::fmt;
 
+pub type ValidationError = SimpleErrorWithMessage;
+pub type ParseError = SimpleErrorWithMessage;
+
 #[derive(Debug)]
-pub struct ParseError {
+pub struct SimpleErrorWithMessage {
     message: String,
 }
 
-impl ParseError {
+impl SimpleErrorWithMessage {
     pub fn new(message: &str) -> Self {
         Self {
             message: message.to_string(),
@@ -13,16 +16,16 @@ impl ParseError {
     }
 }
 
-impl fmt::Display for ParseError {
+impl fmt::Display for SimpleErrorWithMessage {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message)
     }
 }
 
-impl std::error::Error for ParseError {}
-impl Default for ParseError {
+impl std::error::Error for SimpleErrorWithMessage {}
+impl Default for SimpleErrorWithMessage {
     fn default() -> Self {
-        ParseError {
+        SimpleErrorWithMessage {
             message: String::from("Invalid input data!"),
         }
     }

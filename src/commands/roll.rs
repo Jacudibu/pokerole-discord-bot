@@ -1,6 +1,6 @@
 use crate::commands::{Context, Error};
+use crate::errors::ParseError;
 use crate::helpers;
-use crate::parse_error::ParseError;
 use rand::Rng;
 use std::str::FromStr;
 
