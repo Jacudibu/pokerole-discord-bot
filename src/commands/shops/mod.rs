@@ -1,14 +1,20 @@
-use crate::commands::shops::add_shop_owner::add_shop_owner;
-use crate::commands::{BuildUpdatedStatMessageStringResult, Context};
+use crate::cache::ShopCacheItem;
+use crate::commands::characters::{log_action, ActionType, EntityWithNameAndNumericValue};
+use crate::commands::{send_error, BuildUpdatedStatMessageStringResult, Context};
 use crate::data::Data;
 use crate::{emoji, Error};
 use poise::Command;
 
 mod add_shop_owner;
 mod initialize_shop;
+mod pay;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
-    vec![initialize_shop::initialize_shop(), add_shop_owner()]
+    vec![
+        initialize_shop::initialize_shop(),
+        add_shop_owner::add_shop_owner(),
+        pay::pay(),
+    ]
 }
 
 pub async fn update_shop_post<'a>(ctx: &Context<'a>, shop_id: i64) {
@@ -64,5 +70,63 @@ async fn build_shop_string<'a>(
             stat_message_id: entry.bot_message_id,
         }),
         Err(_) => None,
+    }
+}
+
+pub async fn change_shop_stat_after_validation<'a>(
+    ctx: &Context<'a>,
+    database_column: &str,
+    shop: &ShopCacheItem,
+    amount: i64,
+    action_type: &ActionType,
+) -> Result<(), Error> {
+    ctx.defer().await?;
+    let record = sqlx::query_as::<_, EntityWithNameAndNumericValue>(
+        format!(
+            "SELECT id, name, {} as value FROM shop WHERE name = ? AND guild_id = ?",
+            database_column
+        )
+        .as_str(),
+    )
+    .bind(&shop.name)
+    .bind(shop.guild_id as i64)
+    .fetch_one(&ctx.data().database)
+    .await;
+
+    match record {
+        Ok(record) => {
+            let new_value = record.value + amount;
+            let result = sqlx::query(
+                format!("UPDATE shop SET {} = ? WHERE id = ? AND {} = ?", database_column, database_column).as_str())
+                .bind(new_value)
+                .bind(record.id)
+                .bind(record.value)
+                .execute(&ctx.data().database).await;
+
+            if result.is_err() || result.unwrap().rows_affected() != 1 {
+                return crate::commands::characters::send_stale_data_error(ctx).await
+            }
+
+            update_shop_post(ctx, record.id).await;
+            let action = if database_column == "money" {
+                emoji::POKE_COIN
+            } else {
+                database_column
+            };
+            let added_or_removed: &str;
+            let to_or_from: &str;
+            if amount > 0 {
+                added_or_removed = "Added";
+                to_or_from = "to";
+            } else {
+                added_or_removed = "Removed";
+                to_or_from = "from";
+            }
+
+            log_action(action_type, ctx, format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
+        }
+        Err(_) => {
+            send_error(ctx, format!("Unable to find a shop named {}.\n**Internal cache must be out of date. Please let me know if this ever happens.**", shop.name).as_str()).await
+        }
     }
 }

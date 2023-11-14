@@ -196,10 +196,10 @@ pub async fn log_action<'a>(
 }
 
 #[derive(sqlx::FromRow)]
-pub struct CharacterWithNumericValue {
-    id: i64,
-    name: String,
-    value: i64,
+pub struct EntityWithNameAndNumericValue {
+    pub id: i64,
+    pub name: String,
+    pub value: i64,
 }
 
 pub async fn change_character_stat<'a>(
@@ -240,7 +240,7 @@ pub async fn change_character_stat_after_validation<'a>(
     action_type: &ActionType,
 ) -> Result<(), Error> {
     ctx.defer().await?;
-    let record = sqlx::query_as::<_, CharacterWithNumericValue>(
+    let record = sqlx::query_as::<_, EntityWithNameAndNumericValue>(
         format!(
             "SELECT id, name, {} as value FROM character WHERE name = ? AND guild_id = ?",
             database_column
