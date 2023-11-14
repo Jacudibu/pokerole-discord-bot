@@ -12,7 +12,8 @@ mod logger;
 mod parse_error;
 
 use crate::data::Data;
-use poise::serenity_prelude as serenity;
+use poise::samples::on_error;
+use poise::{serenity_prelude as serenity, FrameworkError};
 use sqlx::{Pool, Sqlite};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -35,6 +36,7 @@ async fn main() {
             event_handler: |serenity_ctx, event, ctx, _| {
                 Box::pin(events::handle_events(serenity_ctx, event, ctx))
             },
+            on_error: |error| Box::pin(handle_error(error)),
             ..Default::default()
         })
         .token(std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN"))
@@ -47,6 +49,34 @@ async fn main() {
         });
 
     framework.run().await.unwrap();
+}
+
+async fn handle_error(error: FrameworkError<'_, Data, Error>) {
+    match error {
+        FrameworkError::Command { ctx, error } => {
+            log::error!(
+                "An error occurred in command /{}: {}",
+                &ctx.command().name,
+                error
+            );
+            if let Err(e) = ctx
+                .send(|builder| {
+                    builder
+                        .ephemeral(true)
+                        .reply(true)
+                        .content(error.to_string())
+                })
+                .await
+            {
+                log::error!("Fatal error while sending error message: {}", e);
+            }
+        }
+        _ => {
+            if let Err(e) = on_error(error).await {
+                log::error!("Fatal error while sending error message: {}", e);
+            }
+        }
+    }
 }
 
 async fn initialize_database() -> Pool<Sqlite> {
