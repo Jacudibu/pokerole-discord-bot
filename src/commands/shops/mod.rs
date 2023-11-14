@@ -54,14 +54,43 @@ async fn build_shop_string<'a>(
     .fetch_one(&ctx.data().database)
     .await;
 
+    let owners = sqlx::query!(
+        "SELECT character.name FROM character WHERE id in (\
+                SELECT character_id FROM shop_owner WHERE shop_id = ?)",
+        shop_id
+    )
+    .fetch_all(&ctx.data().database)
+    .await;
+
+    let owner_line;
+    if let Ok(owners) = owners {
+        if owners.is_empty() {
+            owner_line = String::new()
+        } else if owners.len() == 1 {
+            owner_line = format!("\n**Owner**: {}", owners.get(0).expect("len = 1").name);
+        } else {
+            owner_line = format!(
+                "\n**Owners**: {}",
+                owners
+                    .iter()
+                    .map(|x| x.name.clone())
+                    .collect::<Vec<String>>()
+                    .join(", ")
+            );
+        }
+    } else {
+        owner_line = String::new()
+    }
+
     match entry {
         Ok(entry) => Some(BuildUpdatedStatMessageStringResult {
             message: format!(
                 "\
-## {}
+## {}{}
 {} {}
 ",
                 entry.name,
+                owner_line,
                 entry.money,
                 emoji::POKE_COIN,
             ),
