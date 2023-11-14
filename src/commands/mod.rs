@@ -281,13 +281,13 @@ pub struct BuildUpdatedStatMessageStringResult {
 }
 
 pub async fn ensure_character_has_money(
-    ctx: &Context<'_>,
+    data: &Data,
     character: &CharacterCacheItem,
     amount: i64,
     verb: &str,
 ) -> Result<(), ValidationError> {
     let character_record = sqlx::query!("SELECT money FROM character WHERE id = ?", character.id)
-        .fetch_one(&ctx.data().database)
+        .fetch_one(&data.database)
         .await;
 
     if let Ok(character_record) = character_record {
