@@ -242,13 +242,12 @@ pub async fn change_character_stat_after_validation<'a>(
     ctx.defer().await?;
     let record = sqlx::query_as::<_, EntityWithNameAndNumericValue>(
         format!(
-            "SELECT id, name, {} as value FROM character WHERE name = ? AND guild_id = ?",
+            "SELECT id, name, {} as value FROM character WHERE id = ?",
             database_column
         )
         .as_str(),
     )
-    .bind(&character.name)
-    .bind(character.guild_id as i64)
+    .bind(character.id)
     .fetch_one(&ctx.data().database)
     .await;
 
