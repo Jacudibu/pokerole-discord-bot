@@ -4,6 +4,7 @@ use crate::parse_error::ParseError;
 use crate::Error;
 use poise::{Command, ReplyHandle};
 use serenity::model::id::{GuildId, UserId};
+use serenity::model::prelude::User;
 
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -277,4 +278,47 @@ pub struct BuildUpdatedStatMessageStringResult {
     pub name: String,
     pub stat_channel_id: i64,
     pub stat_message_id: i64,
+}
+
+pub async fn ensure_character_has_money(
+    ctx: &Context<'_>,
+    character: &CharacterCacheItem,
+    amount: i64,
+) -> Result<(), ParseError> {
+    let character_record = sqlx::query!("SELECT money FROM character WHERE id = ?", character.id)
+        .fetch_one(&ctx.data().database)
+        .await;
+
+    if let Ok(character_record) = character_record {
+        if character_record.money >= amount {
+            Ok(())
+        } else {
+            Err(ParseError::new(&format!(
+                "**Unable to pay {} {}.**\n*{} only owns {} {}.*",
+                amount,
+                crate::emoji::POKE_COIN,
+                character.name,
+                character_record.money,
+                crate::emoji::POKE_COIN
+            )))
+        }
+    } else {
+        Err(ParseError::new(format!("**Something went wrong when checking how much money {} has. Please try again. Let me know if this ever happens.**",
+                                    character.name).as_str()
+        ))
+    }
+}
+
+pub fn ensure_user_owns_character(
+    user: &User,
+    giver: &CharacterCacheItem,
+) -> Result<(), ParseError> {
+    if giver.user_id == user.id.0 {
+        Ok(())
+    } else {
+        Err(ParseError::new(&format!(
+            "You don't seem to own a character named {} on this server.",
+            giver.name
+        )))
+    }
 }
