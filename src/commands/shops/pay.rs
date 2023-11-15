@@ -24,18 +24,13 @@ async fn transfer_money_from_character_to_shop<'a>(
         "money",
         &character,
         -amount,
-        &ActionType::TradeOutgoing,
+        &ActionType::ShopPayment,
     )
     .await
     {
-        if let Ok(_) = change_shop_stat_after_validation(
-            ctx,
-            "money",
-            &shop,
-            amount,
-            &ActionType::TradeOutgoing,
-        )
-        .await
+        if let Ok(_) =
+            change_shop_stat_after_validation(ctx, "money", &shop, amount, &ActionType::ShopPayment)
+                .await
         {
             ctx.say(format!(
                 "***{}** paid {} {} to **{}***!",

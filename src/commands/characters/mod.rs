@@ -139,6 +139,8 @@ pub enum ActionType {
     TradeOutgoing,
     TradeIncoming,
     ShopChange,
+    ShopPayment,
+    ShopWithdrawal,
     Undo,
 }
 
@@ -152,6 +154,8 @@ impl fmt::Display for ActionType {
             ActionType::TradeOutgoing => "➡️ [Trade]",
             ActionType::TradeIncoming => "⬅️ [Trade]",
             ActionType::ShopChange => "🏪 [Shop]",
+            ActionType::ShopPayment => "🏪⬅️ [Payment]",
+            ActionType::ShopWithdrawal => "🏪➡️ [Withdrawal]",
             ActionType::Undo => "↩️ [Undo]",
         })
     }
