@@ -8,12 +8,14 @@ use poise::Command;
 mod add_shop_owner;
 mod initialize_shop;
 mod pay;
+mod withdraw;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec![
         initialize_shop::initialize_shop(),
         add_shop_owner::add_shop_owner(),
         pay::pay(),
+        withdraw::withdraw(),
     ]
 }
 

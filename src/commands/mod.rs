@@ -280,16 +280,45 @@ pub struct BuildUpdatedStatMessageStringResult {
     pub stat_message_id: i64,
 }
 
+#[derive(sqlx::FromRow)]
+struct MoneyRecord {
+    pub money: i64,
+}
+
 pub async fn ensure_character_has_money(
     data: &Data,
     character: &CharacterCacheItem,
     amount: i64,
     verb: &str,
 ) -> Result<(), ValidationError> {
-    let character_record = sqlx::query!("SELECT money FROM character WHERE id = ?", character.id)
+    let character_record = sqlx::query_as("SELECT money FROM character WHERE id = ?")
+        .bind(character.id)
         .fetch_one(&data.database)
         .await;
 
+    ensure_money_record_has_money(&character.name, amount, verb, character_record)
+}
+
+pub async fn ensure_shop_has_money(
+    data: &Data,
+    shop: &ShopCacheItem,
+    amount: i64,
+    verb: &str,
+) -> Result<(), ValidationError> {
+    let record = sqlx::query_as("SELECT money FROM shop WHERE id = ?")
+        .bind(shop.id)
+        .fetch_one(&data.database)
+        .await;
+
+    ensure_money_record_has_money(&shop.name, amount, verb, record)
+}
+
+fn ensure_money_record_has_money(
+    entity_name: &str,
+    amount: i64,
+    verb: &str,
+    character_record: Result<MoneyRecord, sqlx::Error>,
+) -> Result<(), ValidationError> {
     if let Ok(character_record) = character_record {
         if character_record.money >= amount {
             Ok(())
@@ -299,14 +328,14 @@ pub async fn ensure_character_has_money(
                 verb,
                 amount,
                 crate::emoji::POKE_COIN,
-                character.name,
+                entity_name,
                 character_record.money,
                 crate::emoji::POKE_COIN
             )))
         }
     } else {
         Err(ValidationError::new(format!("**Something went wrong when checking how much money {} has. Please try again. Let me know if this ever happens.**",
-                                    character.name).as_str()
+                                         entity_name).as_str()
         ))
     }
 }
@@ -323,4 +352,11 @@ pub fn ensure_user_owns_character(
             giver.name
         )))
     }
+}
+
+pub fn ensure_user_owns_shop_or_is_admin(
+    user: &User,
+    shop: &ShopCacheItem,
+) -> Result<(), ValidationError> {
+    todo!()
 }
