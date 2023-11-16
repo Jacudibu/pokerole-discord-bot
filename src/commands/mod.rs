@@ -356,9 +356,17 @@ pub fn ensure_user_owns_character(
     }
 }
 
+// TODO: Technically this should be persisted in the database and configurable on a per-server basis, but... as long as only one server uses the bot, who cares...? :D
 const ADMIN_ROLE_ID: u64 = 1113123557292134480;
 const GM_ROLE_ID: u64 = 1114261188323319878;
 const TRIAL_GM_ROLE_ID: u64 = 1119538793310068787;
+
+pub fn is_user_admin_or_gm(user_member: Cow<'_, Member>) -> bool {
+    user_member
+        .roles
+        .iter()
+        .any(|r| r.0 == ADMIN_ROLE_ID || r.0 == GM_ROLE_ID || r.0 == TRIAL_GM_ROLE_ID)
+}
 
 pub async fn ensure_user_owns_shop_or_is_gm(
     data: &Data,
@@ -366,11 +374,7 @@ pub async fn ensure_user_owns_shop_or_is_gm(
     user_member: Cow<'_, Member>,
     shop: &ShopCacheItem,
 ) -> Result<(), ValidationError> {
-    if user_member
-        .roles
-        .iter()
-        .any(|r| r.0 == ADMIN_ROLE_ID || r.0 == GM_ROLE_ID || r.0 == TRIAL_GM_ROLE_ID)
-    {
+    if is_user_admin_or_gm(user_member) {
         return Ok(());
     }
 
