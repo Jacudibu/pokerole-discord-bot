@@ -3,7 +3,7 @@ use crate::commands::autocompletion::{autocomplete_character_name, autocomplete_
 use crate::commands::characters::{change_character_stat_after_validation, ActionType};
 use crate::commands::shops::change_shop_stat_after_validation;
 use crate::commands::{
-    ensure_shop_has_money, ensure_user_owns_shop_or_is_admin, find_character, find_shop, Context,
+    ensure_shop_has_money, ensure_user_owns_shop_or_is_gm, find_character, find_shop, Context,
     Error,
 };
 use crate::emoji;
@@ -14,7 +14,15 @@ async fn transfer_money_from_shop_to_character<'a>(
     shop: ShopCacheItem,
     amount: i64,
 ) -> Result<(), Error> {
-    ensure_user_owns_shop_or_is_admin(ctx.author(), &shop)?;
+    ensure_user_owns_shop_or_is_gm(
+        ctx.data(),
+        ctx.author().id.0 as i64,
+        ctx.author_member()
+            .await
+            .expect("author_member should be set within guild context."),
+        &shop,
+    )
+    .await?;
     ensure_shop_has_money(ctx.data(), &shop, amount, "pay").await?;
 
     // TODO: Potential flaw: Money gets transferred by someone else in between, this might not be detected. Figure out how to use sqlx transactions instead.

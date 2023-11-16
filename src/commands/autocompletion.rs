@@ -96,19 +96,6 @@ pub async fn autocomplete_shop_name<'a>(ctx: Context<'a>, partial: &'a str) -> V
     }
 }
 
-pub async fn autocomplete_owned_shop_name<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let guild_id = ctx.guild_id().expect("Command should be guild_only!").0 as i64;
-    let entries = sqlx::query!("SELECT name FROM shop WHERE shop.guild_id = ?", guild_id)
-        .fetch_all(&ctx.data().database)
-        .await;
-
-    if let Ok(entries) = entries {
-        filter_and_sort(partial, entries.iter().map(|x| &x.name), 0)
-    } else {
-        Vec::new()
-    }
-}
-
 pub async fn autocomplete_owned_character_name<'a>(
     ctx: Context<'a>,
     partial: &'a str,

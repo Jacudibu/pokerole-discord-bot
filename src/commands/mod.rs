@@ -3,8 +3,10 @@ use crate::data::Data;
 use crate::errors::{ParseError, ValidationError};
 use crate::Error;
 use poise::{Command, ReplyHandle};
+use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;
+use std::borrow::Cow;
 
 type Context<'a> = poise::Context<'a, Data, Error>;
 
@@ -354,9 +356,42 @@ pub fn ensure_user_owns_character(
     }
 }
 
-pub fn ensure_user_owns_shop_or_is_admin(
-    user: &User,
+const ADMIN_ROLE_ID: u64 = 1113123557292134480;
+const GM_ROLE_ID: u64 = 1114261188323319878;
+const TRIAL_GM_ROLE_ID: u64 = 1119538793310068787;
+
+pub async fn ensure_user_owns_shop_or_is_gm(
+    data: &Data,
+    user_id: i64,
+    user_member: Cow<'_, Member>,
     shop: &ShopCacheItem,
 ) -> Result<(), ValidationError> {
-    todo!()
+    if user_member
+        .roles
+        .iter()
+        .any(|r| r.0 == ADMIN_ROLE_ID || r.0 == GM_ROLE_ID || r.0 == TRIAL_GM_ROLE_ID)
+    {
+        return Ok(());
+    }
+
+    let owners = sqlx::query!(
+        "SELECT * FROM character WHERE user_id = ? and id in (\
+                SELECT character_id FROM shop_owner WHERE shop_id = ?)",
+        user_id,
+        shop.id
+    )
+    .fetch_all(&data.database)
+    .await;
+
+    if let Ok(owners) = owners {
+        if owners.is_empty() {
+            Err(ValidationError::new(
+                "Only shop owners, GMs and Admins can withdraw money from shop wallets.",
+            ))
+        } else {
+            Ok(())
+        }
+    } else {
+        Err(ValidationError::new("Was unable to validate whether you are allowed to access this wallet. Please try again."))
+    }
 }
