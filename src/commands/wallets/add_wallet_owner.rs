@@ -26,7 +26,7 @@ pub async fn add_wallet_owner(
         return send_error(&ctx, e).await;
     }
 
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get();
     ensure_guild_exists(&ctx, guild_id as i64).await;
 
     add_wallet_owner_impl(ctx.data(), &wallet_name, &character_name, guild_id).await?;

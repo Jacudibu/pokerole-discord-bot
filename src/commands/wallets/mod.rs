@@ -4,6 +4,7 @@ use crate::commands::{send_error, BuildUpdatedStatMessageStringResult, Context};
 use crate::data::Data;
 use crate::{emoji, Error};
 use poise::Command;
+use serenity::all::{ChannelId, EditMessage, MessageId};
 
 mod add_wallet_owner;
 mod initialize_wallet;
@@ -26,10 +27,16 @@ pub async fn update_wallet_post<'a>(ctx: &Context<'a>, wallet_id: i64) {
         let message = ctx
             .serenity_context()
             .http
-            .get_message(result.stat_channel_id as u64, result.stat_message_id as u64)
+            .get_message(
+                ChannelId::from(result.stat_channel_id as u64),
+                MessageId::from(result.stat_message_id as u64),
+            )
             .await;
         if let Ok(mut message) = message {
-            match message.edit(ctx, |f| f.content(&result.message)).await {
+            match message
+                .edit(ctx, EditMessage::new().content(&result.message))
+                .await
+            {
                 Ok(_) => {}
                 Err(e) => {
                     let _ = ctx

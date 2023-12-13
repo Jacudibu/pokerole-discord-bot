@@ -76,7 +76,7 @@ pub async fn pay(
     wallet: String,
 ) -> Result<(), Error> {
     // TODO: Button to undo the transaction which lasts for a minute or so.
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get();
     let character = find_character(ctx.data(), guild_id, &character).await?;
     let wallet = find_wallet(ctx.data(), guild_id, &wallet).await?;
 

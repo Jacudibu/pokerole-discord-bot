@@ -4,6 +4,7 @@ use crate::commands::{ensure_guild_exists, send_ephemeral_reply, send_error, Con
 use crate::data::Data;
 use crate::emoji;
 use chrono::Utc;
+use serenity::all::CreateMessage;
 
 /// Create a new wallet within the database.
 #[poise::command(
@@ -23,17 +24,20 @@ pub async fn initialize_wallet(
     let money = money.unwrap_or(0);
     let message = ctx
         .channel_id()
-        .send_message(ctx, |f| {
-            f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
-        })
+        .send_message(
+            ctx,
+            CreateMessage::new().content(
+                "[Placeholder. This should get replaced or deleted within a couple seconds.]",
+            ),
+        )
         .await?;
 
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get() as i64;
 
     ensure_guild_exists(&ctx, guild_id).await;
 
-    let message_id = message.id.0 as i64;
-    let channel_id = message.channel_id.0 as i64;
+    let message_id = message.id.get() as i64;
+    let channel_id = message.channel_id.get() as i64;
 
     let result = create_wallet(
         name.clone(),
