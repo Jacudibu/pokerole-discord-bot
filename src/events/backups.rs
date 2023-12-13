@@ -1,5 +1,6 @@
 use crate::data::Data;
 use chrono::{Duration, Utc};
+use serenity::all::{CreateAttachment, CreateMessage};
 use serenity::model::id::ChannelId;
 use serenity::prelude::Context;
 use std::sync::atomic::Ordering;
@@ -47,24 +48,59 @@ fn calculate_duration_until_next_run() -> std::time::Duration {
     }
 }
 
+fn get_database_file_path() -> String {
+    std::env::var("DATABASE_URL")
+        .expect("missing DATABASE_URL")
+        .replace("sqlite:///", "/")
+        .replace("sqlite:", "")
+}
+
 async fn upload_backup(ctx: Arc<Context>, channel_id: u64) {
     let backup_channel_id = std::env::var("DB_BACKUP_CHANNEL_ID");
     if backup_channel_id.is_err() {
         return;
     }
 
-    let database_url = std::env::var("DATABASE_URL")
-        .expect("missing DATABASE_URL")
-        .replace("sqlite:///", "/")
-        .replace("sqlite:", "");
+    let database_path = get_database_file_path();
     let channel = ChannelId::from(channel_id);
-    let files = vec![database_url.as_str()];
-    let result = channel.send_files(&ctx, files, |f| f).await;
-    if let Err(e) = result {
-        let _ = channel
-            .send_message(&ctx, |f| {
-                f.content(&format!("Failed to upload database backup: {}", e))
-            })
+    if let Ok(file) = tokio::fs::File::create(database_path).await {
+        let filename = "backup.sqlite"; // TODO: use utc timestamp
+        if let Ok(create_attachment) = CreateAttachment::file(&file, filename).await {
+            let files = vec![create_attachment];
+
+            let result = channel.send_files(&ctx, files, CreateMessage::new()).await;
+            if let Err(e) = result {
+                let _ = channel
+                    .send_message(
+                        &ctx,
+                        CreateMessage::new()
+                            .content(&format!("Failed to upload database backup: {}", e)),
+                    )
+                    .await;
+            }
+        } else {
+            send_error(
+                channel,
+                &ctx,
+                &format!("Failed to upload database backup. Something went horribly wrong, I guess. File Path: {}", get_database_file_path()),
+            )
             .await;
+        }
+    } else {
+        send_error(
+            channel,
+            &ctx,
+            &format!(
+                "Failed to upload database backup, invalid file path: {}",
+                get_database_file_path()
+            ),
+        )
+        .await;
     }
+}
+
+async fn send_error(channel: ChannelId, ctx: &Context, message: impl Into<String>) {
+    let _ = channel
+        .send_message(ctx, CreateMessage::new().content(message))
+        .await;
 }
