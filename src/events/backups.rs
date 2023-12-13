@@ -63,39 +63,46 @@ async fn upload_backup(ctx: Arc<Context>, channel_id: u64) {
 
     let database_path = get_database_file_path();
     let channel = ChannelId::from(channel_id);
-    if let Ok(file) = tokio::fs::File::create(database_path).await {
-        let filename = "backup.sqlite"; // TODO: use utc timestamp
-        if let Ok(create_attachment) = CreateAttachment::file(&file, filename).await {
-            let files = vec![create_attachment];
+    match tokio::fs::File::create(database_path).await {
+        Ok(file) => {
+            let filename = "backup.sqlite"; // TODO: use utc timestamp
+            match CreateAttachment::file(&file, filename).await {
+                Ok(create_attachment) => {
+                    let files = vec![create_attachment];
 
-            let result = channel.send_files(&ctx, files, CreateMessage::new()).await;
-            if let Err(e) = result {
-                let _ = channel
-                    .send_message(
+                    let result = channel.send_files(&ctx, files, CreateMessage::new()).await;
+                    if let Err(e) = result {
+                        let _ = channel
+                            .send_message(
+                                &ctx,
+                                CreateMessage::new()
+                                    .content(&format!("Failed to upload database backup: {}", e)),
+                            )
+                            .await;
+                    }
+                }
+                Err(e) => {
+                    send_error(
+                        channel,
                         &ctx,
-                        CreateMessage::new()
-                            .content(&format!("Failed to upload database backup: {}", e)),
+                        &format!("Failed to create attachment for backup. Something went horribly wrong, I guess. File Path: {}, Internal Error: {}", get_database_file_path(), e),
                     )
-                    .await;
+                        .await;
+                }
             }
-        } else {
+        }
+        Err(e) => {
             send_error(
                 channel,
                 &ctx,
-                &format!("Failed to upload database backup. Something went horribly wrong, I guess. File Path: {}", get_database_file_path()),
+                &format!(
+                    "Failed to upload database backup, invalid file path: {}, internal error: {}",
+                    get_database_file_path(),
+                    e
+                ),
             )
             .await;
         }
-    } else {
-        send_error(
-            channel,
-            &ctx,
-            &format!(
-                "Failed to upload database backup, invalid file path: {}",
-                get_database_file_path()
-            ),
-        )
-        .await;
     }
 }
 
