@@ -1,9 +1,9 @@
 use crate::data::Data;
 use crate::enums::QuestParticipantSelectionMechanism;
 use crate::Error;
-use serenity::builder::{CreateButton, CreateComponents};
-use serenity::model::application::component::ButtonStyle;
-use serenity::prelude::Context;
+use serenity::all::{
+    ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, EditMessage, MessageId,
+};
 
 pub fn create_styled_button(
     label: &str,
@@ -11,18 +11,14 @@ pub fn create_styled_button(
     is_disabled: bool,
     style: ButtonStyle,
 ) -> CreateButton {
-    let mut button = create_button(label, custom_id, is_disabled);
-    button.style(style);
-    button
+    create_button(label, custom_id, is_disabled).style(style)
 }
 
 pub fn create_button(label: &str, custom_id: &str, is_disabled: bool) -> CreateButton {
-    let mut button = CreateButton::default();
-    button.label(label);
-    button.custom_id(custom_id);
-    button.style(ButtonStyle::Primary);
-    button.disabled(is_disabled);
-    button
+    CreateButton::new(custom_id)
+        .label(label)
+        .style(ButtonStyle::Primary)
+        .disabled(is_disabled)
 }
 
 pub fn split_long_messages(message: String) -> Vec<String> {
@@ -164,34 +160,23 @@ fn add_character_names(text: &mut String, quest_signups: Vec<&Signup>) {
 }
 
 pub fn create_quest_signup_buttons(
-    components: &mut CreateComponents,
     signup_mechanism: QuestParticipantSelectionMechanism,
-) -> &mut CreateComponents {
-    components.create_action_row(|action_row| {
-        action_row
-            .add_button(create_styled_button(
-                "Sign up!",
-                "quest-sign-up",
-                false,
-                ButtonStyle::Success,
-            ))
-            .add_button(create_styled_button(
-                "Sign out",
-                "quest-sign-out",
-                false,
-                ButtonStyle::Danger,
-            ));
-        if signup_mechanism == QuestParticipantSelectionMechanism::Random {
-            action_row.add_button(create_styled_button(
-                "Select Random Participants",
-                "quest-add-random-participants",
-                false,
-                ButtonStyle::Secondary,
-            ));
-        }
+) -> CreateActionRow {
+    let mut buttons = vec![
+        create_styled_button("Sign up!", "quest-sign-up", false, ButtonStyle::Success),
+        create_styled_button("Sign out", "quest-sign-out", false, ButtonStyle::Danger),
+    ];
 
-        action_row
-    })
+    if signup_mechanism == QuestParticipantSelectionMechanism::Random {
+        buttons.push(create_styled_button(
+            "Select Random Participants",
+            "quest-add-random-participants",
+            false,
+            ButtonStyle::Secondary,
+        ));
+    }
+
+    CreateActionRow::Buttons(buttons)
 }
 
 pub async fn update_quest_message(
@@ -220,15 +205,19 @@ pub async fn update_quest_message(
 
     let message = context
         .http
-        .get_message(channel_id as u64, quest_record.bot_message_id as u64)
+        .get_message(
+            ChannelId::new(channel_id as u64),
+            MessageId::new(quest_record.bot_message_id as u64),
+        )
         .await;
     if let Ok(mut message) = message {
         message
-            .edit(context, |edit| {
-                edit.content(text).components(|components| {
-                    create_quest_signup_buttons(components, selection_mechanism)
-                })
-            })
+            .edit(
+                context,
+                EditMessage::new()
+                    .content(text)
+                    .components(vec![create_quest_signup_buttons(selection_mechanism)]),
+            )
             .await?;
     }
     Ok(())
