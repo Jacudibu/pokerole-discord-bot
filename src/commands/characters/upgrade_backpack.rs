@@ -2,8 +2,8 @@ use crate::commands::autocompletion::autocomplete_owned_character_name;
 use crate::commands::characters::{ActionType, DEFAULT_BACKPACK_SLOTS};
 use crate::commands::{characters, find_character, send_error, Context, Error};
 use crate::{emoji, helpers};
-use poise::ReplyHandle;
-use serenity::model::prelude::component::ButtonStyle;
+use poise::{CreateReply, ReplyHandle};
+use serenity::all::{ButtonStyle, CreateActionRow};
 use std::time::Duration;
 
 const CONFIRM: &str = "upgrade_backpack_proceed";
@@ -20,7 +20,7 @@ pub async fn upgrade_backpack(
     #[autocomplete = "autocomplete_owned_character_name"]
     character: String,
 ) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get();
     let character = find_character(ctx.data(), guild_id, &character).await?;
     let character_record = sqlx::query!(
         "SELECT money, backpack_upgrade_count FROM character WHERE id = ?",
@@ -58,27 +58,19 @@ pub async fn upgrade_backpack(
     );
 
     let reply = ctx
-        .send(|reply| {
-            reply
+        .send(
+            CreateReply::default()
                 .content(original_message.clone())
-                .components(|components| {
-                    components.create_action_row(|action_row| {
-                        action_row
-                            .add_button(helpers::create_styled_button(
-                                "Let's do it!",
-                                CONFIRM,
-                                false,
-                                ButtonStyle::Success,
-                            ))
-                            .add_button(helpers::create_styled_button(
-                                "Nope!",
-                                ABORT,
-                                false,
-                                ButtonStyle::Danger,
-                            ))
-                    })
-                })
-        })
+                .components(vec![CreateActionRow::Buttons(vec![
+                    helpers::create_styled_button(
+                        "Let's do it!",
+                        CONFIRM,
+                        false,
+                        ButtonStyle::Success,
+                    ),
+                    helpers::create_styled_button("Nope!", ABORT, false, ButtonStyle::Danger),
+                ])]),
+        )
         .await?;
     let message = reply.message().await?;
 
@@ -143,14 +135,8 @@ async fn respond_to_success<'a>(
     reply: ReplyHandle<'a>,
     original_message: String,
 ) -> Result<(), Error> {
-    reply
-        .edit(ctx, |reply| {
-            reply
-                .content(original_message + "\n\n**Upgrade successful!**")
-                .components(|components| components)
-        })
-        .await?;
-    Ok(())
+    edit_message_and_delete_buttons(ctx, reply, original_message + "\n\n**Upgrade successful!**")
+        .await
 }
 
 async fn respond_to_cancellation<'a>(
@@ -158,14 +144,12 @@ async fn respond_to_cancellation<'a>(
     reply: ReplyHandle<'a>,
     original_message: String,
 ) -> Result<(), Error> {
-    reply
-        .edit(ctx, |reply| {
-            reply
-                .content(original_message + "\n\n**Request was cancelled.**")
-                .components(|components| components)
-        })
-        .await?;
-    Ok(())
+    edit_message_and_delete_buttons(
+        ctx,
+        reply,
+        original_message + "\n\n**Request was cancelled.**",
+    )
+    .await
 }
 
 async fn respond_to_unexpected_behaviour<'a>(
@@ -173,12 +157,11 @@ async fn respond_to_unexpected_behaviour<'a>(
     reply: ReplyHandle<'a>,
     original_message: String,
 ) -> Result<(), Error> {
-    reply
-        .edit(ctx, |reply| reply
-            .content(original_message + "\n\n**Something went wrong.**\n*This should only happen if you're actively trying to game the system... and if that's the case, thanks for trying, but... please stop? xD*")
-            .components(|components| components))
-        .await?;
-    Ok(())
+    edit_message_and_delete_buttons(
+        ctx,
+        reply,
+        original_message + "\n\n**Something went wrong.**\n*This should only happen if you're actively trying to game the system... and if that's the case, thanks for trying, but... please stop? xD*")
+    .await
 }
 
 async fn respond_to_timeout<'a>(
@@ -186,15 +169,26 @@ async fn respond_to_timeout<'a>(
     reply: ReplyHandle<'a>,
     original_message: String,
 ) -> Result<(), Error> {
+    edit_message_and_delete_buttons(
+        ctx,
+        reply,
+        original_message + "\n\n**Request timed out. Use the command again if needed.**",
+    )
+    .await
+}
+
+async fn edit_message_and_delete_buttons<'a>(
+    ctx: Context<'a>,
+    reply: ReplyHandle<'a>,
+    message: String,
+) -> Result<(), Error> {
     reply
-        .edit(ctx, |reply| {
-            reply
-                .content(
-                    original_message
-                        + "\n\n**Request timed out. Use the command again if needed.**",
-                )
-                .components(|components| components)
-        })
+        .edit(
+            ctx,
+            CreateReply::default()
+                .content(message)
+                .components(Vec::new()),
+        )
         .await?;
     Ok(())
 }
