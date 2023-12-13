@@ -2,7 +2,7 @@ use crate::cache::{CharacterCacheItem, WalletCacheItem};
 use crate::data::Data;
 use crate::errors::{ParseError, ValidationError};
 use crate::Error;
-use poise::{Command, ReplyHandle};
+use poise::{Command, CreateReply, ReplyHandle};
 use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;
@@ -95,7 +95,8 @@ pub async fn send_ephemeral_reply<'a>(
     ctx: &Context<'a>,
     content: &str,
 ) -> Result<ReplyHandle<'a>, serenity::Error> {
-    ctx.send(|b| b.content(content).ephemeral(true)).await
+    ctx.send(CreateReply::default().content(content).ephemeral(true))
+        .await
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -346,7 +347,7 @@ pub fn ensure_user_owns_character(
     user: &User,
     giver: &CharacterCacheItem,
 ) -> Result<(), ValidationError> {
-    if giver.user_id == user.id.0 {
+    if giver.user_id == user.id.get() {
         Ok(())
     } else {
         Err(ValidationError::new(&format!(
@@ -365,7 +366,7 @@ pub fn is_user_admin_or_gm(user_member: Cow<'_, Member>) -> bool {
     user_member
         .roles
         .iter()
-        .any(|r| r.0 == ADMIN_ROLE_ID || r.0 == GM_ROLE_ID || r.0 == TRIAL_GM_ROLE_ID)
+        .any(|r| r.get() == ADMIN_ROLE_ID || r.get() == GM_ROLE_ID || r.get() == TRIAL_GM_ROLE_ID)
 }
 
 pub async fn ensure_user_owns_wallet_or_is_gm(

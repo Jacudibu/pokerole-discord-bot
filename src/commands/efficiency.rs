@@ -3,6 +3,7 @@ use crate::commands::{Context, Error};
 use crate::enums::PokemonType;
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::type_efficiency::{Efficiency, TypeEfficiency};
+use poise::CreateReply;
 use std::fmt;
 use std::fmt::Formatter;
 use strum::IntoEnumIterator;
@@ -70,10 +71,10 @@ pub async fn efficiency(
         ))
         .await?;
     } else {
-        ctx.send(|b| {
-            b.content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name));
-            b.ephemeral(true)
-        }).await?;
+        ctx.send(CreateReply::default()
+            .content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name))
+            .ephemeral(true)
+        ).await?;
     }
 
     Ok(())

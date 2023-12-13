@@ -77,14 +77,14 @@ pub async fn autocomplete_character_name<'a>(ctx: Context<'a>, partial: &'a str)
             .get_characters()
             .await
             .iter()
-            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").0)
+            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").get())
             .map(|x| x.get_autocomplete_name()),
         0,
     )
 }
 
 pub async fn autocomplete_wallet_name<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let guild_id = ctx.guild_id().expect("Command should be guild_only!").0 as i64;
+    let guild_id = ctx.guild_id().expect("Command should be guild_only!").get() as i64;
     let entries = sqlx::query!(
         "SELECT name FROM wallet WHERE wallet.guild_id = ?",
         guild_id
@@ -110,8 +110,8 @@ pub async fn autocomplete_owned_character_name<'a>(
             .get_characters()
             .await
             .iter()
-            .filter(|x| x.user_id == ctx.author().id.0)
-            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").0)
+            .filter(|x| x.user_id == ctx.author().id.get())
+            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").get())
             .map(|x| x.get_autocomplete_name()),
         0,
     )

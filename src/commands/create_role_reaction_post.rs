@@ -1,4 +1,6 @@
 use crate::commands::{Context, Error};
+use poise::CreateReply;
+use serenity::all::CreateMessage;
 use serenity::model::channel::Channel;
 use serenity::model::channel::ReactionType;
 use serenity::model::guild::Role;
@@ -30,11 +32,11 @@ pub async fn create_role_reaction_post(
     emoji_9: Option<String>,
     role_9: Option<Role>,
 ) -> Result<(), Error> {
-    if ctx.author().id.0 != 878982444412448829 {
-        ctx.send(|b| {
-            b.content("This command is currently highly WIP and requires some manual hacks to work. Sowwie! Contact Lilo if you really need to use it.");
-            b.ephemeral(true)
-        }).await?;
+    if ctx.author().id.get() != 878982444412448829 {
+        ctx.send(CreateReply::default()
+            .content("This command is currently highly WIP and requires some manual hacks to work. Sowwie! Contact Lilo if you really need to use it.")
+            .ephemeral(true)
+        ).await?;
         return Ok(());
     }
 
@@ -109,7 +111,7 @@ pub async fn create_role_reaction_post(
 
     let message = channel
         .id()
-        .send_message(ctx, |f| f.content(reaction_message))
+        .send_message(ctx, CreateMessage::new().content(reaction_message))
         .await?;
 
     for x in reactions {
@@ -151,7 +153,7 @@ fn add_role(
     all_emojis: &mut Vec<String>,
 ) {
     command_response.push(&emoji);
-    command_response.push_mono(role.id);
+    command_response.push_mono(role.id.get().to_string());
     command_response.push(' ');
     command_response.push_mono_line("@".to_owned() + &role.name);
 

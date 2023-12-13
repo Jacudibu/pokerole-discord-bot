@@ -1,5 +1,6 @@
 use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::{Context, Error};
+use poise::CreateReply;
 use serenity::utils::MessageBuilder;
 use std::default::Default;
 
@@ -29,10 +30,10 @@ pub async fn scale(
         );
         ctx.say(builder.to_string()).await?;
     } else {
-        ctx.send(|b| {
-            b.content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name));
-            b.ephemeral(true)
-        }).await?;
+        ctx.send(CreateReply::default()
+            .content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name))
+            .ephemeral(true)
+        ).await?;
     }
 
     Ok(())

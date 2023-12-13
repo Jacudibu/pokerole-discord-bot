@@ -3,6 +3,7 @@ use crate::data::Data;
 use crate::enums::QuestParticipantSelectionMechanism;
 use crate::helpers;
 use chrono::Utc;
+use poise::CreateReply;
 
 #[poise::command(
     slash_command,
@@ -14,16 +15,18 @@ pub async fn create_quest(
     #[min = 1_i64] max_participants: i64,
     selection_mechanism: QuestParticipantSelectionMechanism,
 ) -> Result<(), Error> {
-    let reply = ctx.send(|f| f.content("Creating Quest...")).await?;
+    let reply = ctx
+        .send(CreateReply::default().content("Creating Quest..."))
+        .await?;
     let message_id = reply.message().await?.id;
-    let channel_id = ctx.channel_id().0 as i64;
+    let channel_id = ctx.channel_id().get() as i64;
 
     let result = create_quest_impl(
         ctx.data(),
-        ctx.guild_id().expect("Command is guild_only").0 as i64,
+        ctx.guild_id().expect("Command is guild_only").get() as i64,
         channel_id,
-        ctx.author().id.0 as i64,
-        message_id.0 as i64,
+        ctx.author().id.get() as i64,
+        message_id.get() as i64,
         max_participants,
         selection_mechanism,
     )
@@ -39,11 +42,12 @@ pub async fn create_quest(
             )
             .await?;
             reply
-                .edit(ctx, |edit| {
-                    edit.content(text).components(|components| {
-                        helpers::create_quest_signup_buttons(components, selection_mechanism)
-                    })
-                })
+                .edit(
+                    ctx,
+                    CreateReply::default().content(text).components(vec![
+                        helpers::create_quest_signup_buttons(selection_mechanism),
+                    ]),
+                )
                 .await?;
             Ok(())
         }
@@ -54,7 +58,9 @@ pub async fn create_quest(
                 e.as_str()
             };
 
-            reply.edit(ctx, |f| f.content(text)).await?;
+            reply
+                .edit(ctx, CreateReply::default().content(text))
+                .await?;
             Ok(())
         }
     }

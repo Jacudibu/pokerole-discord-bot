@@ -1,5 +1,6 @@
 use crate::commands::autocompletion::autocomplete_item;
 use crate::commands::{Context, Error};
+use poise::CreateReply;
 
 /// Display item description
 #[poise::command(slash_command)]
@@ -13,13 +14,14 @@ pub async fn item(
     if let Some(item) = ctx.data().game.items.get(&name.to_lowercase()) {
         ctx.say(item.build_string()).await?;
     } else {
-        ctx.send(|b| {
-            b.content(std::format!(
-                "Unable to find an item named **{}**, sorry!",
-                name
-            ));
-            b.ephemeral(true)
-        })
+        ctx.send(
+            CreateReply::default()
+                .content(std::format!(
+                    "Unable to find an item named **{}**, sorry!",
+                    name
+                ))
+                .ephemeral(true),
+        )
         .await?;
     }
 

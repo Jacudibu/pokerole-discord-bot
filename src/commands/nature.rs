@@ -1,5 +1,6 @@
 use crate::commands::autocompletion::autocomplete_nature;
 use crate::commands::{Context, Error};
+use poise::CreateReply;
 
 /// Display an Ability
 #[poise::command(slash_command)]
@@ -13,13 +14,14 @@ pub async fn nature(
     if let Some(nature) = ctx.data().game.natures.get(&name.to_lowercase()) {
         ctx.say(nature.build_string()).await?;
     } else {
-        ctx.send(|b| {
-            b.content(std::format!(
-                "Unable to find a nature named **{}**, sorry!",
-                name
-            ));
-            b.ephemeral(true)
-        })
+        ctx.send(
+            CreateReply::default()
+                .content(std::format!(
+                    "Unable to find a nature named **{}**, sorry!",
+                    name
+                ))
+                .ephemeral(true),
+        )
         .await?;
     }
 

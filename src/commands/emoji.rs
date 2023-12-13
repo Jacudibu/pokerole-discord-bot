@@ -2,6 +2,7 @@ use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::{Context, Error};
 use crate::enums::PokemonGeneration;
 use crate::game_data::pokemon::Pokemon;
+use poise::CreateReply;
 
 const GEN5_ANIMATED: &str = "https://github.com/PokeAPI/sprites/blob/master/sprites/pokemon/versions/generation-v/black-white/animated/";
 const GEN5_ANIMATED_FEMALE: &str = "https://github.com/PokeAPI/sprites/blob/master/sprites/pokemon/versions/generation-v/black-white/animated/female/";
@@ -70,10 +71,10 @@ pub async fn emoji(
     if let Some(pokemon) = ctx.data().game.pokemon.get(&name.to_lowercase()) {
         ctx.say(build_string(pokemon)).await?;
     } else {
-        ctx.send(|b| {
-            b.content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name));
-            b.ephemeral(true)
-        }).await?;
+        ctx.send(CreateReply::default()
+            .content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name))
+            .ephemeral(true)
+        ).await?;
     }
 
     Ok(())

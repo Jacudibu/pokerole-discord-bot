@@ -13,7 +13,7 @@ pub async fn timestamp(
     #[description = "Which month? Default this month."] month: Option<u8>,
     #[description = "Which year? Default this year."] year: Option<u16>,
 ) -> Result<(), Error> {
-    let user_id = ctx.author().id.0 as i64;
+    let user_id = ctx.author().id.get() as i64;
     let user = sqlx::query!(
         "SELECT setting_time_offset_hours, setting_time_offset_minutes FROM user WHERE id = ?",
         user_id

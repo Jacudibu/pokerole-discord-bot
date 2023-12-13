@@ -9,8 +9,8 @@ use serenity::model::channel::Channel;
     default_member_permissions = "ADMINISTRATOR"
 )]
 pub async fn initialize_guild(ctx: Context<'_>, action_log_channel: Channel) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
-    let action_log_channel_id = action_log_channel.id().0 as i64;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get() as i64;
+    let action_log_channel_id = action_log_channel.id().get() as i64;
 
     let record = sqlx::query!(
 "INSERT INTO guild (id, action_log_channel_id) VALUES (?, ?)

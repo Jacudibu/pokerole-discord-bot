@@ -5,6 +5,7 @@ use crate::game_data::pokemon::Pokemon;
 use crate::game_data::r#move::Move;
 use crate::game_data::GameData;
 use crate::helpers;
+use poise::CreateReply;
 use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use rand::{thread_rng, Rng};
@@ -34,10 +35,10 @@ pub async fn encounter(
             }
         }
     } else {
-        ctx.send(|b| {
-            b.content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", pokemon));
-            b.ephemeral(true)
-        }).await?;
+        ctx.send(CreateReply::default()
+            .content(std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", pokemon))
+            .ephemeral(true)
+        ).await?;
     }
 
     Ok(())

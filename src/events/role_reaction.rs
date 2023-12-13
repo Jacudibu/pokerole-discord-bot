@@ -1,5 +1,6 @@
 use crate::events::FrameworkContext;
 use crate::{emoji, Error};
+use serenity::all::RoleId;
 use serenity::client::Context;
 use serenity::model::channel::{Reaction, ReactionType};
 use serenity::model::prelude::interaction::InteractionType;
@@ -17,13 +18,13 @@ pub async fn handle_reaction_add(
     reaction: &Reaction,
 ) -> Result<(), Error> {
     let emoji_name = get_emoji_name(&reaction.emoji);
-    if ALLOWED_MESSAGE_IDS.contains(&reaction.message_id.0) {
+    if ALLOWED_MESSAGE_IDS.contains(&reaction.message_id.get()) {
         let role_id = emoji_to_role_id(emoji_name.as_str());
         ctx.http
             .add_member_role(
-                reaction.guild_id.unwrap().0,
-                reaction.user_id.unwrap().0,
-                role_id,
+                reaction.guild_id.unwrap(),
+                reaction.user_id.unwrap(),
+                RoleId::from(role_id),
                 Some("Clicked the button to add the role."),
             )
             .await?;
@@ -48,7 +49,11 @@ async fn delete_bot_message(ctx: &Context, reaction: &Reaction) -> Result<(), Er
                     && interaction.user.id == user_id
                 {
                     ctx.http
-                        .delete_message(reaction.channel_id.0, reaction.message_id.0)
+                        .delete_message(
+                            reaction.channel_id,
+                            reaction.message_id,
+                            Some("Delete emoji was sent."),
+                        )
                         .await?;
                 }
             }
@@ -62,14 +67,14 @@ pub async fn handle_reaction_remove(
     _framework: FrameworkContext<'_>,
     reaction: &Reaction,
 ) -> Result<(), Error> {
-    if ALLOWED_MESSAGE_IDS.contains(&reaction.message_id.0) {
+    if ALLOWED_MESSAGE_IDS.contains(&reaction.message_id.get()) {
         let bla = get_emoji_name(&reaction.emoji);
         let role_id = emoji_to_role_id(bla.as_str());
         ctx.http
             .remove_member_role(
-                reaction.guild_id.unwrap().0,
-                reaction.user_id.unwrap().0,
-                role_id,
+                reaction.guild_id.unwrap(),
+                reaction.user_id.unwrap(),
+                RoleId::from(role_id),
                 Some("Clicked the button to remove the role."),
             )
             .await?;

@@ -1,5 +1,6 @@
 use crate::commands::autocompletion::autocomplete_rule;
 use crate::commands::{Context, Error};
+use poise::CreateReply;
 
 /// Display rule
 #[poise::command(slash_command)]
@@ -13,13 +14,14 @@ pub async fn rule(
     if let Some(rule) = ctx.data().game.rules.get(&name.to_lowercase()) {
         ctx.say(rule.build_string()).await?;
     } else {
-        ctx.send(|b| {
-            b.content(std::format!(
-                "Unable to find a rule named **{}**, sorry!",
-                name
-            ));
-            b.ephemeral(true)
-        })
+        ctx.send(
+            CreateReply::default()
+                .content(std::format!(
+                    "Unable to find a rule named **{}**, sorry!",
+                    name
+                ))
+                .ephemeral(true),
+        )
         .await?;
     }
 

@@ -8,6 +8,7 @@ use crate::{emoji, Error};
 use core::fmt;
 use poise::Command;
 use regex::Regex;
+use serenity::all::{CreateAllowedMentions, CreateMessage, EditMessage, MessageId};
 use serenity::model::id::ChannelId;
 use std::fmt::Formatter;
 
@@ -46,10 +47,16 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
         let message = ctx
             .serenity_context()
             .http
-            .get_message(result.stat_channel_id as u64, result.stat_message_id as u64)
+            .get_message(
+                ChannelId::from(result.stat_channel_id as u64),
+                MessageId::from(result.stat_message_id as u64),
+            )
             .await;
         if let Ok(mut message) = message {
-            match message.edit(ctx, |f| f.content(&result.message)).await {
+            match message
+                .edit(ctx, EditMessage::new().content(&result.message))
+                .await
+            {
                 Ok(_) => {}
                 Err(e) => {
                     let _ = ctx
@@ -171,7 +178,7 @@ pub async fn log_action<'a>(
         return Ok(());
     }
 
-    let guild_id = guild_id.expect("should only be called in guild_only").0 as i64;
+    let guild_id = guild_id.expect("should only be called in guild_only").get() as i64;
     let record = sqlx::query!(
         "SELECT action_log_channel_id FROM guild WHERE id = ?",
         guild_id
@@ -183,15 +190,17 @@ pub async fn log_action<'a>(
         if let Some(action_log_channel_id) = record.action_log_channel_id {
             let channel_id = ChannelId::from(action_log_channel_id as u64);
             channel_id
-                .send_message(ctx, |f| {
-                    f.content(std::format!(
-                        "{} {} (triggered by {})",
-                        action_type,
-                        message,
-                        ctx.author()
-                    ))
-                    .allowed_mentions(|mentions| mentions.empty_users())
-                })
+                .send_message(
+                    ctx,
+                    CreateMessage::new()
+                        .content(std::format!(
+                            "{} {} (triggered by {})",
+                            action_type,
+                            message,
+                            ctx.author()
+                        ))
+                        .allowed_mentions(CreateAllowedMentions::new().empty_users()),
+                )
                 .await?;
         }
     }
@@ -216,7 +225,7 @@ pub async fn change_character_stat<'a>(
     let guild_id = ctx
         .guild_id()
         .expect("Commands using this function are marked as guild_only")
-        .0;
+        .get();
 
     match parse_character_names(ctx, guild_id, names).await {
         Ok(characters) => {

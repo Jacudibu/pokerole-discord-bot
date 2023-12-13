@@ -26,7 +26,7 @@ pub async fn remove_quest_participant(
         character8, character9,
     );
 
-    let channel_id = ctx.channel_id().0 as i64;
+    let channel_id = ctx.channel_id().get() as i64;
     let guild_id = ctx.guild_id().expect("Command is guild_only!");
 
     let existing_quest = sqlx::query!("SELECT * FROM quest WHERE channel_id = ?", channel_id)
@@ -41,7 +41,7 @@ pub async fn remove_quest_participant(
         .await;
     }
 
-    let characters = parse_character_names(&ctx, guild_id.0, &args).await?;
+    let characters = parse_character_names(&ctx, guild_id.get(), &args).await?;
 
     let mut result = String::from("Manually removed the following signups for this quest:\n");
     for x in characters {

@@ -1,7 +1,9 @@
 use crate::commands::{Context, Error};
 use crate::errors::ParseError;
 use crate::helpers;
+use poise::CreateReply;
 use rand::Rng;
+use serenity::all::CreateActionRow;
 use std::str::FromStr;
 
 const CRIT: u8 = 6;
@@ -199,17 +201,13 @@ async fn execute_parsed<'a>(ctx: &Context<'a>, query: ParsedRollQuery) -> Result
     ctx.defer().await?;
     let result = query.execute();
     let query_string = query.as_button_callback_query_string();
-    ctx.send(|reply| {
-        reply.content(result).components(|component| {
-            component.create_action_row(|action_row| {
-                action_row.add_button(helpers::create_button(
-                    "Roll again!",
-                    query_string.as_str(),
-                    false,
-                ))
-            })
-        })
-    })
+    ctx.send(
+        CreateReply::default()
+            .content(result)
+            .components(vec![CreateActionRow::Buttons(vec![
+                helpers::create_button("Roll again!", query_string.as_str(), false),
+            ])]),
+    )
     .await?;
     Ok(())
 }

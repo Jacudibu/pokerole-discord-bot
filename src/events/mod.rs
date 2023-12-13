@@ -52,8 +52,8 @@ async fn handle_guild_member_removal(
 ) -> Result<(), Error> {
     // TODO: Should be a Database setting instead of being hardcoded.
     let channel_id: u64;
-    let user_id = user.id.0 as i64;
-    let guild_id = guild_id.0 as i64;
+    let user_id = user.id.get() as i64;
+    let guild_id = guild_id.get() as i64;
     if guild_id == 1113123066059436093 {
         // Explorers of the Sea
         channel_id = 1113127675586941140;

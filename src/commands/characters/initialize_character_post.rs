@@ -2,6 +2,7 @@ use crate::cache::CharacterCacheItem;
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::characters::update_character_post;
 use crate::commands::{find_character, send_ephemeral_reply, send_error, Context, Error};
+use serenity::all::CreateMessage;
 
 async fn post_character_post<'a>(
     ctx: &Context<'a>,
@@ -9,13 +10,16 @@ async fn post_character_post<'a>(
 ) -> Result<(), Error> {
     let message = ctx
         .channel_id()
-        .send_message(ctx, |f| {
-            f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
-        })
+        .send_message(
+            ctx,
+            CreateMessage::new().content(
+                "[Placeholder. This should get replaced or deleted within a couple seconds.]",
+            ),
+        )
         .await?;
 
-    let stat_message_id = message.id.0 as i64;
-    let stat_channel_id = message.channel_id.0 as i64;
+    let stat_message_id = message.id.get() as i64;
+    let stat_channel_id = message.channel_id.get() as i64;
 
     let record = sqlx::query!(
         "UPDATE character SET stat_message_id = ?, stat_channel_id = ? WHERE id = ?",
@@ -56,7 +60,7 @@ pub async fn initialize_character_post(
     #[autocomplete = "autocomplete_character_name"]
     name: String,
 ) -> Result<(), Error> {
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get();
     let character = find_character(ctx.data(), guild_id, &name).await?;
 
     post_character_post(&ctx, character).await

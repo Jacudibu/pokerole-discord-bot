@@ -5,6 +5,7 @@ use crate::commands::{
     ensure_guild_exists, ensure_user_exists, send_ephemeral_reply, send_error, Context, Error,
 };
 use crate::emoji;
+use serenity::all::CreateMessage;
 use serenity::model::user::User;
 
 /// Create a new character within the database.
@@ -26,19 +27,22 @@ pub async fn initialize_character(
 
     let message = ctx
         .channel_id()
-        .send_message(ctx, |f| {
-            f.content("[Placeholder. This should get replaced or deleted within a couple seconds.]")
-        })
+        .send_message(
+            ctx,
+            CreateMessage::new().content(
+                "[Placeholder. This should get replaced or deleted within a couple seconds.]",
+            ),
+        )
         .await?;
 
-    let user_id = player.id.0 as i64;
-    let guild_id = ctx.guild_id().expect("Command is guild_only").0 as i64;
+    let user_id = player.id.get() as i64;
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get() as i64;
 
     ensure_guild_exists(&ctx, guild_id).await;
     ensure_user_exists(&ctx, user_id, guild_id).await;
 
-    let stat_message_id = message.id.0 as i64;
-    let stat_channel_id = message.channel_id.0 as i64;
+    let stat_message_id = message.id.get() as i64;
+    let stat_channel_id = message.channel_id.get() as i64;
     let creation_date = chrono::Utc::now().date_naive();
 
     let record = sqlx::query!(

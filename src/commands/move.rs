@@ -2,6 +2,8 @@ use crate::commands::autocompletion::autocomplete_move;
 use crate::commands::{Context, Error};
 use crate::game_data::r#move::Move;
 use crate::helpers;
+use poise::CreateReply;
+use serenity::all::CreateActionRow;
 
 /// Display a move
 #[poise::command(slash_command, rename = "move")]
@@ -19,10 +21,10 @@ pub async fn poke_move(
             ctx.say(poke_move.build_string()).await?;
         }
     } else {
-        ctx.send(|b| {
-            b.content(std::format!("Unable to find a move named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name));
-            b.ephemeral(true)
-        }).await?;
+        ctx.send(CreateReply::default()
+            .content(std::format!("Unable to find a move named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name))
+            .ephemeral(true)
+        ).await?;
     }
 
     Ok(())
@@ -30,13 +32,13 @@ pub async fn poke_move(
 
 async fn execute_metronome<'a>(ctx: Context<'a>, poke_move: &Move) -> Result<(), Error> {
     let reply = ctx
-        .send(|b| {
-            b.content(poke_move.build_string()).components(|b| {
-                b.create_action_row(|b| {
-                    b.add_button(helpers::create_button("Use Metronome", "metronome", false))
-                })
-            })
-        })
+        .send(
+            CreateReply::default()
+                .content(poke_move.build_string())
+                .components(vec![CreateActionRow::Buttons(vec![
+                    helpers::create_button("Use Metronome", "metronome", false),
+                ])]),
+        )
         .await?;
 
     reply.message().await?;
