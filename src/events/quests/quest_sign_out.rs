@@ -1,20 +1,21 @@
 use crate::data::Data;
 use crate::{helpers, Error};
+use serenity::all::{
+    ComponentInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
+};
 use serenity::client::Context;
-use serenity::model::prelude::message_component::MessageComponentInteraction;
-use serenity::model::prelude::InteractionResponseType;
 
 pub async fn quest_sign_out(
     context: &Context,
-    interaction: &MessageComponentInteraction,
+    interaction: &ComponentInteraction,
     data: &Data,
 ) -> Result<(), Error> {
     let guild_id = interaction
         .guild_id
         .expect("Command should be guild_only")
-        .0 as i64;
-    let user_id = interaction.user.id.0 as i64;
-    let channel_id = interaction.channel_id.0 as i64;
+        .get() as i64;
+    let user_id = interaction.user.id.get() as i64;
+    let channel_id = interaction.channel_id.get() as i64;
 
     let rows_affected = execute_sign_out(data, guild_id, user_id, channel_id).await?;
 
@@ -25,15 +26,15 @@ pub async fn quest_sign_out(
     };
 
     interaction
-        .create_interaction_response(context, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| {
-                    data.ephemeral(true)
-                        .content(text)
-                        .components(|components| components)
-                })
-        })
+        .create_response(
+            context,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .ephemeral(true)
+                    .content(text)
+                    .components(Vec::new()),
+            ),
+        )
         .await?;
 
     if rows_affected > 0 {

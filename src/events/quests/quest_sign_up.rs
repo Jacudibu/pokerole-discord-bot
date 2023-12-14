@@ -1,14 +1,21 @@
 use crate::data::Data;
 use crate::{helpers, Error};
 use chrono::Utc;
+use serenity::all::{
+    ComponentInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
+};
+use serenity::builder::CreateActionRow;
 use serenity::client::Context;
-use serenity::model::prelude::message_component::MessageComponentInteraction;
-use serenity::model::prelude::InteractionResponseType;
 use std::str::FromStr;
+
+enum MessageType {
+    UpdateMessage,
+    NewMessage,
+}
 
 pub async fn quest_sign_up(
     context: &Context,
-    interaction: &MessageComponentInteraction,
+    interaction: &ComponentInteraction,
     data: &Data,
     args: Vec<&str>,
 ) -> Result<(), Error> {
@@ -39,7 +46,7 @@ pub async fn quest_sign_up(
         return process_signup(
             context,
             interaction,
-            InteractionResponseType::UpdateMessage,
+            MessageType::UpdateMessage,
             data,
             channel_id,
             character_id,
@@ -53,7 +60,7 @@ pub async fn quest_sign_up(
         return process_signup(
             context,
             interaction,
-            InteractionResponseType::ChannelMessageWithSource,
+            MessageType::NewMessage,
             data,
             channel_id,
             available_characters[0].id,
@@ -62,35 +69,36 @@ pub async fn quest_sign_up(
         .await;
     }
 
-    interaction
-        .create_interaction_response(context, |interaction_response| {
-            interaction_response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| {
-                    data.ephemeral(true)
-                        .content("Which character would you like to sign up?")
-                        .components(|components| {
-                            components.create_action_row(|row| {
-                                for x in available_characters {
-                                    row.add_button(helpers::create_button(
-                                        x.name.as_str(),
-                                        &format!("quest-sign-up_{}_{}", x.id, timestamp),
-                                        false,
-                                    ));
-                                }
-                                row
-                            })
-                        })
-                })
+    let character_buttons = available_characters
+        .iter()
+        .map(|x| {
+            helpers::create_button(
+                x.name.as_str(),
+                &format!("quest-sign-up_{}_{}", x.id, timestamp),
+                false,
+            )
         })
+        .collect();
+
+    interaction
+        .create_response(
+            context,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .ephemeral(true)
+                    .content("Which character would you like to sign up?")
+                    .components(vec![CreateActionRow::Buttons(character_buttons)]),
+            ),
+        )
         .await?;
+
     Ok(())
 }
 
 async fn process_signup(
     context: &Context,
-    interaction: &MessageComponentInteraction,
-    response_type: InteractionResponseType,
+    interaction: &ComponentInteraction,
+    response_type: MessageType,
     data: &Data,
     channel_id: i64,
     character_id: i64,
@@ -114,17 +122,21 @@ async fn process_signup(
         String::from("Successfully signed up!")
     };
 
-    interaction
-        .create_interaction_response(context, |response| {
-            response
-                .kind(response_type)
-                .interaction_response_data(|data| {
-                    data.ephemeral(true)
-                        .content(text)
-                        .components(|components| components)
-                })
-        })
-        .await?;
+    let message = CreateInteractionResponseMessage::new()
+        .ephemeral(true)
+        .content(text)
+        .components(Vec::new());
+
+    match response_type {
+        MessageType::UpdateMessage => {
+            interaction.create_response(context, CreateInteractionResponse::UpdateMessage(message))
+        }
+
+        MessageType::NewMessage => {
+            interaction.create_response(context, CreateInteractionResponse::Message(message))
+        }
+    }
+    .await?;
 
     helpers::update_quest_message(context, data, channel_id).await?;
 

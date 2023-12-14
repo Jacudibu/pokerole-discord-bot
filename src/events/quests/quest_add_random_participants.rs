@@ -1,31 +1,32 @@
 use crate::data::Data;
 use crate::{helpers, Error};
 use rand::Rng;
+use serenity::all::{
+    ComponentInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
+};
 use serenity::client::Context;
-use serenity::model::prelude::message_component::MessageComponentInteraction;
-use serenity::model::prelude::InteractionResponseType;
 
 pub async fn quest_add_random_participants(
     context: &Context,
-    interaction: &MessageComponentInteraction,
+    interaction: &ComponentInteraction,
     data: &Data,
 ) -> Result<(), Error> {
-    let user_id = interaction.user.id.0 as i64;
-    let channel_id = interaction.channel_id.0 as i64;
+    let user_id = interaction.user.id.get() as i64;
+    let channel_id = interaction.channel_id.get() as i64;
 
     let execution_result = execute(data, user_id, channel_id).await;
     let was_error = execution_result.is_err();
-    let result = match execution_result {
-        Ok(ok) => ok,
-        Err(error) => error.to_string(),
-    };
+    let result = execution_result.unwrap_or_else(|error| error.to_string());
 
     interaction
-        .create_interaction_response(context, |response| {
-            response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.ephemeral(was_error).content(result))
-        })
+        .create_response(
+            context,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .ephemeral(was_error)
+                    .content(result),
+            ),
+        )
         .await?;
 
     if !was_error {
