@@ -1,6 +1,7 @@
+use crate::errors::ParseError;
 use crate::events::FrameworkContext;
 use crate::{events, Error};
-use serenity::all::ComponentInteraction;
+use serenity::all::{ComponentInteraction, ComponentInteractionDataKind};
 use serenity::client::Context;
 
 pub async fn handle_select_menu_interaction(
@@ -25,9 +26,20 @@ async fn timestamp_offset(
     framework: FrameworkContext<'_>,
     interaction: &&ComponentInteraction,
 ) -> Result<(), Error> {
-    let args: Vec<i32> = interaction
-        .data
-        .custom_id
+    let selected_value = match &interaction.data.kind {
+        ComponentInteractionDataKind::StringSelect { values } => values.first(),
+        _ => None,
+    };
+
+    if selected_value.is_none() {
+        return Err(Box::new(ParseError::new(&format!(
+            "Unable to parse selected value. Weird stuff. Interaction data: {:?}",
+            &interaction.data.kind
+        ))));
+    }
+
+    let args: Vec<i32> = selected_value
+        .unwrap()
         .split('_')
         .map(|x| x.parse().expect("Arguments should never be invalid."))
         .collect();
