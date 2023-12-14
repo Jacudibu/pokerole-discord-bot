@@ -1,18 +1,17 @@
 use crate::commands::{efficiency, learns};
 use crate::events::{parse_interaction_command, quests, FrameworkContext};
 use crate::{commands, helpers, Error};
-use poise::CreateReply;
-use serenity::builder::{CreateActionRow, CreateButton, CreateComponents};
+use serenity::all::{
+    ActionRow, ActionRowComponent, Button, ButtonKind, ComponentInteraction,
+    CreateInteractionResponse, CreateInteractionResponseFollowup, CreateInteractionResponseMessage,
+};
+use serenity::builder::{CreateActionRow, CreateButton};
 use serenity::client::Context;
-use serenity::model::application::component::ActionRowComponent;
-use serenity::model::application::interaction::InteractionResponseType;
-use serenity::model::prelude::component::{ActionRow, Button};
-use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
 
 pub async fn handle_button_interaction(
     context: &Context,
     framework: FrameworkContext<'_>,
-    interaction: &&MessageComponentInteraction,
+    interaction: &&ComponentInteraction,
 ) -> Result<(), Error> {
     if interaction.data.custom_id.is_empty() {
         return Ok(());
@@ -63,13 +62,12 @@ pub async fn handle_button_interaction(
         "moves" => {
             disable_button_on_original_message(context, interaction).await?;
             let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
-            let mut create_reply = CreateReply::default();
-            learns::create_reply(&mut create_reply, pokemon);
             interaction
-                .create_followup_message(context, |f| {
-                    create_reply.to_slash_followup_response(f);
-                    f
-                })
+                .create_followup(
+                    context,
+                    learns::create_reply(pokemon)
+                        .to_slash_followup_response(CreateInteractionResponseFollowup::new()),
+                )
                 .await?;
         }
         "abilities" => {
@@ -90,9 +88,12 @@ pub async fn handle_button_interaction(
                 .expect("This should always be a valid query in buttons!")
                 .execute();
             interaction
-                .create_interaction_response(context, |f| {
-                    f.interaction_response_data(|f| f.content(message))
-                })
+                .create_response(
+                    context,
+                    CreateInteractionResponse::Message(
+                        CreateInteractionResponseMessage::new().content(message),
+                    ),
+                )
                 .await?;
         }
         "quest-sign-up" => {
@@ -119,65 +120,74 @@ pub async fn handle_button_interaction(
 
 async fn disable_button_on_original_message(
     context: &Context,
-    interaction: &&MessageComponentInteraction,
+    interaction: &&ComponentInteraction,
 ) -> serenity::Result<()> {
     interaction
-        .create_interaction_response(context, |f| {
-            f.kind(InteractionResponseType::UpdateMessage)
-                .interaction_response_data(|create_data| {
-                    create_data.set_components(create_components(
+        .create_response(
+            context,
+            CreateInteractionResponse::UpdateMessage(
+                CreateInteractionResponseMessage::new().components(
+                    create_components_from_discord_components(
                         &interaction.message.components,
                         &interaction.data.custom_id,
-                    ))
-                })
-        })
+                    ),
+                ),
+            ),
+        )
         .await
 }
 
-fn create_components(
+fn create_components_from_discord_components(
     original_components: &Vec<ActionRow>,
     used_button_id: &String,
-) -> CreateComponents {
-    let mut result = CreateComponents::default();
+) -> Vec<CreateActionRow> {
+    let mut result = Vec::new();
 
     for row in original_components {
-        result.add_action_row(create_action_row(row, used_button_id));
+        result.push(create_action_row_from_discord_components(
+            row,
+            used_button_id,
+        ));
     }
 
     result
 }
 
-fn create_action_row(row: &ActionRow, used_button_id: &String) -> CreateActionRow {
-    let mut result = CreateActionRow::default();
+fn create_action_row_from_discord_components(
+    row: &ActionRow,
+    used_button_id: &String,
+) -> CreateActionRow {
+    let mut row_components = Vec::new();
 
     for component in &row.components {
         match component {
             ActionRowComponent::Button(button) => {
-                result.add_button(create_button(button, used_button_id));
+                row_components.push(create_button_from_discord_button(button, used_button_id));
             }
-            ActionRowComponent::SelectMenu(_) => todo!(),
             ActionRowComponent::InputText(_) => todo!(),
+            ActionRowComponent::SelectMenu(_) => todo!(),
             _ => todo!(),
         }
     }
 
-    result
+    CreateActionRow::Buttons(row_components)
 }
 
-fn create_button(button: &Button, used_button_id: &String) -> CreateButton {
-    let mut result = CreateButton::default();
+fn create_button_from_discord_button(button: &Button, used_button_id: &String) -> CreateButton {
+    match &button.data {
+        ButtonKind::Link { .. } => {
+            todo!()
+        }
+        ButtonKind::NonLink { custom_id, style } => {
+            let mut result = CreateButton::new(custom_id)
+                .style(style.clone())
+                .disabled(button.disabled || custom_id == used_button_id);
 
-    result.style(button.style);
+            if let Some(label) = &button.label {
+                result = result.label(label);
+            }
 
-    if let Some(label) = &button.label {
-        result.label(label);
+            result
+        }
     }
-    if let Some(custom_id) = &button.custom_id {
-        result.custom_id(custom_id);
-        result.disabled(button.disabled || used_button_id == custom_id);
-    } else {
-        result.disabled(button.disabled);
-    }
-
-    result
 }
