@@ -144,7 +144,7 @@ ORDER BY quest_signup.accepted DESC, quest_signup.timestamp ASC
 
     text.push_str(
         format!(
-            "\nParticipant Selection Method: **{}**\nMaximum Participants: **{}**",
+            "\nParticipant Selection Method: **{:?}**\nMaximum Participants: **{}**",
             selection_mechanism, maximum_participants,
         )
         .as_str(),

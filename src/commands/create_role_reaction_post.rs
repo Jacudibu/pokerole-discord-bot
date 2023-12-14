@@ -111,7 +111,7 @@ pub async fn create_role_reaction_post(
 
     let message = channel
         .id()
-        .send_message(ctx, CreateMessage::new().content(reaction_message))
+        .send_message(ctx, CreateMessage::new().content(reaction_message.build()))
         .await?;
 
     for x in reactions {

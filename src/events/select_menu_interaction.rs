@@ -1,12 +1,12 @@
 use crate::events::FrameworkContext;
 use crate::{events, Error};
+use serenity::all::ComponentInteraction;
 use serenity::client::Context;
-use serenity::model::prelude::message_component::MessageComponentInteraction;
 
 pub async fn handle_select_menu_interaction(
     context: &Context,
     framework: FrameworkContext<'_>,
-    interaction: &&MessageComponentInteraction,
+    interaction: &&ComponentInteraction,
 ) -> Result<(), Error> {
     if interaction.data.custom_id.is_empty() {
         return Ok(());
@@ -23,16 +23,18 @@ pub async fn handle_select_menu_interaction(
 async fn timestamp_offset(
     context: &Context,
     framework: FrameworkContext<'_>,
-    interaction: &&MessageComponentInteraction,
+    interaction: &&ComponentInteraction,
 ) -> Result<(), Error> {
-    let args: Vec<i32> = interaction.data.values[0]
+    let args: Vec<i32> = interaction
+        .data
+        .custom_id
         .split('_')
         .map(|x| x.parse().expect("Arguments should never be invalid."))
         .collect();
     let hours = args[0];
     let minutes = args[1];
 
-    let user_id = interaction.user.id.0 as i64;
+    let user_id = interaction.user.id.get() as i64;
     let user = sqlx::query!(
         "SELECT setting_time_offset_hours, setting_time_offset_minutes FROM user WHERE id = ?",
         user_id

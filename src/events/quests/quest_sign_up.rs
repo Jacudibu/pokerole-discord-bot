@@ -22,9 +22,9 @@ pub async fn quest_sign_up(
     let guild_id = interaction
         .guild_id
         .expect("Command should be guild_only")
-        .0 as i64;
-    let user_id = interaction.user.id.0 as i64;
-    let channel_id = interaction.channel_id.0 as i64;
+        .get() as i64;
+    let user_id = interaction.user.id.get() as i64;
+    let channel_id = interaction.channel_id.get() as i64;
 
     let available_characters = sqlx::query!(
         "SELECT id, name FROM character WHERE user_id = ? AND guild_id = ?",

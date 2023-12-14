@@ -6,37 +6,34 @@ mod select_menu_interaction;
 
 use crate::data::Data;
 use crate::Error;
-use poise::Event;
+use serenity::all::{
+    ComponentInteraction, ComponentInteractionDataKind, CreateAllowedMentions,
+    CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, Event, GuildId,
+    Interaction, User,
+};
 use serenity::client::Context;
-use serenity::model::application::component::ComponentType;
-use serenity::model::application::interaction::Interaction;
 use serenity::model::id::ChannelId;
-use serenity::model::prelude::interaction::message_component::MessageComponentInteraction;
-use serenity::model::prelude::{GuildId, InteractionResponseType, User};
 
 type FrameworkContext<'a> = poise::FrameworkContext<'a, Data, Error>;
 
 pub async fn handle_events<'a>(
     context: &'a Context,
-    event: &'a Event<'a>,
+    event: &Event,
     framework: FrameworkContext<'a>,
 ) -> Result<(), Error> {
     match event {
-        Event::InteractionCreate { interaction } => {
-            handle_interaction(context, framework, interaction).await
+        Event::InteractionCreate(e) => handle_interaction(context, framework, &e.interaction).await,
+        Event::ReactionAdd(e) => {
+            role_reaction::handle_reaction_add(context, framework, &e.reaction).await
         }
-        Event::ReactionAdd { add_reaction } => {
-            role_reaction::handle_reaction_add(context, framework, add_reaction).await
+        Event::ReactionRemove(e) => {
+            role_reaction::handle_reaction_remove(context, framework, &e.reaction).await
         }
-        Event::ReactionRemove { removed_reaction } => {
-            role_reaction::handle_reaction_remove(context, framework, removed_reaction).await
+        Event::GuildMemberRemove(e) => {
+            handle_guild_member_removal(context, framework.user_data, &e.guild_id, &e.user).await
         }
-        Event::GuildMemberRemoval {
-            guild_id,
-            user,
-            member_data_if_available: _,
-        } => handle_guild_member_removal(context, framework.user_data, guild_id, user).await,
-        Event::CacheReady { guilds: _ } => {
+        Event::Ready(_) => {
+            // TODO: Could use the data inside this event to lazily count how many discord servers are using the bot.
             backups::start_backup_thread(context, framework.user_data).await;
             Ok(())
         }
@@ -85,11 +82,12 @@ async fn handle_guild_member_removal(
 
     let channel = ChannelId::from(channel_id);
     channel
-        .send_message(context, |create_message| {
-            create_message
+        .send_message(
+            context,
+            CreateMessage::new()
                 .content(&format!("{} ({}) has left the server.", user, names))
-                .allowed_mentions(|mentions| mentions.empty_users())
-        })
+                .allowed_mentions(CreateAllowedMentions::default().empty_users()),
+        )
         .await?;
 
     Ok(())
@@ -101,7 +99,7 @@ async fn handle_interaction(
     interaction: &Interaction,
 ) -> Result<(), Error> {
     match interaction {
-        Interaction::MessageComponent(component) => {
+        Interaction::Component(component) => {
             handle_message_component_interaction(context, framework, component).await
         }
         _ => Ok(()),
@@ -111,14 +109,13 @@ async fn handle_interaction(
 async fn handle_message_component_interaction(
     context: &Context,
     framework: FrameworkContext<'_>,
-    interaction: &MessageComponentInteraction,
+    interaction: &ComponentInteraction,
 ) -> Result<(), Error> {
-    match interaction.data.component_type {
-        ComponentType::ActionRow => {}
-        ComponentType::Button => {
+    match &interaction.data.kind {
+        ComponentInteractionDataKind::Button => {
             button_interaction::handle_button_interaction(context, framework, &interaction).await?
         }
-        ComponentType::SelectMenu => {
+        ComponentInteractionDataKind::StringSelect { .. } => {
             select_menu_interaction::handle_select_menu_interaction(
                 context,
                 framework,
@@ -126,9 +123,11 @@ async fn handle_message_component_interaction(
             )
             .await?
         }
-        ComponentType::InputText => {}
-        ComponentType::Unknown => {}
-        _ => {}
+        ComponentInteractionDataKind::UserSelect { .. } => {}
+        ComponentInteractionDataKind::RoleSelect { .. } => {}
+        ComponentInteractionDataKind::MentionableSelect { .. } => {}
+        ComponentInteractionDataKind::ChannelSelect { .. } => {}
+        ComponentInteractionDataKind::Unknown(_) => {}
     }
 
     Ok(())
@@ -146,22 +145,25 @@ fn parse_interaction_command(custom_id: &str) -> (&str, Vec<&str>) {
 }
 
 async fn send_ephemeral_reply(
-    interaction: &&MessageComponentInteraction,
+    interaction: &&ComponentInteraction,
     context: &Context,
     content: &str,
 ) -> Result<(), Error> {
     interaction
-        .create_interaction_response(context, |interaction_response| {
-            interaction_response
-                .kind(InteractionResponseType::ChannelMessageWithSource)
-                .interaction_response_data(|data| data.ephemeral(true).content(content))
-        })
+        .create_response(
+            context,
+            CreateInteractionResponse::Message(
+                CreateInteractionResponseMessage::new()
+                    .ephemeral(true)
+                    .content(content),
+            ),
+        )
         .await?;
     Ok(())
 }
 
 async fn send_error(
-    interaction: &&MessageComponentInteraction,
+    interaction: &&ComponentInteraction,
     context: &Context,
     content: &str,
 ) -> Result<(), Error> {

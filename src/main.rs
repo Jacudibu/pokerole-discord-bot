@@ -13,7 +13,7 @@ mod logger;
 
 use crate::data::Data;
 use poise::builtins::on_error;
-use poise::{serenity_prelude as serenity, FrameworkError};
+use poise::{serenity_prelude as serenity, CreateReply, FrameworkError};
 use sqlx::{Pool, Sqlite};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -39,36 +39,43 @@ async fn main() {
             on_error: |error| Box::pin(handle_error(error)),
             ..Default::default()
         })
-        .token(std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN"))
-        .intents(
-            serenity::GatewayIntents::non_privileged()
-                .union(serenity::GatewayIntents::GUILD_MEMBERS),
-        )
         .setup(|ctx, _ready, framework| {
             Box::pin(async move {
                 poise::builtins::register_globally(ctx, &framework.options().commands).await?;
                 Ok(data)
             })
-        });
+        })
+        .build();
 
-    framework.run().await.unwrap();
+    let token = std::env::var("DISCORD_TOKEN").expect("missing DISCORD_TOKEN");
+    let intents =
+        serenity::GatewayIntents::non_privileged().union(serenity::GatewayIntents::GUILD_MEMBERS);
+
+    let client = serenity::ClientBuilder::new(token, intents)
+        .framework(framework)
+        .await;
+    client
+        .expect("Creating client failed!")
+        .start()
+        .await
+        .unwrap();
 }
 
 async fn handle_error(error: FrameworkError<'_, Data, Error>) {
     match error {
-        FrameworkError::Command { ctx, error } => {
+        FrameworkError::Command { ctx, error, .. } => {
             log::error!(
                 "An error occurred in command /{}: {}",
                 &ctx.command().name,
                 error
             );
             if let Err(e) = ctx
-                .send(|builder| {
-                    builder
+                .send(
+                    CreateReply::default()
                         .ephemeral(true)
                         .reply(true)
-                        .content(error.to_string())
-                })
+                        .content(error.to_string()),
+                )
                 .await
             {
                 log::error!("Fatal error while sending error message: {}", e);
