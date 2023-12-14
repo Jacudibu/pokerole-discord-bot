@@ -8,7 +8,7 @@ use crate::data::Data;
 use crate::Error;
 use serenity::all::{
     ComponentInteraction, ComponentInteractionDataKind, CreateAllowedMentions,
-    CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, Event, GuildId,
+    CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, FullEvent, GuildId,
     Interaction, User,
 };
 use serenity::client::Context;
@@ -18,21 +18,23 @@ type FrameworkContext<'a> = poise::FrameworkContext<'a, Data, Error>;
 
 pub async fn handle_events<'a>(
     context: &'a Context,
-    event: &Event,
+    event: &FullEvent,
     framework: FrameworkContext<'a>,
 ) -> Result<(), Error> {
     match event {
-        Event::InteractionCreate(e) => handle_interaction(context, framework, &e.interaction).await,
-        Event::ReactionAdd(e) => {
-            role_reaction::handle_reaction_add(context, framework, &e.reaction).await
+        FullEvent::InteractionCreate { interaction } => {
+            handle_interaction(context, framework, interaction).await
         }
-        Event::ReactionRemove(e) => {
-            role_reaction::handle_reaction_remove(context, framework, &e.reaction).await
+        FullEvent::ReactionAdd { add_reaction } => {
+            role_reaction::handle_reaction_add(context, framework, add_reaction).await
         }
-        Event::GuildMemberRemove(e) => {
-            handle_guild_member_removal(context, framework.user_data, &e.guild_id, &e.user).await
+        FullEvent::ReactionRemove { removed_reaction } => {
+            role_reaction::handle_reaction_remove(context, framework, removed_reaction).await
         }
-        Event::Ready(_) => {
+        FullEvent::GuildMemberRemoval { guild_id, user, .. } => {
+            handle_guild_member_removal(context, framework.user_data, guild_id, user).await
+        }
+        FullEvent::Ready { .. } => {
             // TODO: Could use the data inside this event to lazily count how many discord servers are using the bot.
             backups::start_backup_thread(context, framework.user_data).await;
             Ok(())
