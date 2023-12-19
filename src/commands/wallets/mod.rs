@@ -1,6 +1,8 @@
 use crate::cache::WalletCacheItem;
 use crate::commands::characters::{log_action, ActionType, EntityWithNameAndNumericValue};
-use crate::commands::{send_error, BuildUpdatedStatMessageStringResult, Context};
+use crate::commands::{
+    handle_error_during_message_edit, send_error, BuildUpdatedStatMessageStringResult, Context,
+};
 use crate::data::Data;
 use crate::{emoji, Error};
 use poise::Command;
@@ -33,21 +35,12 @@ pub async fn update_wallet_post<'a>(ctx: &Context<'a>, wallet_id: i64) {
             )
             .await;
         if let Ok(mut message) = message {
-            match message
+            if let Err(e) = message
                 .edit(ctx, EditMessage::new().content(&result.message))
                 .await
             {
-                Ok(_) => {}
-                Err(e) => {
-                    let _ = ctx
-                        .say(format!(
-                            "**Failed to update the wallet message for {}!**.\nThe change has been tracked, but whilst updating the message the following issue occurred: **{}**.\n\
-                            In case this says 'Thread was archived', you can probably fix this by opening the forum post and then adding and removing one poke from the wallet in order to trigger another update.",
-                            result.name,
-                            e
-                        ))
-                        .await;
-                }
+                handle_error_during_message_edit(ctx, e, message, result.message, result.name)
+                    .await;
             }
         }
     }

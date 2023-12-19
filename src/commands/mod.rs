@@ -1,8 +1,9 @@
 use crate::cache::{CharacterCacheItem, WalletCacheItem};
 use crate::data::Data;
 use crate::errors::{ParseError, ValidationError};
-use crate::Error;
+use crate::{discord_error_codes, helpers, Error};
 use poise::{Command, CreateReply, ReplyHandle};
+use serenity::all::{EditMessage, HttpError, Message};
 use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;
@@ -399,4 +400,39 @@ pub async fn ensure_user_owns_wallet_or_is_gm(
     } else {
         Err(ValidationError::new("Was unable to validate whether you are allowed to access this wallet. Please try again."))
     }
+}
+
+async fn handle_error_during_message_edit<'a>(
+    ctx: &Context<'a>,
+    e: serenity::Error,
+    mut message_to_edit: Message,
+    updated_message_content: impl Into<String>,
+    name: impl Into<String>,
+) {
+    if let serenity::Error::Http(HttpError::UnsuccessfulRequest(e)) = &e {
+        if e.error.code == discord_error_codes::ARCHIVED_THREAD {
+            if let Ok(channel) = message_to_edit.channel(ctx).await {
+                if let Some(channel) = channel.guild() {
+                    if let Ok(response) = channel
+                        .say(ctx, "This thread was (probably) automagically archived, and I'm sending this message to reopen it so I can update some values. This message should be deleted right away, sorry if it pinged you!").await
+                    {
+                        let _ = response.delete(ctx).await;
+                        if let Err(e) = message_to_edit.edit(ctx, EditMessage::new().content(updated_message_content)).await {
+                            let _ = ctx.say(format!(
+                                "**Failed to update the stat message for {}!**.\nThe change has been tracked, but whilst updating the message some error occurred:\n```{:?}```\nTechnically this issue should have been fixed, so I'll ping {} to have a look at it. For now, just proceed as if nothing went wrong. Sorry for the inconvenience!",
+                                name.into(),
+                                e,
+                                helpers::ADMIN_PING_STRING
+                            ))
+                                .await;
+                        }
+
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    let _ = ctx.say(format!("Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n{}, please look into this:\n```{:?}```", name.into(), helpers::ADMIN_PING_STRING, e)).await;
 }
