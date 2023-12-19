@@ -3,6 +3,7 @@ mod commands;
 mod csv_utils;
 mod data;
 mod database_helpers;
+mod discord_error_codes;
 mod emoji;
 mod enums;
 mod errors;

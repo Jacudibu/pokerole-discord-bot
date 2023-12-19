@@ -5,6 +5,8 @@ use serenity::all::{
     ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, EditMessage, MessageId,
 };
 
+pub const ADMIN_PING_STRING: &str = "<@878982444412448829>";
+
 pub fn create_styled_button(
     label: &str,
     custom_id: &str,

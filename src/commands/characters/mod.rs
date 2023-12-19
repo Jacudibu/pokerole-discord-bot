@@ -4,11 +4,13 @@ use crate::commands::{
 };
 use crate::data::Data;
 use crate::enums::MysteryDungeonRank;
-use crate::{emoji, Error};
+use crate::{discord_error_codes, emoji, helpers, Error};
 use core::fmt;
 use poise::Command;
 use regex::Regex;
-use serenity::all::{CreateAllowedMentions, CreateMessage, EditMessage, MessageId};
+use serenity::all::{
+    CreateAllowedMentions, CreateMessage, EditMessage, HttpError, Message, MessageId,
+};
 use serenity::model::id::ChannelId;
 use std::fmt::Formatter;
 
@@ -53,24 +55,49 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
             )
             .await;
         if let Ok(mut message) = message {
-            match message
+            if let Err(e) = message
                 .edit(ctx, EditMessage::new().content(&result.message))
                 .await
             {
-                Ok(_) => {}
-                Err(e) => {
-                    let _ = ctx
-                        .say(format!(
-                            "**Failed to update the character message for {}!**.\nThe change has been tracked, but whilst updating the message the following issue occurred: **{}**.\n\
-                            In case this says 'Thread was archived', you can probably fix this by opening the forum post and then adding and removing one poke from the character in order to trigger another update.",
-                            result.name,
-                            e
-                        ))
-                        .await;
+                handle_error_during_message_edit(ctx, e, message, result).await;
+            }
+        }
+    }
+}
+
+async fn handle_error_during_message_edit<'a>(
+    ctx: &Context<'a>,
+    e: serenity::Error,
+    mut message_to_edit: Message,
+    result: BuildUpdatedStatMessageStringResult,
+) {
+    if let serenity::Error::Http(HttpError::UnsuccessfulRequest(e)) = &e {
+        if e.error.code == discord_error_codes::ARCHIVED_THREAD {
+            let channel_id = ChannelId::from(result.stat_channel_id as u64);
+            if let Ok(channel) = ctx.serenity_context().http.get_channel(channel_id).await {
+                if let Some(channel) = channel.guild() {
+                    if let Ok(response) = channel
+                        .say(ctx, "This thread was automagically archived, and I'm sending this message to reopen it so I can update some values. This message should be deleted right away, sorry if it pinged you!").await
+                    {
+                        let _ = response.delete(ctx).await;
+                        if let Err(e) = message_to_edit.edit(ctx, EditMessage::new().content(&result.message)).await {
+                            let _ = ctx.say(format!(
+                                "**Failed to update the character message for {}!**.\nThe change has been tracked, but whilst updating the message some error occurred:\n```{:?}```\nTechnically this issue should have been fixed, so I'll ping {} to have a look at it. For now, just proceed as if nothing went wrong. Sorry for the inconvenience!",
+                                result.name,
+                                e,
+                                helpers::ADMIN_PING_STRING
+                            ))
+                                .await;
+                        }
+
+                        return;
+                    }
                 }
             }
         }
     }
+
+    let _ = ctx.say(format!("Some very random error occurred when updating the character post for {}.\n**The requested change has been applied, but it isn't shown in the character post right now.**\n{}, please look into this:\n```{:?}```", result.name, helpers::ADMIN_PING_STRING, e)).await;
 }
 
 async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32 {
