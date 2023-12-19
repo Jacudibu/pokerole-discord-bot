@@ -59,7 +59,8 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
                 .edit(ctx, EditMessage::new().content(&result.message))
                 .await
             {
-                handle_error_during_message_edit(ctx, e, message, result).await;
+                handle_error_during_message_edit(ctx, e, message, result.message, result.name)
+                    .await;
             }
         }
     }
@@ -69,21 +70,21 @@ async fn handle_error_during_message_edit<'a>(
     ctx: &Context<'a>,
     e: serenity::Error,
     mut message_to_edit: Message,
-    result: BuildUpdatedStatMessageStringResult,
+    updated_message_content: impl Into<String>,
+    name: impl Into<String>,
 ) {
     if let serenity::Error::Http(HttpError::UnsuccessfulRequest(e)) = &e {
         if e.error.code == discord_error_codes::ARCHIVED_THREAD {
-            let channel_id = ChannelId::from(result.stat_channel_id as u64);
-            if let Ok(channel) = ctx.serenity_context().http.get_channel(channel_id).await {
+            if let Ok(channel) = message_to_edit.channel(ctx).await {
                 if let Some(channel) = channel.guild() {
                     if let Ok(response) = channel
                         .say(ctx, "This thread was automagically archived, and I'm sending this message to reopen it so I can update some values. This message should be deleted right away, sorry if it pinged you!").await
                     {
                         let _ = response.delete(ctx).await;
-                        if let Err(e) = message_to_edit.edit(ctx, EditMessage::new().content(&result.message)).await {
+                        if let Err(e) = message_to_edit.edit(ctx, EditMessage::new().content(updated_message_content)).await {
                             let _ = ctx.say(format!(
-                                "**Failed to update the character message for {}!**.\nThe change has been tracked, but whilst updating the message some error occurred:\n```{:?}```\nTechnically this issue should have been fixed, so I'll ping {} to have a look at it. For now, just proceed as if nothing went wrong. Sorry for the inconvenience!",
-                                result.name,
+                                "**Failed to update the stat message for {}!**.\nThe change has been tracked, but whilst updating the message some error occurred:\n```{:?}```\nTechnically this issue should have been fixed, so I'll ping {} to have a look at it. For now, just proceed as if nothing went wrong. Sorry for the inconvenience!",
+                                name.into(),
                                 e,
                                 helpers::ADMIN_PING_STRING
                             ))
@@ -97,7 +98,7 @@ async fn handle_error_during_message_edit<'a>(
         }
     }
 
-    let _ = ctx.say(format!("Some very random error occurred when updating the character post for {}.\n**The requested change has been applied, but it isn't shown in the character post right now.**\n{}, please look into this:\n```{:?}```", result.name, helpers::ADMIN_PING_STRING, e)).await;
+    let _ = ctx.say(format!("Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n{}, please look into this:\n```{:?}```", name.into(), helpers::ADMIN_PING_STRING, e)).await;
 }
 
 async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32 {
