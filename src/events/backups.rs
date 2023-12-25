@@ -1,4 +1,5 @@
 use crate::data::Data;
+use crate::events::send_error_to_log_channel;
 use chrono::{Duration, Utc};
 use serenity::all::{CreateAttachment, CreateMessage};
 use serenity::model::id::ChannelId;
@@ -85,8 +86,7 @@ async fn upload_backup(ctx: Arc<Context>, channel_id: u64) {
                     }
                 }
                 Err(e) => {
-                    send_error(
-                        channel,
+                    send_error_to_log_channel(
                         &ctx,
                         &format!("Failed to create attachment for backup. Something went horribly wrong, I guess. File Path: {}, Internal Error: {:?}", get_database_file_path(), e),
                     )
@@ -95,8 +95,7 @@ async fn upload_backup(ctx: Arc<Context>, channel_id: u64) {
             }
         }
         Err(e) => {
-            send_error(
-                channel,
+            send_error_to_log_channel(
                 &ctx,
                 &format!(
                     "Failed to upload database backup, invalid file path: {}, internal error: {}",
@@ -107,10 +106,4 @@ async fn upload_backup(ctx: Arc<Context>, channel_id: u64) {
             .await;
         }
     }
-}
-
-async fn send_error(channel: ChannelId, ctx: &Context, message: impl Into<String>) {
-    let _ = channel
-        .send_message(ctx, CreateMessage::new().content(message))
-        .await;
 }

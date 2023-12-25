@@ -1,10 +1,10 @@
 use crate::data::Data;
-use crate::get_db_pool;
+use crate::events::send_error_to_log_channel;
 use chrono::{Datelike, Duration, NaiveDate, Utc, Weekday};
-use serenity::all::{CreateAttachment, CreateMessage};
+use serenity::all::CreateMessage;
 use serenity::model::id::ChannelId;
 use serenity::prelude::Context;
-use sqlx::{Error, Pool, Sqlite};
+use sqlx::{Pool, Sqlite};
 use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
@@ -52,7 +52,9 @@ async fn execute_weekly_reset(ctx: Arc<Context>, database: Pool<Sqlite>) {
             notify_guilds(&ctx, &database).await;
             update_character_posts(&ctx, &database).await;
         }
-        Err(_) => {}
+        Err(error) => {
+            send_error_to_log_channel(&ctx, error.to_string()).await;
+        }
     }
 }
 
@@ -66,7 +68,9 @@ async fn update_character_posts(ctx: &Arc<Context>, database: &Pool<Sqlite>) {
                 todo!();
             }
         }
-        Err(_) => {}
+        Err(error) => {
+            send_error_to_log_channel(ctx, error.to_string()).await;
+        }
     }
 }
 
@@ -78,8 +82,7 @@ async fn notify_guilds(ctx: &Arc<Context>, database: &Pool<Sqlite>) {
         Ok(records) => {
             let channel_ids: Vec<i64> = records
                 .iter()
-                .map(|x| x.action_log_channel_id)
-                .flatten()
+                .filter_map(|x| x.action_log_channel_id)
                 .collect();
 
             for action_log_channel_id in channel_ids {
@@ -92,12 +95,8 @@ async fn notify_guilds(ctx: &Arc<Context>, database: &Pool<Sqlite>) {
                     .await;
             }
         }
-        Err(_) => {}
+        Err(error) => {
+            send_error_to_log_channel(ctx, error.to_string()).await;
+        }
     }
-}
-
-async fn send_error(channel: ChannelId, ctx: &Context, message: impl Into<String>) {
-    let _ = channel
-        .send_message(ctx, CreateMessage::new().content(message))
-        .await;
 }

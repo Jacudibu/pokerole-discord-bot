@@ -6,7 +6,7 @@ mod select_menu_interaction;
 mod weekly_reset;
 
 use crate::data::Data;
-use crate::Error;
+use crate::{helpers, Error};
 use serenity::all::{
     ComponentInteraction, ComponentInteractionDataKind, CreateAllowedMentions,
     CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, FullEvent, GuildId,
@@ -180,4 +180,10 @@ async fn send_error(
     content: &str,
 ) -> Result<(), Error> {
     send_ephemeral_reply(interaction, context, content).await
+}
+
+async fn send_error_to_log_channel(ctx: &Context, message: impl Into<String>) {
+    let _ = helpers::ERROR_LOG_CHANNEL
+        .send_message(ctx, CreateMessage::new().content(message))
+        .await;
 }
