@@ -159,7 +159,7 @@ async fn track_spar_for_character<'a>(
     )
     .await;
 
-    if new_total_spar_count <= guild_settings.weekly_spar_limit {
+    if new_weekly_spar_count <= guild_settings.weekly_spar_limit {
         result.participants_who_gained_exp.push(character.clone());
         let _ = change_character_stat_after_validation(
             ctx,
