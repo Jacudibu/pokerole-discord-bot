@@ -33,7 +33,7 @@ fn calculate_duration_until_next_run() -> std::time::Duration {
         .expect("Week 1 Monday should always exist, even if it's within the last year.");
 
     let next_run = (last_monday + Duration::days(7))
-        .and_hms_opt(0, 0, 0)
+        .and_hms_opt(0, 1, 0)
         .expect("Should never return None when passing 0's.");
     let seconds_until_next_run = next_run
         .signed_duration_since(now.naive_utc())
