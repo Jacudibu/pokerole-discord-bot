@@ -50,26 +50,10 @@ async fn execute_weekly_reset(ctx: Arc<Context>, database: Pool<Sqlite>) {
     {
         Ok(_) => {
             notify_guilds(&ctx, &database).await;
-            update_character_posts(&ctx, &database).await;
+            // Updating character posts is disabled until we figure out how to reopen forum threads without sending a message...
         }
         Err(error) => {
             send_error_to_log_channel(&ctx, error.to_string()).await;
-        }
-    }
-}
-
-async fn update_character_posts(ctx: &Arc<Context>, database: &Pool<Sqlite>) {
-    match sqlx::query!("SELECT id FROM character")
-        .fetch_all(database)
-        .await
-    {
-        Ok(records) => {
-            for x in records {
-                todo!();
-            }
-        }
-        Err(error) => {
-            send_error_to_log_channel(ctx, error.to_string()).await;
         }
     }
 }
