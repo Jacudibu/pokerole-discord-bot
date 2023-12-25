@@ -11,6 +11,7 @@ use poise::Command;
 use regex::Regex;
 use serenity::all::{CreateAllowedMentions, CreateMessage, EditMessage, MessageId};
 use serenity::model::id::ChannelId;
+use sqlx::{Pool, Sqlite};
 use std::fmt::Formatter;
 
 mod give_money;
@@ -46,7 +47,7 @@ You can copy the command string either by just pressing the up key inside the te
 }
 
 pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
-    if let Some(result) = build_character_string(ctx, id).await {
+    if let Some(result) = build_character_string(&ctx.data().database, id).await {
         let message = ctx
             .serenity_context()
             .http
@@ -67,12 +68,12 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
     }
 }
 
-async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32 {
+async fn count_completed_quests<'a>(database: &Pool<Sqlite>, character_id: i64) -> i32 {
     let result = sqlx::query!(
         "SELECT COUNT(*) as count FROM quest_completion WHERE character_id = ?",
         character_id
     )
-    .fetch_optional(&ctx.data().database)
+    .fetch_optional(database)
     .await;
 
     if let Ok(Some(record)) = result {
@@ -82,9 +83,8 @@ async fn count_completed_quests<'a>(ctx: &Context<'a>, character_id: i64) -> i32
     }
 }
 
-// TODO: we really should just change this to a query_as thingy...
-pub async fn build_character_string<'a>(
-    ctx: &Context<'a>,
+pub async fn build_character_string(
+    database: &Pool<Sqlite>,
     character_id: i64,
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
@@ -94,10 +94,10 @@ pub async fn build_character_string<'a>(
                 LIMIT 1",
         character_id,
     )
-    .fetch_one(&ctx.data().database)
+    .fetch_one(database)
     .await;
 
-    let completed_quest_count = count_completed_quests(ctx, character_id).await;
+    let completed_quest_count = count_completed_quests(database, character_id).await;
 
     match entry {
         Ok(entry) => {
