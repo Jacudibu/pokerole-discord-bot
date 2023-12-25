@@ -92,7 +92,7 @@ pub async fn build_character_string(
     character_id: i64,
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
-        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count \
+        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, total_new_player_tour_count, total_new_player_combat_tutorial_count \
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -109,26 +109,48 @@ pub async fn build_character_string(
             let experience = entry.experience % 100;
             let rank = MysteryDungeonRank::from_level(level as u8);
 
-            Some(BuildUpdatedStatMessageStringResult {
-                message: format!(
-                    "\
+            let mut message = format!(
+                "\
 ## {} {}
 {} {}
 **Level**: {} `({} / 100)`
-Completed Quests: {}
-Backpack Slots: {}
-Sparring Sessions: {}
-",
-                    rank.emoji_string(),
-                    entry.name,
-                    entry.money,
-                    emoji::POKE_COIN,
-                    level,
-                    experience,
-                    completed_quest_count,
-                    entry.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
-                    entry.total_spar_count,
-                ),
+Backpack Slots: {}\n",
+                rank.emoji_string(),
+                entry.name,
+                entry.money,
+                emoji::POKE_COIN,
+                level,
+                experience,
+                entry.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
+            );
+
+            if completed_quest_count > 0 {
+                message.push_str(&format!("Completed Quests: {}\n", completed_quest_count));
+            }
+
+            if entry.total_spar_count > 0 {
+                message.push_str(&format!(
+                    "Total Sparring Sessions: {}\n",
+                    entry.total_spar_count
+                ));
+            }
+
+            if entry.total_new_player_tour_count > 0 {
+                message.push_str(&format!(
+                    "Given tours: {}\n",
+                    entry.total_new_player_tour_count
+                ));
+            }
+
+            if entry.total_new_player_combat_tutorial_count > 0 {
+                message.push_str(&format!(
+                    "Given combat tutorials: {}\n",
+                    entry.total_new_player_combat_tutorial_count
+                ));
+            }
+
+            Some(BuildUpdatedStatMessageStringResult {
+                message,
                 name: entry.name,
                 stat_channel_id: entry.stat_channel_id,
                 stat_message_id: entry.stat_message_id,
