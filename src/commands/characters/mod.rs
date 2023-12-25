@@ -88,7 +88,7 @@ pub async fn build_character_string<'a>(
     character_id: i64,
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
-        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count \
+        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, weekly_spar_count \
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -113,6 +113,7 @@ pub async fn build_character_string<'a>(
 **Level**: {} `({} / 100)`
 Completed Quests: {}
 Backpack Slots: {}
+Sparring Sessions: {} ({} this week)
 ",
                     rank.emoji_string(),
                     entry.name,
@@ -122,6 +123,8 @@ Backpack Slots: {}
                     experience,
                     completed_quest_count,
                     entry.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
+                    entry.total_spar_count,
+                    entry.weekly_spar_count
                 ),
                 name: entry.name,
                 stat_channel_id: entry.stat_channel_id,

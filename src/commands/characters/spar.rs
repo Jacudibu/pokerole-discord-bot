@@ -1,7 +1,8 @@
 use crate::cache::CharacterCacheItem;
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::characters::{
-    build_character_list, change_character_stat_after_validation, log_action, ActionType,
+    build_character_list, change_character_stat_after_validation, log_action,
+    update_character_post, ActionType,
 };
 use crate::commands::{parse_character_names, parse_variadic_args, send_error, Context, Error};
 
@@ -17,7 +18,9 @@ pub async fn spar(
     #[description = "Which characters are sparring?"]
     #[autocomplete = "autocomplete_character_name"]
     character1: String,
-    #[autocomplete = "autocomplete_character_name"] character2: Option<String>,
+    #[description = "Which characters are sparring?"]
+    #[autocomplete = "autocomplete_character_name"]
+    character2: String,
     #[autocomplete = "autocomplete_character_name"] character3: Option<String>,
     #[autocomplete = "autocomplete_character_name"] character4: Option<String>,
     #[autocomplete = "autocomplete_character_name"] character5: Option<String>,
@@ -28,8 +31,15 @@ pub async fn spar(
 ) -> Result<(), Error> {
     // TODO: Button to undo the transaction which lasts for a minute or so.
     let args = parse_variadic_args(
-        character1, character2, character3, character4, character5, character6, character7,
-        character8, character9,
+        character1,
+        Some(character2),
+        character3,
+        character4,
+        character5,
+        character6,
+        character7,
+        character8,
+        character9,
     );
 
     match handle_sparring(&ctx, &args).await {
@@ -111,12 +121,12 @@ async fn track_spar_for_character<'a>(
     ctx: &Context<'a>,
     guild_settings: &SparSettings,
     result: &mut SparringResult,
-    x: &CharacterCacheItem,
+    character: &CharacterCacheItem,
 ) {
-    result.participants.push(x.clone());
+    result.participants.push(character.clone());
     let current = sqlx::query!(
         "SELECT total_spar_count, weekly_spar_count FROM character WHERE id = ?",
-        x.id
+        character.id
     )
     .fetch_one(&ctx.data().database)
     .await
@@ -129,7 +139,7 @@ async fn track_spar_for_character<'a>(
         "UPDATE character SET total_spar_count = ?, weekly_spar_count = ? WHERE id = ?",
         new_total_spar_count,
         new_weekly_spar_count,
-        x.id
+        character.id
     )
     .execute(&ctx.data().database)
     .await;
@@ -137,20 +147,22 @@ async fn track_spar_for_character<'a>(
     let _ = log_action(
         &ActionType::Spar,
         ctx,
-        &format!("Tracked a sparring session for {}!", x.name),
+        &format!("Tracked a sparring session for {}!", character.name),
     )
     .await;
 
     if new_total_spar_count <= guild_settings.weekly_spar_limit {
-        result.participants_who_gained_exp.push(x.clone());
+        result.participants_who_gained_exp.push(character.clone());
         let _ = change_character_stat_after_validation(
             ctx,
             "experience",
-            x,
+            character,
             guild_settings.weekly_spar_reward,
-            &ActionType::Spar,
+            &ActionType::Reward,
         )
         .await;
+    } else {
+        update_character_post(ctx, character.id).await;
     }
 }
 
