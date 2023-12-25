@@ -19,6 +19,7 @@ mod initialize_character_post;
 mod initialize_guild;
 mod reward_experience;
 mod reward_money;
+mod spar;
 mod upgrade_backpack;
 
 const DEFAULT_BACKPACK_SLOTS: i64 = 6;
@@ -32,6 +33,7 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         reward_experience::reward_experience(),
         reward_money::reward_money(),
         upgrade_backpack::upgrade_backpack(),
+        spar::spar(),
     ]
 }
 
@@ -141,6 +143,7 @@ pub enum ActionType {
     WalletPayment,
     WalletWithdrawal,
     Undo,
+    Spar,
 }
 
 impl fmt::Display for ActionType {
@@ -156,6 +159,7 @@ impl fmt::Display for ActionType {
             ActionType::WalletPayment => "👛⬅️ [Payment]",
             ActionType::WalletWithdrawal => "👛➡️ [Withdrawal]",
             ActionType::Undo => "↩️ [Undo]",
+            ActionType::Spar => "🤺 [Spar]",
         })
     }
 }
