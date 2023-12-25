@@ -19,6 +19,8 @@ mod initialize_character;
 mod initialize_character_post;
 mod initialize_guild;
 mod reward_experience;
+mod reward_giving_combat_tutorial;
+mod reward_giving_tour;
 mod reward_money;
 mod reward_spar;
 mod upgrade_backpack;
@@ -34,7 +36,9 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         reward_experience::reward_experience(),
         reward_money::reward_money(),
         upgrade_backpack::upgrade_backpack(),
-        reward_spar::spar(),
+        reward_spar::reward_spar(),
+        reward_giving_combat_tutorial::reward_giving_combat_tutorial(),
+        reward_giving_tour::reward_giving_tour(),
     ]
 }
 
@@ -146,6 +150,8 @@ pub enum ActionType {
     WalletWithdrawal,
     Undo,
     Spar,
+    NewPlayerCombatTutorial,
+    NewPlayerTour,
 }
 
 impl fmt::Display for ActionType {
@@ -162,6 +168,8 @@ impl fmt::Display for ActionType {
             ActionType::WalletWithdrawal => "👛➡️ [Withdrawal]",
             ActionType::Undo => "↩️ [Undo]",
             ActionType::Spar => "🤺 [Spar]",
+            ActionType::NewPlayerCombatTutorial => "⚔️ [Combat Tutorial]",
+            ActionType::NewPlayerTour => "🎫 [Tour]",
         })
     }
 }
