@@ -42,6 +42,7 @@ mod say;
 mod setting_time_offset;
 mod update_user_names;
 mod wallets;
+mod weekly_reset;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     let mut result = vec![

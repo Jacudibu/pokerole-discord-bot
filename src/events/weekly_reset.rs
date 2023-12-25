@@ -9,8 +9,6 @@ use std::sync::atomic::Ordering;
 use std::sync::Arc;
 
 pub async fn start_weekly_reset_thread(ctx: &Context, data: &Data) {
-    return;
-
     let ctx = Arc::new(ctx.clone());
     if !data.is_weekly_reset_thread_running.load(Ordering::Relaxed) {
         let ctx_in_thread = Arc::clone(&ctx);
@@ -73,12 +71,18 @@ async fn update_character_posts(ctx: &Arc<Context>, database: &Pool<Sqlite>) {
 }
 
 async fn notify_guilds(ctx: &Arc<Context>, database: &Pool<Sqlite>) {
-    match sqlx::query!("SELECT id, action_log_channel_id FROM guild")
+    match sqlx::query!("SELECT action_log_channel_id FROM guild")
         .fetch_all(database)
         .await
     {
         Ok(records) => {
-            for action_log_channel_id in records.iter().map(|x| x.action_log_channel_id).flatten() {
+            let channel_ids: Vec<i64> = records
+                .iter()
+                .map(|x| x.action_log_channel_id)
+                .flatten()
+                .collect();
+
+            for action_log_channel_id in channel_ids {
                 let channel = ChannelId::from(action_log_channel_id as u64);
                 let _ = channel
                     .send_message(
