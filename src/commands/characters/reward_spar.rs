@@ -6,14 +6,14 @@ use crate::commands::characters::{
 };
 use crate::commands::{parse_character_names, parse_variadic_args, send_error, Context, Error};
 
-/// Reward players with cash.
+/// Reward players for sparring outside of quests.
 #[allow(clippy::too_many_arguments)]
 #[poise::command(
     slash_command,
     guild_only,
     default_member_permissions = "ADMINISTRATOR"
 )]
-pub async fn spar(
+pub async fn reward_spar(
     ctx: Context<'_>,
     #[description = "Which characters are sparring?"]
     #[autocomplete = "autocomplete_character_name"]
@@ -171,21 +171,5 @@ async fn track_spar_for_character<'a>(
         .await;
     } else {
         update_character_post(ctx, character.id).await;
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::Error;
-    use sqlx::{Pool, Sqlite};
-
-    #[sqlx::test]
-    async fn spar_once(db: Pool<Sqlite>) -> Result<(), Error> {
-        todo!();
-    }
-
-    #[sqlx::test]
-    async fn spar_more_than_weekly_limit(db: Pool<Sqlite>) -> Result<(), Error> {
-        todo!();
     }
 }

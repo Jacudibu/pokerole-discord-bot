@@ -20,7 +20,7 @@ mod initialize_character_post;
 mod initialize_guild;
 mod reward_experience;
 mod reward_money;
-mod spar;
+mod reward_spar;
 mod upgrade_backpack;
 
 const DEFAULT_BACKPACK_SLOTS: i64 = 6;
@@ -34,7 +34,7 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         reward_experience::reward_experience(),
         reward_money::reward_money(),
         upgrade_backpack::upgrade_backpack(),
-        spar::spar(),
+        reward_spar::spar(),
     ]
 }
 
