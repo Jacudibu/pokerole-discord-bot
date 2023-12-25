@@ -12,10 +12,11 @@ pub async fn start_weekly_reset_thread(ctx: &Context, data: &Data) {
     let ctx = Arc::new(ctx.clone());
     if !data.is_weekly_reset_thread_running.load(Ordering::Relaxed) {
         let ctx_in_thread = Arc::clone(&ctx);
+        let database = data.database.clone();
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(calculate_duration_until_next_run()).await;
-                execute_weekly_reset(Arc::clone(&ctx_in_thread)).await;
+                execute_weekly_reset(Arc::clone(&ctx_in_thread), database.clone()).await;
             }
         });
 
@@ -42,8 +43,7 @@ fn calculate_duration_until_next_run() -> std::time::Duration {
     std::time::Duration::from_secs(seconds_until_next_run)
 }
 
-async fn execute_weekly_reset(ctx: Arc<Context>) {
-    let database = get_db_pool().await; // TODO: Figure out how to use the regular db pool inside data inside a spawned tokio thread
+async fn execute_weekly_reset(ctx: Arc<Context>, database: Pool<Sqlite>) {
     match sqlx::query!("UPDATE character SET weekly_spar_count = 0")
         .execute(&database)
         .await
