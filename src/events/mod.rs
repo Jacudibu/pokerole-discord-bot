@@ -3,6 +3,7 @@ mod button_interaction;
 mod quests;
 mod role_reaction;
 mod select_menu_interaction;
+mod weekly_reset;
 
 use crate::data::Data;
 use crate::Error;
@@ -37,6 +38,7 @@ pub async fn handle_events<'a>(
         FullEvent::Ready { .. } => {
             // TODO: Could use the data inside this event to lazily count how many discord servers are using the bot.
             backups::start_backup_thread(context, framework.user_data).await;
+            // weekly_reset::start_weekly_reset_thread(context, framework.user_data).await;
             Ok(())
         }
         _ => Ok(()),

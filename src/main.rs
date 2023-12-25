@@ -90,20 +90,25 @@ async fn handle_error(error: FrameworkError<'_, Data, Error>) {
     }
 }
 
-async fn initialize_database() -> Pool<Sqlite> {
+pub async fn get_db_pool() -> Pool<Sqlite> {
     let url = std::env::var("DATABASE_URL").expect("missing DATABASE_URL");
-    let database = sqlx::sqlite::SqlitePoolOptions::new()
+    sqlx::sqlite::SqlitePoolOptions::new()
         .max_connections(5)
         .connect_with(
             sqlx::sqlite::SqliteConnectOptions::from_str(url.as_str())
                 .expect("Unable to parse DATABASE_URL"),
         )
         .await
-        .expect("Couldn't connect to database");
+        .expect("Couldn't connect to database")
+}
+
+async fn initialize_database() -> Pool<Sqlite> {
+    let database = get_db_pool().await;
 
     sqlx::migrate!("./migrations")
         .run(&database)
         .await
         .expect("Couldn't run database migrations");
+
     database
 }

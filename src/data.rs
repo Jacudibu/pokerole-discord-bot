@@ -9,6 +9,7 @@ pub struct Data {
     pub game: Arc<GameData>,
     pub cache: Arc<Cache>,
     pub is_backup_thread_running: AtomicBool,
+    pub is_weekly_reset_thread_running: AtomicBool,
 }
 
 impl Data {
@@ -18,6 +19,7 @@ impl Data {
             game,
             cache: Arc::new(Cache::new()),
             is_backup_thread_running: AtomicBool::new(false),
+            is_weekly_reset_thread_running: AtomicBool::new(false),
         };
 
         result.cache.update_character_names(&result.database).await;
