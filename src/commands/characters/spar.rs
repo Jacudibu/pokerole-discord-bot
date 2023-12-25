@@ -46,10 +46,18 @@ pub async fn spar(
         Ok(result) => {
             if result.participants_who_gained_exp.is_empty() {
                 ctx.say(format!(
-                    "Tracked a sparring session for {}.",
+                    "Tracked a sparring session for {}.\n*Everyone's already reached the weekly limit for sparring exp rewards.*",
                     build_character_list(&result.participants),
                 ))
                 .await?;
+            } else if result.participants_who_gained_exp.len() != result.participants.len() {
+                ctx.say(format!(
+                        "Tracked a sparring session for {}.\n{} received {} experience points. *(Everyone who did not receive any already reached the weekly limit)*",
+                        build_character_list(&result.participants),
+                        build_character_list(&result.participants_who_gained_exp),
+                        result.experience_value,
+                    ))
+                    .await?;
             } else {
                 ctx.say(format!(
                     "Tracked a sparring session for {}.\n{} received {} experience points!",
