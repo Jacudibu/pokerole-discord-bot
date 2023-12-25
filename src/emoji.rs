@@ -18,3 +18,9 @@ pub const UNICODE_NINE: &str = "9️⃣";
 
 pub const UNICODE_CROSS_MARK_BUTTON: &str = "❎";
 pub const UNICODE_CROSS_MARK: &str = "❌";
+
+pub const TROPHY: &str = "🏆";
+pub const BACKPACK: &str = "🎒";
+pub const FENCING: &str = "🤺";
+pub const TICKET: &str = "🎫";
+pub const CROSSED_SWORDS: &str = "⚔️";

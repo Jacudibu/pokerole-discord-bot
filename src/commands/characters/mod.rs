@@ -112,39 +112,48 @@ pub async fn build_character_string(
             let mut message = format!(
                 "\
 ## {} {}
+**Level {}** `({} / 100)`
 {} {}
-**Level**: {} `({} / 100)`
-Backpack Slots: {}\n",
+
+{} Backpack Slots: {}\n\n",
                 rank.emoji_string(),
                 entry.name,
-                entry.money,
-                emoji::POKE_COIN,
                 level,
                 experience,
+                entry.money,
+                emoji::POKE_COIN,
+                emoji::BACKPACK,
                 entry.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
             );
 
             if completed_quest_count > 0 {
-                message.push_str(&format!("Completed Quests: {}\n", completed_quest_count));
+                message.push_str(&format!(
+                    "{} Completed Quests: {}\n",
+                    emoji::TROPHY,
+                    completed_quest_count
+                ));
             }
 
             if entry.total_spar_count > 0 {
                 message.push_str(&format!(
-                    "Total Sparring Sessions: {}\n",
+                    "{} Total Sparring Sessions: {}\n",
+                    emoji::FENCING,
                     entry.total_spar_count
                 ));
             }
 
             if entry.total_new_player_tour_count > 0 {
                 message.push_str(&format!(
-                    "Given tours: {}\n",
+                    "{} Given tours: {}\n",
+                    emoji::TICKET,
                     entry.total_new_player_tour_count
                 ));
             }
 
             if entry.total_new_player_combat_tutorial_count > 0 {
                 message.push_str(&format!(
-                    "Given combat tutorials: {}\n",
+                    "{} Given combat tutorials: {}\n",
+                    emoji::CROSSED_SWORDS,
                     entry.total_new_player_combat_tutorial_count
                 ));
             }
