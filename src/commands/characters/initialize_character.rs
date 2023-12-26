@@ -22,7 +22,9 @@ pub async fn initialize_character(
     #[autocomplete = "autocomplete_pokemon"]
     #[description = "What kind of pokemon are you?"]
     pokemon_species: String,
-    #[description = "Does it glow in the dark?"] is_shiny: bool,
+    #[description = "Optional. Does it glow in the dark? Defaults to false."] is_shiny: Option<
+        bool,
+    >,
     #[description = "Optional. Defaults to 0."]
     #[min = 0_i64]
     exp: Option<i64>,
@@ -40,6 +42,7 @@ pub async fn initialize_character(
     }
     let pokemon = pokemon.expect("This was just checked.");
 
+    let is_shiny = is_shiny.unwrap_or(false);
     let exp = exp.unwrap_or(0);
     let money = money.unwrap_or(500);
 
