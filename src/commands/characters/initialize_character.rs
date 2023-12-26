@@ -1,3 +1,4 @@
+use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::characters::{
     log_action, update_character_post, validate_user_input, ActionType,
 };
@@ -18,12 +19,29 @@ pub async fn initialize_character(
     ctx: Context<'_>,
     #[description = "Who owns the character?"] player: User,
     #[description = "What's the character's name?"] name: String,
-    #[min = 0_i64] exp: i64,
-    #[min = 0_i64] money: i64,
+    #[autocomplete = "autocomplete_pokemon"]
+    #[description = "What kind of pokemon are you?"]
+    pokemon_species: String,
+    #[description = "Does it glow in the dark?"] is_shiny: bool,
+    #[description = "Optional. Defaults to 0."]
+    #[min = 0_i64]
+    exp: Option<i64>,
+    #[description = "Optional. Defaults to 500."]
+    #[min = 0_i64]
+    money: Option<i64>,
 ) -> Result<(), Error> {
     if let Err(e) = validate_user_input(name.as_str()) {
         return send_error(&ctx, e).await;
     }
+
+    let pokemon = ctx.data().game.pokemon.get(&pokemon_species.to_lowercase());
+    if pokemon.is_none() {
+        return send_error(&ctx, &std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", pokemon_species)).await;
+    }
+    let pokemon = pokemon.expect("This was just checked.");
+
+    let exp = exp.unwrap_or(0);
+    let money = money.unwrap_or(500);
 
     let message = ctx
         .channel_id()
@@ -46,7 +64,7 @@ pub async fn initialize_character(
     let creation_date = chrono::Utc::now().date_naive();
 
     let record = sqlx::query!(
-        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money, species_api_id, is_shiny) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         user_id,
         guild_id,
         name,
@@ -54,7 +72,9 @@ pub async fn initialize_character(
         stat_channel_id,
         creation_date,
         exp,
-        money
+        money,
+        pokemon.poke_api_id.0,
+        is_shiny
     ).fetch_one(&ctx.data().database)
         .await;
 

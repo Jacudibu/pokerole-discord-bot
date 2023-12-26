@@ -5,6 +5,7 @@ use crate::commands::{
 };
 use crate::data::Data;
 use crate::enums::MysteryDungeonRank;
+use crate::game_data::PokemonApiId;
 use crate::{emoji, Error};
 use core::fmt;
 use poise::Command;
@@ -51,7 +52,7 @@ You can copy the command string either by just pressing the up key inside the te
 }
 
 pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
-    if let Some(result) = build_character_string(&ctx.data().database, id).await {
+    if let Some(result) = build_character_string(&ctx.data(), id).await {
         let message = ctx
             .serenity_context()
             .http
@@ -88,36 +89,46 @@ async fn count_completed_quests<'a>(database: &Pool<Sqlite>, character_id: i64) 
 }
 
 pub async fn build_character_string(
-    database: &Pool<Sqlite>,
+    data: &Data,
     character_id: i64,
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
-        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, total_new_player_tour_count, total_new_player_combat_tutorial_count \
+        "SELECT name, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, total_new_player_tour_count, total_new_player_combat_tutorial_count, species_api_id, is_shiny \
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
         character_id,
     )
-    .fetch_one(database)
+    .fetch_one(&data.database)
     .await;
 
-    let completed_quest_count = count_completed_quests(database, character_id).await;
-
+    let completed_quest_count = count_completed_quests(&data.database, character_id).await;
     match entry {
         Ok(entry) => {
             let level = entry.experience / 100 + 1;
             let experience = entry.experience % 100;
             let rank = MysteryDungeonRank::from_level(level as u8);
+            let pokemon = data
+                .game
+                .pokemon_by_api_id
+                .get(&PokemonApiId(
+                    entry
+                        .species_api_id
+                        .try_into()
+                        .expect("Should always be in valid range."),
+                ))
+                .expect("All mons inside the Database should have a valid API ID assigned.");
 
             let mut message = format!(
                 "\
-## {} {}
+## {} {} [{}]
 **Level {}** `({} / 100)`
 {} {}
 
 {} Backpack Slots: {}\n\n",
                 rank.emoji_string(),
                 entry.name,
+                pokemon.name,
                 level,
                 experience,
                 entry.money,

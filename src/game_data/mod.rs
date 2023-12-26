@@ -1,4 +1,4 @@
-use crate::game_data::pokemon_api::PokemonApiId;
+pub use crate::game_data::pokemon_api::PokemonApiId;
 use std::collections::HashMap;
 use std::sync::Arc;
 
