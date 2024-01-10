@@ -1,4 +1,5 @@
 use crate::cache::CharacterCacheItem;
+use crate::character_stats::GenericCharacterStats;
 use crate::commands::{
     handle_error_during_message_edit, parse_character_names, send_error,
     BuildUpdatedStatMessageStringResult, Context,
@@ -98,7 +99,8 @@ pub async fn build_character_string(
     character_id: i64,
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
-        "SELECT name, guild_id, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, total_new_player_tour_count, total_new_player_combat_tutorial_count, species_api_id, is_shiny, phenotype \
+        "SELECT name, guild_id, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, total_new_player_tour_count, total_new_player_combat_tutorial_count, species_api_id, is_shiny, phenotype, \
+                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight, stat_tough, stat_cool, stat_beauty, stat_cute, stat_clever
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -109,47 +111,71 @@ pub async fn build_character_string(
 
     let completed_quest_count = count_completed_quests(&data.database, character_id).await;
     match entry {
-        Ok(entry) => {
-            let level = entry.experience / 100 + 1;
-            let experience = entry.experience % 100;
+        Ok(record) => {
+            let level = record.experience / 100 + 1;
+            let experience = record.experience % 100;
             let rank = MysteryDungeonRank::from_level(level as u8);
             let pokemon = data
                 .game
                 .pokemon_by_api_id
                 .get(&PokemonApiId(
-                    entry
+                    record
                         .species_api_id
                         .try_into()
                         .expect("Should always be in valid range."),
                 ))
                 .expect("All mons inside the Database should have a valid API ID assigned.");
-            let gender = Gender::from_phenotype(entry.phenotype);
+            let gender = Gender::from_phenotype(record.phenotype);
             let emoji = emoji::get_pokemon_emoji(
                 &data.database,
-                entry.guild_id,
+                record.guild_id,
                 pokemon,
                 &gender,
-                entry.is_shiny,
+                record.is_shiny,
             )
             .await
             .unwrap_or(format!("[{}]", pokemon.name));
+
+            let combat_stats = GenericCharacterStats::from_combat(
+                pokemon,
+                record.stat_strength,
+                record.stat_dexterity,
+                record.stat_vitality,
+                record.stat_special,
+                record.stat_insight,
+            );
+
+            let social_stats = GenericCharacterStats::from_social(
+                record.stat_tough,
+                record.stat_cool,
+                record.stat_beauty,
+                record.stat_cute,
+                record.stat_clever,
+            );
 
             let mut message = format!(
                 "\
 ## {} {} {}
 **Level {}** `({} / 100)`
 {} {}
+### Stats 
+```
+{}
 
+{}
+```
 {} Backpack Slots: {}\n\n",
                 rank.emoji_string(),
-                entry.name,
+                record.name,
                 emoji,
                 level,
                 experience,
-                entry.money,
+                record.money,
                 emoji::POKE_COIN,
+                combat_stats.build_string(),
+                social_stats.build_string(),
                 emoji::BACKPACK,
-                entry.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
+                record.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
             );
 
             if completed_quest_count > 0 {
@@ -160,35 +186,35 @@ pub async fn build_character_string(
                 ));
             }
 
-            if entry.total_spar_count > 0 {
+            if record.total_spar_count > 0 {
                 message.push_str(&format!(
                     "{} Total Sparring Sessions: {}\n",
                     emoji::FENCING,
-                    entry.total_spar_count
+                    record.total_spar_count
                 ));
             }
 
-            if entry.total_new_player_tour_count > 0 {
+            if record.total_new_player_tour_count > 0 {
                 message.push_str(&format!(
                     "{} Given tours: {}\n",
                     emoji::TICKET,
-                    entry.total_new_player_tour_count
+                    record.total_new_player_tour_count
                 ));
             }
 
-            if entry.total_new_player_combat_tutorial_count > 0 {
+            if record.total_new_player_combat_tutorial_count > 0 {
                 message.push_str(&format!(
                     "{} Given combat tutorials: {}\n",
                     emoji::CROSSED_SWORDS,
-                    entry.total_new_player_combat_tutorial_count
+                    record.total_new_player_combat_tutorial_count
                 ));
             }
 
             Some(BuildUpdatedStatMessageStringResult {
                 message,
-                name: entry.name,
-                stat_channel_id: entry.stat_channel_id,
-                stat_message_id: entry.stat_message_id,
+                name: record.name,
+                stat_channel_id: record.stat_channel_id,
+                stat_message_id: record.stat_message_id,
             })
         }
         Err(_) => None,

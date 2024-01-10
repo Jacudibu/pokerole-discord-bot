@@ -6,7 +6,7 @@ enum CharacterStatType {
     Social,
 }
 
-struct GenericCharacterStats {
+pub struct GenericCharacterStats {
     kind: CharacterStatType,
     strength_or_tough: i64,
     strength_or_tough_max: i64,
@@ -22,16 +22,17 @@ struct GenericCharacterStats {
 
 impl GenericCharacterStats {
     pub fn from_combat(
-        base_hp: u8,
+        pokemon: &Pokemon,
         strength: i64,
         dexterity: i64,
         vitality: i64,
         special: i64,
         insight: i64,
-        pokemon: &Pokemon,
     ) -> Self {
         GenericCharacterStats {
-            kind: CharacterStatType::Combat { base_hp },
+            kind: CharacterStatType::Combat {
+                base_hp: pokemon.base_hp,
+            },
             strength_or_tough: strength,
             strength_or_tough_max: pokemon.strength.max as i64,
             dexterity_or_cool: dexterity,
@@ -83,7 +84,7 @@ Special Defense: {}
         }
     }
 
-    pub fn build_stat_block(&self) -> String {
+    fn build_stat_block(&self) -> String {
         match self.kind {
             CharacterStatType::Combat { .. } => {
                 format!(
