@@ -129,7 +129,7 @@ pub async fn build_character_string(
     let completed_quest_count = count_completed_quests(&data.database, character_id).await;
     match entry {
         Ok(record) => {
-            let level = record.experience / 100 + 1;
+            let level = helpers::calculate_level_from_experience(record.experience);
             let experience = record.experience % 100;
             let rank = MysteryDungeonRank::from_level(level as u8);
             let pokemon = data
@@ -163,9 +163,10 @@ pub async fn build_character_string(
                 emoji::type_to_emoji(&pokemon.type1).to_string()
             };
 
-            // TODO: Account for pre-evolution stats in case of earlier evos.
+            let pokemon_evolution_form_for_stats =
+                helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
             let combat_stats = GenericCharacterStats::from_combat(
-                pokemon,
+                pokemon_evolution_form_for_stats,
                 record.stat_strength,
                 record.stat_dexterity,
                 record.stat_vitality,

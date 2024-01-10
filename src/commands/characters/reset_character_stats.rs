@@ -2,6 +2,7 @@ use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::characters::{log_action, update_character_post, ActionType};
 use crate::commands::{find_character, Context, Error};
 use crate::game_data::PokemonApiId;
+use crate::helpers;
 
 /// Resets a characters stats to its default values.
 #[allow(clippy::too_many_arguments)]
@@ -20,21 +21,24 @@ pub async fn reset_character_stats(
     let character = find_character(ctx.data(), guild_id, &character).await?;
 
     let record = sqlx::query!(
-        "SELECT name, species_api_id FROM character WHERE id = ?",
+        "SELECT name, species_api_id, experience FROM character WHERE id = ?",
         character.id
     )
     .fetch_one(&ctx.data().database)
     .await?;
 
     let species_id = PokemonApiId(record.species_api_id as u16);
-    let species = ctx
+    let used_poke_species = ctx
         .data()
         .game
         .pokemon_by_api_id
         .get(&species_id)
         .expect("DB IDs should always be mappable.");
 
-    // TODO: Account for pre-evolution stats if mons evolve earlier.
+    let level = helpers::calculate_level_from_experience(record.experience);
+
+    let pokemon_evolution_form_for_stats =
+        helpers::get_usual_evolution_stage_for_level(level, used_poke_species, ctx.data());
 
     let _ = sqlx::query!(
         "UPDATE character SET 
@@ -59,16 +63,16 @@ stat_edit_beauty = 1,
 stat_edit_cute = 1,
 stat_edit_clever = 1
     WHERE id = ?",
-        species.strength.min,
-        species.dexterity.min,
-        species.vitality.min,
-        species.special.min,
-        species.insight.min,
-        species.strength.min,
-        species.dexterity.min,
-        species.vitality.min,
-        species.special.min,
-        species.insight.min,
+        pokemon_evolution_form_for_stats.strength.min,
+        pokemon_evolution_form_for_stats.dexterity.min,
+        pokemon_evolution_form_for_stats.vitality.min,
+        pokemon_evolution_form_for_stats.special.min,
+        pokemon_evolution_form_for_stats.insight.min,
+        pokemon_evolution_form_for_stats.strength.min,
+        pokemon_evolution_form_for_stats.dexterity.min,
+        pokemon_evolution_form_for_stats.vitality.min,
+        pokemon_evolution_form_for_stats.special.min,
+        pokemon_evolution_form_for_stats.insight.min,
         character.id
     )
     .execute(&ctx.data().database)

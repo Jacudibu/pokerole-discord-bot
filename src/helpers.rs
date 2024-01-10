@@ -1,5 +1,6 @@
 use crate::data::Data;
 use crate::enums::{MysteryDungeonRank, QuestParticipantSelectionMechanism};
+use crate::game_data::pokemon::Pokemon;
 use crate::{emoji, Error};
 use serenity::all::{
     ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, EditMessage, MessageId,
@@ -264,4 +265,52 @@ pub fn calculate_available_social_points(rank: &MysteryDungeonRank) -> u8 {
 
 pub fn calculate_available_combat_points(level: i64) -> i64 {
     level + 3
+}
+
+const STAGE1_EVOLUTION_LEVEL_THRESHOLD: i64 = 3;
+const STAGE2_EVOLUTION_LEVEL_THRESHOLD: i64 = 6;
+
+pub fn get_usual_evolution_stage_for_level<'a>(
+    level: i64,
+    pokemon: &'a Pokemon,
+    data: &'a Data,
+) -> &'a Pokemon {
+    if pokemon.evolves_from.is_none() {
+        return pokemon;
+    }
+    let evolves_from = pokemon.evolves_from.unwrap();
+
+    if level >= STAGE2_EVOLUTION_LEVEL_THRESHOLD {
+        return pokemon;
+    }
+
+    let pre_evolution = data
+        .game
+        .pokemon_by_api_id
+        .get(&evolves_from)
+        .expect("Pre-Evolutions should be implemented!");
+
+    if pre_evolution.evolves_from.is_none() {
+        // Confirmed one stage evo
+        return if level >= STAGE1_EVOLUTION_LEVEL_THRESHOLD {
+            pokemon
+        } else {
+            pre_evolution
+        };
+    }
+
+    // Confirmed two stage evo
+    if level >= STAGE1_EVOLUTION_LEVEL_THRESHOLD {
+        return pre_evolution;
+    }
+
+    // Confirmed first stage stats
+    data.game
+        .pokemon_by_api_id
+        .get(&pre_evolution.evolves_from.unwrap())
+        .expect("Pre-Evolutions should be implemented!")
+}
+
+pub fn calculate_level_from_experience(experience: i64) -> i64 {
+    experience / 100 + 1
 }
