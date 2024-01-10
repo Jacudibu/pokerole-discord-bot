@@ -1,5 +1,5 @@
 use crate::data::Data;
-use crate::enums::QuestParticipantSelectionMechanism;
+use crate::enums::{MysteryDungeonRank, QuestParticipantSelectionMechanism};
 use crate::{emoji, Error};
 use serenity::all::{
     ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, EditMessage, MessageId,
@@ -250,4 +250,18 @@ pub async fn update_quest_message(
             .await?;
     }
     Ok(())
+}
+
+pub fn calculate_available_social_points(rank: &MysteryDungeonRank) -> u8 {
+    match rank {
+        MysteryDungeonRank::Bronze => 4,
+        MysteryDungeonRank::Silver => 4 + 2,
+        MysteryDungeonRank::Gold => 4 + 4,
+        MysteryDungeonRank::Platinum => 4 + 6,
+        MysteryDungeonRank::Diamond => 4 + 8,
+    }
+}
+
+pub fn calculate_available_combat_points(level: i64) -> i64 {
+    level + 3
 }

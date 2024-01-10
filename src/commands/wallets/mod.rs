@@ -39,8 +39,15 @@ pub async fn update_wallet_post<'a>(ctx: &Context<'a>, wallet_id: i64) {
                 .edit(ctx, EditMessage::new().content(&result.message))
                 .await
             {
-                handle_error_during_message_edit(ctx, e, message, result.message, result.name)
-                    .await;
+                handle_error_during_message_edit(
+                    ctx,
+                    e,
+                    message,
+                    result.message,
+                    None,
+                    result.name,
+                )
+                .await;
             }
         }
     }
@@ -99,6 +106,7 @@ async fn build_wallet_string<'a>(
                 emoji::POKE_COIN,
             ),
             name: entry.name,
+            components: Vec::new(),
             stat_channel_id: entry.bot_message_channel_id,
             stat_message_id: entry.bot_message_id,
         }),

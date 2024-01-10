@@ -103,7 +103,7 @@ impl EncounterMon {
             Stat::Insight,
         ];
         let mut non_maxed_stat_points = all_stats.clone();
-        let mut remaining_stat_points = level + 3;
+        let mut remaining_stat_points = helpers::calculate_available_combat_points(level as i64);
         let mut limit_break_count = 0;
         while remaining_stat_points > 0 {
             if let Some(mut stat) = non_maxed_stat_points.choose(&mut rng) {
@@ -131,7 +131,7 @@ impl EncounterMon {
             SocialStat::Clever,
             SocialStat::Cute,
         ];
-        let mut remaining_social_points = EncounterMon::calculate_social_points(&result.rank);
+        let mut remaining_social_points = helpers::calculate_available_social_points(&result.rank);
         while remaining_social_points > 0 {
             if let Some(mut stat) = non_maxed_social_stats.choose(&mut rng) {
                 result.increase_social_stat(stat);
@@ -160,16 +160,6 @@ impl EncounterMon {
         result.moves = available_moves.choose_multiple(&mut thread_rng(), move_count as usize);
 
         result
-    }
-
-    fn calculate_social_points(rank: &MysteryDungeonRank) -> u8 {
-        match rank {
-            MysteryDungeonRank::Bronze => 4,
-            MysteryDungeonRank::Silver => 4 + 2,
-            MysteryDungeonRank::Gold => 4 + 4,
-            MysteryDungeonRank::Platinum => 4 + 6,
-            MysteryDungeonRank::Diamond => 4 + 8,
-        }
     }
 
     fn get_random_gender(_pokemon: &Pokemon) -> Gender {

@@ -4,7 +4,7 @@ use crate::errors::{ParseError, ValidationError};
 use crate::game_data::pokemon::Pokemon;
 use crate::{discord_error_codes, helpers, Error};
 use poise::{Command, CreateReply, ReplyHandle};
-use serenity::all::{EditMessage, HttpError, Message};
+use serenity::all::{ActionRow, CreateActionRow, EditMessage, HttpError, Message};
 use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;
@@ -282,6 +282,7 @@ async fn ensure_user_exists<'a>(ctx: &Context<'a>, user_id: i64, guild_id: i64) 
 
 pub struct BuildUpdatedStatMessageStringResult {
     pub message: String,
+    pub components: Vec<CreateActionRow>,
     pub name: String,
     pub stat_channel_id: i64,
     pub stat_message_id: i64,
@@ -410,6 +411,7 @@ async fn handle_error_during_message_edit<'a>(
     e: serenity::Error,
     mut message_to_edit: Message,
     updated_message_content: impl Into<String>,
+    components: Option<Vec<CreateActionRow>>,
     name: impl Into<String>,
 ) {
     if let serenity::Error::Http(HttpError::UnsuccessfulRequest(e)) = &e {
@@ -420,7 +422,12 @@ async fn handle_error_during_message_edit<'a>(
                         .say(ctx, "This thread was (probably) automagically archived, and I'm sending this message to reopen it so I can update some values. This message should be deleted right away, sorry if it pinged you!").await
                     {
                         let _ = response.delete(ctx).await;
-                        if let Err(e) = message_to_edit.edit(ctx, EditMessage::new().content(updated_message_content)).await {
+                        let mut edit_message = EditMessage::new().content(updated_message_content);
+                        if let Some(components) = components {
+                            edit_message = edit_message.components(components);
+                        }
+
+                        if let Err(e) = message_to_edit.edit(ctx, edit_message).await {
                             let _ = ctx.say(format!(
                                 "**Failed to update the stat message for {}!**.\nThe change has been tracked, but whilst updating the message some error occurred:\n```{:?}```\nTechnically this issue should have been fixed, so I'll ping {} to have a look at it. For now, just proceed as if nothing went wrong. Sorry for the inconvenience!",
                                 name.into(),

@@ -7,11 +7,14 @@ use crate::commands::{
 use crate::data::Data;
 use crate::enums::{Gender, MysteryDungeonRank};
 use crate::game_data::PokemonApiId;
-use crate::{emoji, Error};
+use crate::{emoji, helpers, Error};
 use core::fmt;
 use poise::Command;
 use regex::Regex;
-use serenity::all::{CreateAllowedMentions, CreateMessage, EditMessage, MessageId};
+use serenity::all::{
+    ButtonStyle, CreateActionRow, CreateAllowedMentions, CreateButton, CreateMessage, EditMessage,
+    MessageId,
+};
 use serenity::model::id::ChannelId;
 use sqlx::{Pool, Sqlite};
 use std::fmt::Formatter;
@@ -69,11 +72,23 @@ pub async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
             .await;
         if let Ok(mut message) = message {
             if let Err(e) = message
-                .edit(ctx, EditMessage::new().content(&result.message))
+                .edit(
+                    ctx,
+                    EditMessage::new()
+                        .content(&result.message)
+                        .components(result.components.clone()),
+                )
                 .await
             {
-                handle_error_during_message_edit(ctx, e, message, result.message, result.name)
-                    .await;
+                handle_error_during_message_edit(
+                    ctx,
+                    e,
+                    message,
+                    result.message,
+                    Some(result.components),
+                    result.name,
+                )
+                .await;
             }
         }
     }
@@ -209,8 +224,38 @@ pub async fn build_character_string(
                 ));
             }
 
+            let remaining_combat_points = helpers::calculate_available_combat_points(level)
+                - combat_stats.calculate_invested_stat_points();
+            let remaining_social_points = helpers::calculate_available_social_points(&rank) as i64
+                - social_stats.calculate_invested_stat_points();
+
+            let mut components = Vec::new();
+            if remaining_combat_points + remaining_social_points > 0 {
+                let mut action_row = Vec::new();
+                if remaining_combat_points > 0 {
+                    action_row.push(
+                        CreateButton::new("ignore_distribute-stats")
+                            .label(format!("{} Remaining Stat Points", remaining_combat_points))
+                            .style(ButtonStyle::Primary),
+                    );
+                }
+                if remaining_social_points > 0 {
+                    action_row.push(
+                        CreateButton::new("ignore_distribute-socials")
+                            .label(format!(
+                                "{} Remaining Social Points",
+                                remaining_social_points
+                            ))
+                            .style(ButtonStyle::Primary),
+                    )
+                }
+
+                components.push(CreateActionRow::Buttons(action_row));
+            }
+
             Some(BuildUpdatedStatMessageStringResult {
                 message,
+                components,
                 name: record.name,
                 stat_channel_id: record.stat_channel_id,
                 stat_message_id: record.stat_message_id,
