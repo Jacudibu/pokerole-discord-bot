@@ -1,4 +1,5 @@
 mod cache;
+mod character_stats;
 mod commands;
 mod csv_utils;
 mod data;

@@ -727,10 +727,10 @@ impl PokemonStat {
         result.push_str(&std::format!("**{}**: ", stat_name));
 
         for _ in 0..self.min {
-            result.push('⬤');
+            result.push(emoji::DOT_FILLED);
         }
         for _ in 0..self.max - self.min {
-            result.push('⭘');
+            result.push(emoji::DOT_EMPTY);
         }
 
         result.push_str(&std::format!(" `{}/{}`\n", self.min, self.max));

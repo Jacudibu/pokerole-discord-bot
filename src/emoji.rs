@@ -32,6 +32,10 @@ pub const FENCING: &str = "🤺";
 pub const TICKET: &str = "🎫";
 pub const CROSSED_SWORDS: &str = "⚔️";
 
+pub const DOT_EMPTY: char = '⭘';
+pub const DOT_FILLED: char = '⬤';
+pub const DOT_OVERCHARGED: char = '⧳';
+
 pub async fn get_character_emoji(data: &Data, character_id: i64) -> Option<String> {
     let result = sqlx::query!(
         "SELECT guild_id, species_api_id, is_shiny, phenotype FROM character WHERE id = ?",
