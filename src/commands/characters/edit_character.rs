@@ -1,6 +1,9 @@
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::characters::{log_action, update_character_post, ActionType};
+use crate::commands::characters::reset_character_stats::reset_character_stats;
+use crate::commands::characters::{
+    log_action, reset_character_stats, update_character_post, ActionType,
+};
 use crate::commands::{
     find_character, pokemon_from_autocomplete_string, send_ephemeral_reply, send_error, Context,
     Error,
@@ -36,9 +39,13 @@ pub async fn edit_character(
 
     let mut action_log = Vec::new();
 
+    let mut should_stats_be_reset = false;
     let species = if let Some(species) = species {
         let species = pokemon_from_autocomplete_string(&ctx, &species)?;
-        action_log.push(format!("species to {}", species.name));
+        if species.poke_api_id.0 as i64 != record.species_api_id {
+            action_log.push(format!("species to {}", species.name));
+            should_stats_be_reset = true;
+        }
         species
     } else {
         ctx.data()
@@ -69,13 +76,18 @@ pub async fn edit_character(
     .execute(&ctx.data().database)
     .await;
 
+    if should_stats_be_reset {
+        let _ = reset_character_stats::reset_db_stats(&ctx, &character).await;
+        action_log.push("and reset their stats".to_string());
+    }
+
     update_character_post(&ctx, character.id).await;
 
     let action_log = action_log.join(", ");
     let _ = log_action(
         &ActionType::CharacterEdit,
         &ctx,
-        &format!("Set {}'s {}", character.name, action_log),
+        &format!("Set {}'s {}.", character.name, action_log),
     )
     .await;
     let _ = send_ephemeral_reply(

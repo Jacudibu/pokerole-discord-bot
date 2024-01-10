@@ -1,3 +1,4 @@
+use crate::cache::CharacterCacheItem;
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::characters::{log_action, update_character_post, ActionType};
 use crate::commands::{find_character, Context, Error};
@@ -20,6 +21,25 @@ pub async fn reset_character_stats(
     let guild_id = ctx.guild_id().expect("Command is guild_only").get();
     let character = find_character(ctx.data(), guild_id, &character).await?;
 
+    reset_db_stats(&ctx, &character).await?;
+    update_character_post(&ctx, character.id).await;
+
+    let _ = ctx
+        .reply(&format!("{}'s stats have been reset.", character.name))
+        .await;
+    let _ = log_action(
+        &ActionType::CharacterStatReset,
+        &ctx,
+        &format!("Reset {}'s stats", character.name),
+    )
+    .await;
+    Ok(())
+}
+
+pub async fn reset_db_stats(
+    ctx: &Context<'_>,
+    character: &CharacterCacheItem,
+) -> Result<(), Error> {
     let record = sqlx::query!(
         "SELECT name, species_api_id, experience FROM character WHERE id = ?",
         character.id
@@ -76,18 +96,6 @@ stat_edit_clever = 1
         character.id
     )
     .execute(&ctx.data().database)
-    .await;
-
-    update_character_post(&ctx, character.id).await;
-
-    let _ = ctx
-        .reply(&format!("{}'s stats have been reset.", character.name))
-        .await;
-    let _ = log_action(
-        &ActionType::CharacterStatReset,
-        &ctx,
-        &format!("Reset {}'s stats", character.name),
-    )
     .await;
     Ok(())
 }
