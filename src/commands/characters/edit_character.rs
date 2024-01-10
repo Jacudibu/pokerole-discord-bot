@@ -1,6 +1,5 @@
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::characters::reset_character_stats::reset_character_stats;
 use crate::commands::characters::{
     log_action, reset_character_stats, update_character_post, ActionType,
 };

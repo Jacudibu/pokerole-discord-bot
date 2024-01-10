@@ -4,7 +4,7 @@ use crate::errors::{ParseError, ValidationError};
 use crate::game_data::pokemon::Pokemon;
 use crate::{discord_error_codes, helpers, Error};
 use poise::{Command, CreateReply, ReplyHandle};
-use serenity::all::{ActionRow, CreateActionRow, EditMessage, HttpError, Message};
+use serenity::all::{CreateActionRow, EditMessage, HttpError, Message};
 use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;

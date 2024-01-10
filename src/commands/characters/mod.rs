@@ -182,6 +182,8 @@ pub async fn build_character_string(
                 record.stat_clever,
             );
 
+            let ability_list = pokemon.build_simple_ability_list(false);
+
             let mut message = format!(
                 "\
 ## {} {} {}
@@ -192,6 +194,8 @@ pub async fn build_character_string(
 {}
 {}
 ```
+### Abilities 
+{}### Statistics
 {} Backpack Slots: {}\n\n",
                 rank.emoji_string(),
                 record.name,
@@ -203,6 +207,7 @@ pub async fn build_character_string(
                 type_emojis,
                 combat_stats.build_string(),
                 social_stats.build_string(),
+                ability_list,
                 emoji::BACKPACK,
                 record.backpack_upgrade_count + DEFAULT_BACKPACK_SLOTS,
             );

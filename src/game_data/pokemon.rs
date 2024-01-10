@@ -163,6 +163,25 @@ impl Pokemon {
         result
     }
 
+    pub(crate) fn build_simple_ability_list(&self, include_hidden: bool) -> String {
+        let mut result = format!("- {}\n", self.ability1);
+        if let Some(ability) = &self.ability2 {
+            result.push_str(&format!("- {}\n", ability));
+        }
+
+        if include_hidden {
+            if let Some(ability) = &self.hidden_ability {
+                result.push_str(&format!("- {} (Hidden)\n", ability));
+            }
+
+            if let Some(ability) = &self.event_abilities {
+                result.push_str(&format!("- {} (Event)\n", ability));
+            }
+        }
+
+        result
+    }
+
     fn push_ability(
         result: &mut String,
         ability_name: &String,
