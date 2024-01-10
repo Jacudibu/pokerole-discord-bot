@@ -1,5 +1,6 @@
 use crate::emoji;
 use crate::game_data::pokemon::Pokemon;
+use std::cmp::Ordering;
 
 enum CharacterStatType {
     Combat { base_hp: u8 },
@@ -19,6 +20,9 @@ pub struct GenericCharacterStats {
     insight_or_clever: i64,
     insight_or_clever_max: i64,
 }
+
+const COMBAT_PADDING: usize = 10;
+const SOCIAL_PADDING: usize = 7;
 
 impl GenericCharacterStats {
     pub fn from_combat(
@@ -69,6 +73,7 @@ impl GenericCharacterStats {
                     "\
 HP: {}
 Willpower: {}
+
 {}
 Defense: {}
 Special Defense: {}
@@ -93,26 +98,31 @@ Special Defense: {}
                         "Strength",
                         self.strength_or_tough,
                         self.strength_or_tough_max,
+                        COMBAT_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Dexterity",
                         self.dexterity_or_cool,
                         self.dexterity_or_cool_max,
+                        COMBAT_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Vitality",
                         self.vitality_or_beauty,
                         self.vitality_or_beauty_max,
+                        COMBAT_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Special",
                         self.special_or_cute,
                         self.special_or_cute_max,
+                        COMBAT_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Insight",
                         self.insight_or_clever,
                         self.insight_or_clever_max,
+                        COMBAT_PADDING
                     ),
                 )
             }
@@ -123,54 +133,68 @@ Special Defense: {}
                         "Tough",
                         self.strength_or_tough,
                         self.strength_or_tough_max,
+                        SOCIAL_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Cool",
                         self.dexterity_or_cool,
                         self.dexterity_or_cool_max,
+                        SOCIAL_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Beauty",
                         self.vitality_or_beauty,
                         self.vitality_or_beauty_max,
+                        SOCIAL_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Cute",
                         self.special_or_cute,
                         self.special_or_cute_max,
+                        SOCIAL_PADDING
                     ),
                     GenericCharacterStats::build_stat_row(
                         "Clever",
                         self.insight_or_clever,
                         self.insight_or_clever_max,
+                        SOCIAL_PADDING
                     ),
                 )
             }
         }
     }
 
-    fn build_stat_row(name: &str, value: i64, max: i64) -> String {
+    fn build_stat_row(name: &str, value: i64, max: i64, padding: usize) -> String {
         let mut result = String::new();
-        result.push_str(&format!("{}: {} |", name, value));
+        result.push_str(&format!(
+            "{:<padding$} {} |",
+            format!("{}:", name),
+            value,
+            padding = padding
+        ));
 
-        if max == value {
-            for _ in 0..value {
-                result.push(emoji::DOT_FILLED);
+        match value.cmp(&max) {
+            Ordering::Less => {
+                for i in 0..max {
+                    if i < value {
+                        result.push(emoji::DOT_FILLED);
+                    } else {
+                        result.push(emoji::DOT_EMPTY);
+                    }
+                }
             }
-        } else if max > value {
-            for i in 0..max {
-                if i < value {
-                    result.push(emoji::DOT_EMPTY);
-                } else {
+            Ordering::Equal => {
+                for _ in 0..value {
                     result.push(emoji::DOT_FILLED);
                 }
             }
-        } else if value > max {
-            for i in 0..value {
-                if i < max {
-                    result.push(emoji::DOT_FILLED);
-                } else {
-                    result.push(emoji::DOT_OVERCHARGED);
+            Ordering::Greater => {
+                for i in 0..value {
+                    if i < max {
+                        result.push(emoji::DOT_FILLED);
+                    } else {
+                        result.push(emoji::DOT_OVERCHARGED);
+                    }
                 }
             }
         }

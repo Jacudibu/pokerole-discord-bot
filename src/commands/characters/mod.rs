@@ -161,7 +161,6 @@ pub async fn build_character_string(
 ### Stats 
 ```
 {}
-
 {}
 ```
 {} Backpack Slots: {}\n\n",
