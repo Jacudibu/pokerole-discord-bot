@@ -153,6 +153,16 @@ pub async fn build_character_string(
             .await
             .unwrap_or(format!("[{}]", pokemon.name));
 
+            let type_emojis = if let Some(type2) = pokemon.type2 {
+                format!(
+                    "{}/{}",
+                    emoji::type_to_emoji(&pokemon.type1),
+                    emoji::type_to_emoji(&type2)
+                )
+            } else {
+                emoji::type_to_emoji(&pokemon.type1).to_string()
+            };
+
             // TODO: Account for pre-evolution stats in case of earlier evos.
             let combat_stats = GenericCharacterStats::from_combat(
                 pokemon,
@@ -176,7 +186,7 @@ pub async fn build_character_string(
 ## {} {} {}
 **Level {}** `({} / 100)`
 {} {}
-### Stats 
+### Stats {}
 ```
 {}
 {}
@@ -189,6 +199,7 @@ pub async fn build_character_string(
                 experience,
                 record.money,
                 emoji::POKE_COIN,
+                type_emojis,
                 combat_stats.build_string(),
                 social_stats.build_string(),
                 emoji::BACKPACK,

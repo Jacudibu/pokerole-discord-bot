@@ -1,5 +1,5 @@
 use crate::data::Data;
-use crate::enums::{Gender, RegionalVariant};
+use crate::enums::{Gender, PokemonType, RegionalVariant};
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::PokemonApiId;
 use sqlx::{Pool, Sqlite};
@@ -180,4 +180,28 @@ pub fn pokemon_to_emoji_name(
         female,
         animated
     )
+}
+
+pub fn type_to_emoji(pokemon_type: &PokemonType) -> &str {
+    match pokemon_type {
+        PokemonType::Normal => "<:type_normal:1118590014931095662>",
+        PokemonType::Fighting => "<:type_fighting:1118590013194649730>",
+        PokemonType::Flying => "<:type_flying:1118590010359283773>",
+        PokemonType::Poison => "<:type_poison:1118590008778047529>",
+        PokemonType::Ground => "<:type_ground:1118590006081114325>",
+        PokemonType::Rock => "<:type_rock:1118590005082861820>",
+        PokemonType::Bug => "<:type_bug:1118594892566908959>",
+        PokemonType::Ghost => "<:type_ghost:1118594890461368350>",
+        PokemonType::Steel => "<:type_steel:1118594889131765821>",
+        PokemonType::Fire => "<:type_fire:1118594887399514145>",
+        PokemonType::Water => "<:type_water:1118594885344297062>",
+        PokemonType::Grass => "<:type_grass:1118594883754664107>",
+        PokemonType::Electric => "<:type_electric:1118594871272415243>",
+        PokemonType::Psychic => "<:type_psychic:1118594873755435009>",
+        PokemonType::Ice => "<:type_ice:1118594875085041825>",
+        PokemonType::Dragon => "<:type_dragon:1118594876444000357>",
+        PokemonType::Dark => "<:type_dark:1118594879195447387>",
+        PokemonType::Fairy => "<:type_fairy:1118594881368100894>",
+        PokemonType::Shadow => "",
+    }
 }
