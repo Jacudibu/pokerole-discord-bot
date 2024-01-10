@@ -25,6 +25,7 @@ mod give_money;
 mod initialize_character;
 mod initialize_character_post;
 mod initialize_guild;
+mod reset_character_stats;
 mod reward_experience;
 mod reward_giving_combat_tutorial;
 mod reward_giving_tour;
@@ -49,6 +50,7 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         reward_giving_tour::reward_giving_tour(),
         cs_mock::cs_mock_1(),
         cs_mock::cs_mock_2(),
+        reset_character_stats::reset_character_stats(),
     ]
 }
 
@@ -151,6 +153,7 @@ pub async fn build_character_string(
             .await
             .unwrap_or(format!("[{}]", pokemon.name));
 
+            // TODO: Account for pre-evolution stats in case of earlier evos.
             let combat_stats = GenericCharacterStats::from_combat(
                 pokemon,
                 record.stat_strength,
@@ -280,6 +283,7 @@ pub enum ActionType {
     NewPlayerCombatTutorial,
     NewPlayerTour,
     CharacterEdit,
+    CharacterStatReset,
 }
 
 impl fmt::Display for ActionType {
@@ -299,6 +303,7 @@ impl fmt::Display for ActionType {
             ActionType::NewPlayerCombatTutorial => "⚔️ [Combat Tutorial]",
             ActionType::NewPlayerTour => "🎫 [Tour]",
             ActionType::CharacterEdit => "📝 [Edit]",
+            ActionType::CharacterStatReset => "📝 [Edit]",
         })
     }
 }
