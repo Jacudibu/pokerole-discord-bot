@@ -1,5 +1,5 @@
 use crate::commands::{efficiency, learns};
-use crate::events::{parse_interaction_command, quests, FrameworkContext};
+use crate::events::{character_stat_edit, parse_interaction_command, quests, FrameworkContext};
 use crate::{commands, emoji, helpers, Error};
 use serenity::all::{
     ActionRow, ActionRowComponent, Button, ButtonKind, ComponentInteraction,
@@ -134,6 +134,15 @@ pub async fn handle_button_interaction(
                 context,
                 interaction,
                 framework.user_data,
+            )
+            .await?;
+        }
+        "ce" => {
+            character_stat_edit::handle_character_editor_command(
+                context,
+                interaction,
+                framework.user_data,
+                args,
             )
             .await?;
         }

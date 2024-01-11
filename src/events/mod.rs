@@ -1,5 +1,6 @@
 mod backups;
 mod button_interaction;
+mod character_stat_edit;
 mod quests;
 mod role_reaction;
 mod select_menu_interaction;

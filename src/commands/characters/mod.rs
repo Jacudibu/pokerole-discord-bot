@@ -254,14 +254,14 @@ pub async fn build_character_string(
                 let mut action_row = Vec::new();
                 if remaining_combat_points > 0 {
                     action_row.push(
-                        CreateButton::new("ignore_distribute-stats")
+                        CreateButton::new(format!("ce_initialize_combat_{}", character_id))
                             .label(format!("{} Remaining Stat Points", remaining_combat_points))
                             .style(ButtonStyle::Primary),
                     );
                 }
                 if remaining_social_points > 0 {
                     action_row.push(
-                        CreateButton::new("ignore_distribute-socials")
+                        CreateButton::new(format!("ce_initialize_social_{}", character_id))
                             .label(format!(
                                 "{} Remaining Social Points",
                                 remaining_social_points
