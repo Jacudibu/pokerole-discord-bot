@@ -2,7 +2,7 @@ use crate::character_stats::GenericCharacterStats;
 use crate::data::Data;
 use crate::enums::MysteryDungeonRank;
 use crate::events::character_stat_edit::{
-    create_combat_edit_overview_message, reset_stat_edit_values,
+    create_stat_edit_overview_message, reset_stat_edit_values, StatType,
 };
 use crate::events::send_error;
 use crate::game_data::PokemonApiId;
@@ -18,7 +18,7 @@ pub async fn initialize(
 ) -> Result<(), Error> {
     match args.remove(0) {
         "combat" => initialize_combat(ctx, interaction, data, args).await,
-        "social" => Ok(()),
+        "social" => initialize_social(ctx, interaction, data, args).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
 }
@@ -35,7 +35,7 @@ async fn initialize_combat(
         let character_id = i64::from_str(character_id)?;
         let record = sqlx::query!(
             "SELECT experience, species_api_id, \
-                      stat_edit_strength, stat_dexterity, stat_vitality, stat_special, stat_insight
+                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight
                 FROM character WHERE id = ? AND user_id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -89,7 +89,8 @@ async fn initialize_combat(
                     .create_response(
                         ctx,
                         CreateInteractionResponse::Message(
-                            create_combat_edit_overview_message(data, character_id).await,
+                            create_stat_edit_overview_message(data, character_id, StatType::Combat)
+                                .await,
                         ),
                     )
                     .await;
@@ -174,7 +175,8 @@ async fn initialize_social(
                     .create_response(
                         ctx,
                         CreateInteractionResponse::Message(
-                            create_combat_edit_overview_message(data, character_id).await,
+                            create_stat_edit_overview_message(data, character_id, StatType::Social)
+                                .await,
                         ),
                     )
                     .await;

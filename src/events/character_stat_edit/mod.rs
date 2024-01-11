@@ -2,7 +2,7 @@ mod initialize;
 
 use crate::character_stats::GenericCharacterStats;
 use crate::data::Data;
-use crate::enums::{Gender, MysteryDungeonRank};
+use crate::enums::{CombatOrSocialStat, Gender, MysteryDungeonRank};
 use crate::events::{character_stat_edit, send_error};
 use crate::game_data::PokemonApiId;
 use crate::{emoji, helpers, Error};
@@ -25,7 +25,13 @@ pub async fn handle_character_editor_command(
     }
 }
 
-pub async fn reset_stat_edit_values(data: &Data, character_id: i64) {
+#[derive(PartialOrd, PartialEq)]
+enum StatType {
+    Combat,
+    Social,
+}
+
+async fn reset_stat_edit_values(data: &Data, character_id: i64) {
     let _ = sqlx::query!(
         "UPDATE character SET 
 stat_edit_strength = stat_strength,
@@ -94,9 +100,59 @@ fn create_combat_buttons(character_id: i64) -> Vec<CreateActionRow> {
     ]
 }
 
-async fn create_edit_overview_message(
+fn create_social_buttons(character_id: i64) -> Vec<CreateActionRow> {
+    vec![
+        CreateActionRow::Buttons(vec![
+            CreateButton::new(format!("ce_social-stat_add_{}_tough", character_id))
+                .label("+Tough")
+                .style(ButtonStyle::Success),
+            CreateButton::new(format!("ce_social-stat_add_{}_cool", character_id))
+                .label("+Cool")
+                .style(ButtonStyle::Success),
+            CreateButton::new(format!("ce_social-stat_add_{}_beauty", character_id))
+                .label("+Beauty")
+                .style(ButtonStyle::Success),
+            CreateButton::new(format!("ce_social-stat_add_{}_cute", character_id))
+                .label("+Cute")
+                .style(ButtonStyle::Success),
+            CreateButton::new(format!("ce_social-stat_add_{}_clever", character_id))
+                .label("+Clever")
+                .style(ButtonStyle::Success),
+        ]),
+        CreateActionRow::Buttons(vec![
+            CreateButton::new(format!("ce_social-stat_subtract_{}_tough", character_id))
+                .label("-Tough")
+                .style(ButtonStyle::Danger),
+            CreateButton::new(format!("ce_social-stat_subtract_{}_cool", character_id))
+                .label("-Cool")
+                .style(ButtonStyle::Danger),
+            CreateButton::new(format!("ce_social-stat_subtract_{}_beauty", character_id))
+                .label("-Beauty")
+                .style(ButtonStyle::Danger),
+            CreateButton::new(format!("ce_social-stat_subtract_{}_cute", character_id))
+                .label("-Cute")
+                .style(ButtonStyle::Danger),
+            CreateButton::new(format!("ce_social-stat_subtract_{}_clever", character_id))
+                .label("-Clever")
+                .style(ButtonStyle::Danger),
+        ]),
+        CreateActionRow::Buttons(vec![
+            CreateButton::new(format!("ce_social-stat_apply_{}", character_id))
+                .label("Apply")
+                .emoji(ReactionType::Unicode(emoji::UNICODE_CHECK_MARK.to_string()))
+                .style(ButtonStyle::Primary),
+            CreateButton::new(format!("ce_social-stat_cancel_{}", character_id))
+                .label("Cancel")
+                .emoji(ReactionType::Unicode(emoji::UNICODE_CROSS_MARK.to_string()))
+                .style(ButtonStyle::Secondary),
+        ]),
+    ]
+}
+
+async fn create_stat_edit_overview_message(
     data: &Data,
     character_id: i64,
+    stat_type: StatType,
 ) -> CreateInteractionResponseMessage {
     let record = sqlx::query!(
         "SELECT name, guild_id, experience, species_api_id, is_shiny, phenotype, \
@@ -134,30 +190,53 @@ async fn create_edit_overview_message(
     .await
     .unwrap_or(format!("[{}]", pokemon.name));
 
-    let pokemon_evolution_form_for_stats =
-        helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
-    let combat_stats = GenericCharacterStats::from_combat(
-        pokemon_evolution_form_for_stats,
-        record.stat_edit_strength,
-        record.stat_edit_dexterity,
-        record.stat_edit_vitality,
-        record.stat_edit_special,
-        record.stat_edit_insight,
-    );
+    let (stats, remaining_points) = match stat_type {
+        StatType::Combat => {
+            let pokemon_evolution_form_for_stats =
+                helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+            let combat_stats = GenericCharacterStats::from_combat(
+                pokemon_evolution_form_for_stats,
+                record.stat_edit_strength,
+                record.stat_edit_dexterity,
+                record.stat_edit_vitality,
+                record.stat_edit_special,
+                record.stat_edit_insight,
+            );
 
-    let remaining_points = helpers::calculate_available_combat_points(level)
-        - combat_stats.calculate_invested_stat_points();
+            let remaining_points = helpers::calculate_available_combat_points(level)
+                - combat_stats.calculate_invested_stat_points();
+
+            (combat_stats, remaining_points)
+        }
+        StatType::Social => {
+            let social_stats = GenericCharacterStats::from_social(
+                record.stat_edit_tough,
+                record.stat_edit_cool,
+                record.stat_edit_beauty,
+                record.stat_edit_cute,
+                record.stat_edit_clever,
+            );
+
+            let remaining_points = helpers::calculate_available_social_points(&rank) as i64
+                - social_stats.calculate_invested_stat_points();
+
+            (social_stats, remaining_points)
+        }
+    };
 
     let message = format!(
-        "### {}{}\n{}\n\n{} Remaining Points.",
+        "### {}{}\n```\n{}```\n{} Remaining Points.",
         emoji,
         record.name,
-        combat_stats.build_string(),
+        stats.build_string(),
         remaining_points
     );
 
     CreateInteractionResponseMessage::new()
         .content(message)
         .ephemeral(true)
-        .components(create_combat_buttons(character_id))
+        .components(match stat_type {
+            StatType::Combat => create_combat_buttons(character_id),
+            StatType::Social => create_social_buttons(character_id),
+        })
 }
