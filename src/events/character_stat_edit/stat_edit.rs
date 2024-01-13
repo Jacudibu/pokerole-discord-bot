@@ -1,4 +1,4 @@
-use crate::character_stats::CharacterCombatStats;
+use crate::character_stats::SingleCharacterStatType;
 use crate::data::Data;
 use crate::events::character_stat_edit::{
     create_stat_edit_overview_message, get_character_data_for_edit, update_character_post,
@@ -9,17 +9,20 @@ use crate::{helpers, Error};
 use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
 use std::str::FromStr;
 
-pub async fn handle_combat_stat_request(
+pub async fn handle_edit_stat_request(
     ctx: &Context,
     interaction: &ComponentInteraction,
     data: &Data,
     mut args: Vec<&str>,
 ) -> Result<(), Error> {
+    let character_id = i64::from_str(args.remove(0))?;
+
     match args.remove(0) {
-        "add" => edit_combat_stat(ctx, interaction, data, args, 1).await,
-        "subtract" => edit_combat_stat(ctx, interaction, data, args, -1).await,
-        "apply" => apply_combat_stats(ctx, interaction, data, args).await,
-        "cancel" => cancel_combat_stats(ctx, interaction).await,
+        "add" => edit_stat(ctx, interaction, data, character_id, args, 1).await,
+        "subtract" => edit_stat(ctx, interaction, data, character_id, args, -1).await,
+        "apply-combat" => apply_combat_stats(ctx, interaction, data, character_id).await,
+        "apply-social" => apply_social_stats(ctx, interaction, data, character_id).await,
+        "cancel" => cancel(ctx, interaction).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
 }
@@ -28,10 +31,9 @@ async fn apply_combat_stats(
     ctx: &Context,
     interaction: &ComponentInteraction,
     data: &Data,
-    mut args: Vec<&str>,
+    character_id: i64,
 ) -> Result<(), Error> {
     let deferred_interaction = interaction.defer(ctx);
-    let character_id = i64::from_str(args.remove(0))?;
 
     let _ = sqlx::query!(
         "UPDATE character
@@ -61,10 +63,42 @@ WHERE id = ?",
     Ok(())
 }
 
-async fn cancel_combat_stats(
+async fn apply_social_stats(
     ctx: &Context,
     interaction: &ComponentInteraction,
+    data: &Data,
+    character_id: i64,
 ) -> Result<(), Error> {
+    let deferred_interaction = interaction.defer(ctx);
+    let _ = sqlx::query!(
+        "UPDATE character
+SET
+    stat_tough = stat_edit_tough,
+    stat_cool = stat_edit_cool,
+    stat_beauty = stat_edit_beauty,
+    stat_cute = stat_edit_cute,
+    stat_clever = stat_edit_clever
+WHERE id = ?",
+        character_id
+    )
+    .execute(&data.database)
+    .await;
+
+    let _ = deferred_interaction.await;
+    let _ = interaction
+        .edit_response(
+            ctx,
+            EditInteractionResponse::new()
+                .content("Successfully applied your stats.")
+                .components(Vec::new()),
+        )
+        .await;
+
+    update_character_post(ctx, data, character_id).await;
+    Ok(())
+}
+
+async fn cancel(ctx: &Context, interaction: &ComponentInteraction) -> Result<(), Error> {
     let _ = interaction.defer(ctx).await;
     let _ = interaction
         .edit_response(
@@ -79,36 +113,46 @@ async fn cancel_combat_stats(
 }
 
 #[rustfmt::skip]
-async fn edit_combat_stat(
+async fn edit_stat(
     ctx: &Context,
     interaction: &ComponentInteraction,
     data: &Data,
+    character_id: i64,
     mut args: Vec<&str>,
     amount: i64,
 ) -> Result<(), Error> {
-    let character_id = i64::from_str(args.remove(0))?;
     let character = get_character_data_for_edit(data, character_id).await;
 
     match args.remove(0) {
-        "strength" => edit_combat_stat_bla(ctx, interaction, data, character, amount, CharacterCombatStats::Strength).await,
-        "dexterity" => edit_combat_stat_bla(ctx, interaction, data, character, amount, CharacterCombatStats::Dexterity).await,
-        "vitality" => edit_combat_stat_bla(ctx, interaction, data, character, amount, CharacterCombatStats::Vitality).await,
-        "special" => edit_combat_stat_bla(ctx, interaction, data, character, amount, CharacterCombatStats::Special).await,
-        "insight" => edit_combat_stat_bla(ctx, interaction, data, character, amount, CharacterCombatStats::Insight).await,
+        "strength" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Strength).await,
+        "dexterity" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Dexterity).await,
+        "vitality" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Vitality).await,
+        "special" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Special).await,
+        "insight" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Insight).await,
+        "tough" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Tough).await,
+        "cool" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Cool).await,
+        "beauty" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Beauty).await,
+        "cute" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Cute).await,
+        "clever" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Clever).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
 }
 
-async fn edit_combat_stat_bla(
+async fn edit_specific_stat(
     ctx: &Context,
     interaction: &ComponentInteraction,
     data: &Data,
     character: CharacterDataForStatEditing,
     amount: i64,
-    stat: CharacterCombatStats,
+    stat: SingleCharacterStatType,
 ) -> Result<(), Error> {
     let deferred_interaction = interaction.defer(ctx);
-    let edited_stat = character.combat_stats.get_combat(stat);
+    let edited_stat = if stat.is_combat_stat() {
+        character.combat_stats.get(stat)
+    } else {
+        character.social_stats.get(stat)
+    };
+
     if amount > 0 {
         let remaining_points = character.remaining_combat_points();
         if remaining_points == 0 {
@@ -160,8 +204,16 @@ async fn edit_combat_stat_bla(
     .execute(&data.database)
     .await;
 
-    let edit_message =
-        create_stat_edit_overview_message(data, character.id, StatType::Combat).await;
+    let edit_message = create_stat_edit_overview_message(
+        data,
+        character.id,
+        if stat.is_combat_stat() {
+            StatType::Combat
+        } else {
+            StatType::Social
+        },
+    )
+    .await;
 
     let _ = deferred_interaction.await;
     let _ = interaction.edit_response(ctx, edit_message.into()).await;
@@ -169,12 +221,17 @@ async fn edit_combat_stat_bla(
     Ok(())
 }
 
-fn get_edit_string(stat: CharacterCombatStats) -> String {
+fn get_edit_string(stat: SingleCharacterStatType) -> String {
     match stat {
-        CharacterCombatStats::Strength => String::from("stat_edit_strength"),
-        CharacterCombatStats::Dexterity => String::from("stat_edit_dexterity"),
-        CharacterCombatStats::Vitality => String::from("stat_edit_vitality"),
-        CharacterCombatStats::Special => String::from("stat_edit_special"),
-        CharacterCombatStats::Insight => String::from("stat_edit_insight"),
+        SingleCharacterStatType::Strength => String::from("stat_edit_strength"),
+        SingleCharacterStatType::Dexterity => String::from("stat_edit_dexterity"),
+        SingleCharacterStatType::Vitality => String::from("stat_edit_vitality"),
+        SingleCharacterStatType::Special => String::from("stat_edit_special"),
+        SingleCharacterStatType::Insight => String::from("stat_edit_insight"),
+        SingleCharacterStatType::Tough => String::from("stat_edit_tough"),
+        SingleCharacterStatType::Cool => String::from("stat_edit_cool"),
+        SingleCharacterStatType::Beauty => String::from("stat_edit_beauty"),
+        SingleCharacterStatType::Cute => String::from("stat_edit_cute"),
+        SingleCharacterStatType::Clever => String::from("stat_edit_clever"),
     }
 }

@@ -8,21 +8,34 @@ enum CharacterStatType {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub enum CharacterCombatStats {
+pub enum SingleCharacterStatType {
     Strength,
     Dexterity,
     Vitality,
     Special,
     Insight,
-}
-
-#[derive(Debug, Copy, Clone)]
-pub enum CharacterSocialStats {
     Tough,
     Cool,
     Beauty,
     Cute,
     Clever,
+}
+
+impl SingleCharacterStatType {
+    pub fn is_combat_stat(&self) -> bool {
+        match self {
+            SingleCharacterStatType::Strength => true,
+            SingleCharacterStatType::Dexterity => true,
+            SingleCharacterStatType::Vitality => true,
+            SingleCharacterStatType::Special => true,
+            SingleCharacterStatType::Insight => true,
+            SingleCharacterStatType::Tough => false,
+            SingleCharacterStatType::Cool => false,
+            SingleCharacterStatType::Beauty => false,
+            SingleCharacterStatType::Cute => false,
+            SingleCharacterStatType::Clever => false,
+        }
+    }
 }
 
 pub struct GenericCharacterStats {
@@ -35,23 +48,23 @@ pub struct GenericCharacterStats {
 }
 
 impl GenericCharacterStats {
-    pub fn get_combat(&self, stat: CharacterCombatStats) -> &CharacterStat {
+    pub fn get(&self, stat: SingleCharacterStatType) -> &CharacterStat {
         match stat {
-            CharacterCombatStats::Strength => &self.strength_or_tough,
-            CharacterCombatStats::Dexterity => &self.dexterity_or_cool,
-            CharacterCombatStats::Vitality => &self.vitality_or_beauty,
-            CharacterCombatStats::Special => &self.special_or_cute,
-            CharacterCombatStats::Insight => &self.insight_or_clever,
-        }
-    }
-
-    pub fn get_social(&self, stat: CharacterSocialStats) -> &CharacterStat {
-        match stat {
-            CharacterSocialStats::Tough => &self.strength_or_tough,
-            CharacterSocialStats::Cool => &self.dexterity_or_cool,
-            CharacterSocialStats::Beauty => &self.vitality_or_beauty,
-            CharacterSocialStats::Cute => &self.special_or_cute,
-            CharacterSocialStats::Clever => &self.insight_or_clever,
+            SingleCharacterStatType::Strength | SingleCharacterStatType::Tough => {
+                &self.strength_or_tough
+            }
+            SingleCharacterStatType::Dexterity | SingleCharacterStatType::Cool => {
+                &self.dexterity_or_cool
+            }
+            SingleCharacterStatType::Vitality | SingleCharacterStatType::Beauty => {
+                &self.vitality_or_beauty
+            }
+            SingleCharacterStatType::Special | SingleCharacterStatType::Cute => {
+                &self.special_or_cute
+            }
+            SingleCharacterStatType::Insight | SingleCharacterStatType::Clever => {
+                &self.insight_or_clever
+            }
         }
     }
 }

@@ -23,7 +23,7 @@ pub async fn handle_character_editor_command(
 ) -> Result<(), Error> {
     match args.remove(0) {
         "initialize" => initialize::initialize(context, interaction, data, args).await,
-        "combat-stat" => stat_edit::handle_combat_stat_request(context, interaction, data, args).await,
+        "edit-stat" => stat_edit::handle_edit_stat_request(context, interaction, data, args).await,
         &_ => {send_error(&interaction, context, "Seems like you are either trying to do something that's not yet implemented or that you are doing something fishy. Mhhhm~").await}
     }
 }
@@ -57,48 +57,45 @@ WHERE id = ?",
 fn create_combat_buttons(character_id: i64) -> Vec<CreateActionRow> {
     vec![
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_combat-stat_add_{}_strength", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_strength", character_id))
                 .label("+STR")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_dexterity", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_dexterity", character_id))
                 .label("+DEX")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_vitality", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_vitality", character_id))
                 .label("+VIT")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_special", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_special", character_id))
                 .label("+SPE")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_insight", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_insight", character_id))
                 .label("+INS")
                 .style(ButtonStyle::Success),
         ]),
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_strength", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_strength", character_id))
                 .label("-STR")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!(
-                "ce_combat-stat_subtract_{}_dexterity",
-                character_id
-            ))
-            .label("-DEX")
-            .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_vitality", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_dexterity", character_id))
+                .label("-DEX")
+                .style(ButtonStyle::Danger),
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_vitality", character_id))
                 .label("-VIT")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_special", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_special", character_id))
                 .label("-SPE")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_insight", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_insight", character_id))
                 .label("-INS")
                 .style(ButtonStyle::Danger),
         ]),
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_combat-stat_apply_{}", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_apply-combat", character_id))
                 .label("Apply")
                 .emoji(ReactionType::Unicode(emoji::UNICODE_CHECK_MARK.to_string()))
                 .style(ButtonStyle::Primary),
-            CreateButton::new(format!("ce_combat-stat_cancel_{}", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_cancel", character_id))
                 .label("Cancel")
                 .emoji(ReactionType::Unicode(emoji::UNICODE_CROSS_MARK.to_string()))
                 .style(ButtonStyle::Secondary),
@@ -109,45 +106,45 @@ fn create_combat_buttons(character_id: i64) -> Vec<CreateActionRow> {
 fn create_social_buttons(character_id: i64) -> Vec<CreateActionRow> {
     vec![
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_social-stat_add_{}_tough", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_tough", character_id))
                 .label("+Tough")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_social-stat_add_{}_cool", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_cool", character_id))
                 .label("+Cool")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_social-stat_add_{}_beauty", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_beauty", character_id))
                 .label("+Beauty")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_social-stat_add_{}_cute", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_cute", character_id))
                 .label("+Cute")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_social-stat_add_{}_clever", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_add_clever", character_id))
                 .label("+Clever")
                 .style(ButtonStyle::Success),
         ]),
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_social-stat_subtract_{}_tough", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_tough", character_id))
                 .label("-Tough")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_social-stat_subtract_{}_cool", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_cool", character_id))
                 .label("-Cool")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_social-stat_subtract_{}_beauty", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_beauty", character_id))
                 .label("-Beauty")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_social-stat_subtract_{}_cute", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_cute", character_id))
                 .label("-Cute")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_social-stat_subtract_{}_clever", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_subtract_clever", character_id))
                 .label("-Clever")
                 .style(ButtonStyle::Danger),
         ]),
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_social-stat_apply_{}", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_apply-social", character_id))
                 .label("Apply")
                 .emoji(ReactionType::Unicode(emoji::UNICODE_CHECK_MARK.to_string()))
                 .style(ButtonStyle::Primary),
-            CreateButton::new(format!("ce_social-stat_cancel_{}", character_id))
+            CreateButton::new(format!("ce_edit-stat_{}_cancel", character_id))
                 .label("Cancel")
                 .emoji(ReactionType::Unicode(emoji::UNICODE_CROSS_MARK.to_string()))
                 .style(ButtonStyle::Secondary),
