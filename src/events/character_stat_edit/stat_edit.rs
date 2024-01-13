@@ -122,7 +122,7 @@ async fn edit_combat_stat_bla(
 
         let points_required_for_limit_break =
             helpers::calculate_next_limit_break_cost(character.combat_stats.count_limit_breaks());
-        if edited_stat.current + 1 > edited_stat.max
+        if edited_stat.current + 1 > edited_stat.species_max
             && remaining_points < points_required_for_limit_break
         {
             return send_error(
@@ -135,13 +135,20 @@ async fn edit_combat_stat_bla(
             )
             .await;
         }
-    } else if edited_stat.current == edited_stat.min {
-        return send_error(
-            &interaction,
-            ctx,
-            &format!("Unable to reduce your {:?} any further.", stat),
-        )
-        .await;
+    } else if edited_stat.current == edited_stat.currently_set_on_character {
+        return if edited_stat.current == edited_stat.species_min {
+            send_error(
+                &interaction,
+                ctx,
+                &format!("Unable to reduce your {:?} any further. That's the lowest your species can go.", stat),
+            ).await
+        } else {
+            send_error(
+                &interaction,
+                ctx,
+                &format!("Unable to reduce your {:?} any further. You cannot remove stat points which you've previously assigned.", stat),
+            ).await
+        };
     }
 
     let _ = sqlx::query(&format!(

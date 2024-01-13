@@ -182,7 +182,10 @@ async fn get_character_data_for_edit(
 ) -> CharacterDataForStatEditing {
     let record = sqlx::query!(
         "SELECT name, guild_id, experience, species_api_id, is_shiny, phenotype, \
-                      stat_edit_strength, stat_edit_dexterity, stat_edit_vitality, stat_edit_special, stat_edit_insight, stat_edit_tough, stat_edit_cool, stat_edit_beauty, stat_edit_cute, stat_edit_clever
+                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight,
+                      stat_edit_strength, stat_edit_dexterity, stat_edit_vitality, stat_edit_special, stat_edit_insight,
+                      stat_tough, stat_cool, stat_beauty, stat_cute, stat_clever,
+                      stat_edit_tough, stat_edit_cool, stat_edit_beauty, stat_edit_cute, stat_edit_clever
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -217,21 +220,31 @@ async fn get_character_data_for_edit(
 
     let pokemon_evolution_form_for_stats =
         helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
-    let combat_stats = GenericCharacterStats::from_combat(
+    let combat_stats = GenericCharacterStats::from_combat_with_current_min(
         pokemon_evolution_form_for_stats,
         record.stat_edit_strength,
+        record.stat_strength,
         record.stat_edit_dexterity,
+        record.stat_dexterity,
         record.stat_edit_vitality,
+        record.stat_vitality,
         record.stat_edit_special,
+        record.stat_special,
         record.stat_edit_insight,
+        record.stat_insight,
     );
 
-    let social_stats = GenericCharacterStats::from_social(
+    let social_stats = GenericCharacterStats::from_social_with_current_min(
         record.stat_edit_tough,
+        record.stat_tough,
         record.stat_edit_cool,
+        record.stat_cool,
         record.stat_edit_beauty,
+        record.stat_beauty,
         record.stat_edit_cute,
+        record.stat_cute,
         record.stat_edit_clever,
+        record.stat_clever,
     );
 
     CharacterDataForStatEditing {
@@ -345,7 +358,7 @@ pub async fn update_character_post<'a>(ctx: &Context, data: &Data, id: i64) {
                 )
                 .await
             {
-                // TODO: Figure out how to do this when we only got a serenity context...
+                // Shouldn't happen since we just pressed a button in that thread and messages are ephemeral.
                 // crate::commands::handle_error_during_message_edit(
                 //     ctx,
                 //     e,

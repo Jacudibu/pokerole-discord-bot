@@ -58,37 +58,56 @@ impl GenericCharacterStats {
 
 pub struct CharacterStat {
     pub current: i64,
-    pub min: i64,
-    pub max: i64,
+    pub currently_set_on_character: i64,
+    pub species_min: i64,
+    pub species_max: i64,
 }
 
 impl CharacterStat {
+    pub fn new(min: i64, current: i64, species_min: i64, species_max: i64) -> Self {
+        Self {
+            current,
+            species_min,
+            species_max,
+            currently_set_on_character: min,
+        }
+    }
     pub fn from_poke(current: i64, stat: &PokemonStat) -> Self {
         Self {
             current,
-            min: stat.min as i64,
-            max: stat.max as i64,
+            currently_set_on_character: current,
+            species_min: stat.min as i64,
+            species_max: stat.max as i64,
+        }
+    }
+    pub fn from_poke_with_min(current: i64, min: i64, stat: &PokemonStat) -> Self {
+        Self {
+            current,
+            currently_set_on_character: min,
+            species_min: stat.min as i64,
+            species_max: stat.max as i64,
         }
     }
     pub fn from_social(current: i64) -> Self {
         Self {
             current,
-            min: 1,
-            max: 5,
+            currently_set_on_character: current,
+            species_min: 1,
+            species_max: 5,
         }
     }
     pub fn invested_points(&self) -> i64 {
-        self.current - self.min
+        self.current - self.species_min
     }
     pub fn count_limit_breaks(&self) -> i64 {
-        if self.current > self.max {
-            self.current - self.max
+        if self.current > self.species_max {
+            self.current - self.species_max
         } else {
             0
         }
     }
     pub fn is_at_or_above_max(&self) -> bool {
-        self.current >= self.max
+        self.current >= self.species_max
     }
 }
 
@@ -116,6 +135,52 @@ impl GenericCharacterStats {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_combat_with_current_min(
+        pokemon: &Pokemon,
+        strength_current: i64,
+        strength_min: i64,
+        dexterity_current: i64,
+        dexterity_min: i64,
+        vitality_current: i64,
+        vitality_min: i64,
+        special_current: i64,
+        special_min: i64,
+        insight_current: i64,
+        insight_min: i64,
+    ) -> Self {
+        GenericCharacterStats {
+            kind: CharacterStatType::Combat {
+                base_hp: pokemon.base_hp,
+            },
+            strength_or_tough: CharacterStat::from_poke_with_min(
+                strength_current,
+                strength_min,
+                &pokemon.strength,
+            ),
+            dexterity_or_cool: CharacterStat::from_poke_with_min(
+                dexterity_current,
+                dexterity_min,
+                &pokemon.dexterity,
+            ),
+            vitality_or_beauty: CharacterStat::from_poke_with_min(
+                vitality_current,
+                vitality_min,
+                &pokemon.vitality,
+            ),
+            special_or_cute: CharacterStat::from_poke_with_min(
+                special_current,
+                special_min,
+                &pokemon.special,
+            ),
+            insight_or_clever: CharacterStat::from_poke_with_min(
+                insight_current,
+                insight_min,
+                &pokemon.insight,
+            ),
+        }
+    }
+
     pub fn from_social(tough: i64, cool: i64, beauty: i64, cute: i64, clever: i64) -> Self {
         GenericCharacterStats {
             kind: CharacterStatType::Social,
@@ -124,6 +189,29 @@ impl GenericCharacterStats {
             vitality_or_beauty: CharacterStat::from_social(beauty),
             special_or_cute: CharacterStat::from_social(cute),
             insight_or_clever: CharacterStat::from_social(clever),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub fn from_social_with_current_min(
+        tough_current: i64,
+        tough_min: i64,
+        cool_current: i64,
+        cool_min: i64,
+        beauty_current: i64,
+        beauty_min: i64,
+        cute_current: i64,
+        cute_min: i64,
+        clever_current: i64,
+        clever_min: i64,
+    ) -> Self {
+        GenericCharacterStats {
+            kind: CharacterStatType::Social,
+            strength_or_tough: CharacterStat::new(tough_min, tough_current, 1, 5),
+            dexterity_or_cool: CharacterStat::new(cool_min, cool_current, 1, 5),
+            vitality_or_beauty: CharacterStat::new(beauty_min, beauty_current, 1, 5),
+            special_or_cute: CharacterStat::new(cute_min, cute_current, 1, 5),
+            insight_or_clever: CharacterStat::new(clever_min, clever_current, 1, 5),
         }
     }
 
@@ -224,9 +312,9 @@ Special Defense: {}
             padding = padding
         ));
 
-        match stat.current.cmp(&stat.max) {
+        match stat.current.cmp(&stat.species_max) {
             Ordering::Less => {
-                for i in 0..stat.max {
+                for i in 0..stat.species_max {
                     if i < stat.current {
                         result.push(emoji::DOT_FILLED);
                     } else {
@@ -241,7 +329,7 @@ Special Defense: {}
             }
             Ordering::Greater => {
                 for i in 0..stat.current {
-                    if i < stat.max {
+                    if i < stat.species_max {
                         result.push(emoji::DOT_FILLED);
                     } else {
                         result.push(emoji::DOT_OVERCHARGED);

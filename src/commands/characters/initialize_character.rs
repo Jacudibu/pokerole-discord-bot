@@ -67,7 +67,7 @@ pub async fn initialize_character(
     let creation_date = chrono::Utc::now().date_naive();
 
     let level = helpers::calculate_level_from_experience(exp);
-    let mon = helpers::get_usual_evolution_stage_for_level(level, pokemon, &ctx.data());
+    let mon = helpers::get_usual_evolution_stage_for_level(level, pokemon, ctx.data());
 
     let record = sqlx::query!(
         "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money, species_api_id, is_shiny, phenotype,\
