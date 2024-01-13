@@ -38,8 +38,14 @@ impl CharacterStat {
         }
     }
     pub fn invested_points(&self) -> i64 {
-        // TODO: Take Limit Breaking into account
         self.current - self.min
+    }
+    pub fn count_limit_breaks(&self) -> i64 {
+        if self.current > self.max {
+            self.current - self.max
+        } else {
+            0
+        }
     }
 }
 
@@ -206,11 +212,26 @@ Special Defense: {}
     }
 
     pub fn calculate_invested_stat_points(&self) -> i64 {
-        // TODO: Take Limit Breaking into account
-        self.strength_or_tough.invested_points()
+        let limit_breaks = self.count_limit_breaks();
+        let used_extra_points_for_limit_breaks = if limit_breaks > 0 {
+            1 + limit_breaks * (limit_breaks + 1) / 2
+        } else {
+            0
+        };
+
+        used_extra_points_for_limit_breaks
+            + self.strength_or_tough.invested_points()
             + self.insight_or_clever.invested_points()
             + self.special_or_cute.invested_points()
             + self.vitality_or_beauty.invested_points()
             + self.dexterity_or_cool.invested_points()
+    }
+
+    pub fn count_limit_breaks(&self) -> i64 {
+        self.strength_or_tough.count_limit_breaks()
+            + self.insight_or_clever.count_limit_breaks()
+            + self.special_or_cute.count_limit_breaks()
+            + self.vitality_or_beauty.count_limit_breaks()
+            + self.dexterity_or_cool.count_limit_breaks()
     }
 }
