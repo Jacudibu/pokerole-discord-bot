@@ -5,12 +5,11 @@ use crate::character_stats::GenericCharacterStats;
 use crate::data::Data;
 use crate::enums::{Gender, MysteryDungeonRank};
 use crate::events::send_error;
-use crate::game_data::pokemon::Pokemon;
 use crate::game_data::PokemonApiId;
 use crate::{emoji, helpers, Error};
 use serenity::all::{
-    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponse,
-    CreateInteractionResponseMessage, EditInteractionResponse, EditMessage, ReactionType,
+    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
+    EditInteractionResponse, EditMessage, ReactionType,
 };
 use serenity::builder::CreateButton;
 use serenity::client::Context;
@@ -155,8 +154,7 @@ fn create_social_buttons(character_id: i64) -> Vec<CreateActionRow> {
     ]
 }
 
-struct CharacterDataForStatEditing<'a> {
-    pokemon: &'a Pokemon,
+struct CharacterDataForStatEditing {
     id: i64,
     name: String,
     emoji: String,
@@ -166,7 +164,7 @@ struct CharacterDataForStatEditing<'a> {
     social_stats: GenericCharacterStats,
 }
 
-impl CharacterDataForStatEditing<'_> {
+impl CharacterDataForStatEditing {
     pub fn remaining_combat_points(&self) -> i64 {
         helpers::calculate_available_combat_points(self.level)
             - self.combat_stats.calculate_invested_stat_points()
@@ -194,7 +192,6 @@ async fn get_character_data_for_edit(
         .unwrap();
 
     let level = helpers::calculate_level_from_experience(record.experience);
-    let experience = record.experience % 100;
     let rank = MysteryDungeonRank::from_level(level as u8);
     let pokemon = data
         .game
@@ -240,7 +237,6 @@ async fn get_character_data_for_edit(
         name: record.name,
         id: character_id,
         emoji,
-        pokemon,
         level,
         rank,
         combat_stats,
@@ -249,33 +245,33 @@ async fn get_character_data_for_edit(
 }
 
 struct MessageContent {
-    content: String,
-    ephemeral: bool,
-    components: Vec<CreateActionRow>,
+    pub content: String,
+    pub ephemeral: bool,
+    pub components: Vec<CreateActionRow>,
 }
 
-impl Into<CreateInteractionResponseMessage> for MessageContent {
-    fn into(self) -> CreateInteractionResponseMessage {
+impl From<MessageContent> for CreateInteractionResponseMessage {
+    fn from(value: MessageContent) -> Self {
         CreateInteractionResponseMessage::new()
-            .content(self.content)
-            .ephemeral(self.ephemeral)
-            .components(self.components)
+            .content(value.content)
+            .ephemeral(value.ephemeral)
+            .components(value.components)
     }
 }
 
-impl Into<EditMessage> for MessageContent {
-    fn into(self) -> EditMessage {
+impl From<MessageContent> for EditMessage {
+    fn from(value: MessageContent) -> Self {
         EditMessage::new()
-            .content(self.content)
-            .components(self.components)
+            .content(value.content)
+            .components(value.components)
     }
 }
 
-impl Into<EditInteractionResponse> for MessageContent {
-    fn into(self) -> EditInteractionResponse {
+impl From<MessageContent> for EditInteractionResponse {
+    fn from(value: MessageContent) -> Self {
         EditInteractionResponse::new()
-            .content(self.content)
-            .components(self.components)
+            .content(value.content)
+            .components(value.components)
     }
 }
 

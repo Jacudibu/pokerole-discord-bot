@@ -1,15 +1,12 @@
 use crate::character_stats::CharacterCombatStats;
 use crate::data::Data;
-use crate::enums::CombatOrSocialStat;
 use crate::events::character_stat_edit::{
     create_stat_edit_overview_message, get_character_data_for_edit, CharacterDataForStatEditing,
     StatType,
 };
 use crate::events::send_error;
 use crate::Error;
-use log::info;
-use serenity::all::{ComponentInteraction, Context, CreateInteractionResponse};
-use serenity::builder::EditMessage;
+use serenity::all::{ComponentInteraction, Context};
 use std::str::FromStr;
 
 pub async fn handle_combat_stat_request(
@@ -50,11 +47,11 @@ async fn edit_combat_stat_bla(
     ctx: &Context,
     interaction: &ComponentInteraction,
     data: &Data,
-    character: CharacterDataForStatEditing<'_>,
+    character: CharacterDataForStatEditing,
     amount: i64,
     stat: CharacterCombatStats,
 ) -> Result<(), Error> {
-    let defer = interaction.defer(ctx);
+    let deferred_interaction = interaction.defer(ctx);
     let edited_stat = character.combat_stats.get_combat(stat);
     if amount > 0 {
         let remaining_points = character.remaining_combat_points();
@@ -99,16 +96,11 @@ async fn edit_combat_stat_bla(
     .execute(&data.database)
     .await;
 
-    let _ = defer.await;
     let edit_message =
         create_stat_edit_overview_message(data, character.id, StatType::Combat).await;
 
-    match interaction.edit_response(ctx, edit_message.into()).await {
-        Ok(_) => {}
-        Err(e) => {
-            info!("bleh. {:?}", e);
-        }
-    }
+    let _ = deferred_interaction.await;
+    let _ = interaction.edit_response(ctx, edit_message.into()).await;
 
     Ok(())
 }
