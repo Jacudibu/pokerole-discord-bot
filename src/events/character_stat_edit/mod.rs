@@ -1,4 +1,5 @@
 mod initialize;
+mod stat_edit;
 
 use crate::character_stats::GenericCharacterStats;
 use crate::data::Data;
@@ -8,8 +9,8 @@ use crate::game_data::pokemon::Pokemon;
 use crate::game_data::PokemonApiId;
 use crate::{emoji, helpers, Error};
 use serenity::all::{
-    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
-    ReactionType,
+    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponse,
+    CreateInteractionResponseMessage, EditInteractionResponse, EditMessage, ReactionType,
 };
 use serenity::builder::CreateButton;
 use serenity::client::Context;
@@ -22,6 +23,7 @@ pub async fn handle_character_editor_command(
 ) -> Result<(), Error> {
     match args.remove(0) {
         "initialize" => initialize::initialize(context, interaction, data, args).await,
+        "combat-stat" => stat_edit::handle_combat_stat_request(context, interaction, data, args).await,
         &_ => {send_error(&interaction, context, "Seems like you are either trying to do something that's not yet implemented or that you are doing something fishy. Mhhhm~").await}
     }
 }
@@ -155,20 +157,24 @@ fn create_social_buttons(character_id: i64) -> Vec<CreateActionRow> {
 
 struct CharacterDataForStatEditing<'a> {
     pokemon: &'a Pokemon,
+    id: i64,
     name: String,
     emoji: String,
     level: i64,
     rank: MysteryDungeonRank,
-    strength: i64,
-    dexterity: i64,
-    vitality: i64,
-    special: i64,
-    insight: i64,
-    tough: i64,
-    cool: i64,
-    beauty: i64,
-    cute: i64,
-    clever: i64,
+    combat_stats: GenericCharacterStats,
+    social_stats: GenericCharacterStats,
+}
+
+impl CharacterDataForStatEditing<'_> {
+    pub fn remaining_combat_points(&self) -> i64 {
+        helpers::calculate_available_combat_points(self.level)
+            - self.combat_stats.calculate_invested_stat_points()
+    }
+    pub fn remaining_social_points(&self) -> i64 {
+        helpers::calculate_available_social_points(&self.rank) as i64
+            - self.social_stats.calculate_invested_stat_points()
+    }
 }
 
 async fn get_character_data_for_edit(
@@ -211,22 +217,65 @@ async fn get_character_data_for_edit(
     .await
     .unwrap_or(format!("[{}]", pokemon.name));
 
+    let pokemon_evolution_form_for_stats =
+        helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+    let combat_stats = GenericCharacterStats::from_combat(
+        pokemon_evolution_form_for_stats,
+        record.stat_edit_strength,
+        record.stat_edit_dexterity,
+        record.stat_edit_vitality,
+        record.stat_edit_special,
+        record.stat_edit_insight,
+    );
+
+    let social_stats = GenericCharacterStats::from_social(
+        record.stat_edit_tough,
+        record.stat_edit_cool,
+        record.stat_edit_beauty,
+        record.stat_edit_cute,
+        record.stat_edit_clever,
+    );
+
     CharacterDataForStatEditing {
         name: record.name,
+        id: character_id,
         emoji,
         pokemon,
         level,
         rank,
-        strength: record.stat_edit_strength,
-        dexterity: record.stat_edit_dexterity,
-        vitality: record.stat_edit_vitality,
-        special: record.stat_edit_special,
-        insight: record.stat_edit_insight,
-        tough: record.stat_edit_tough,
-        cool: record.stat_edit_cool,
-        beauty: record.stat_edit_beauty,
-        cute: record.stat_edit_cute,
-        clever: record.stat_edit_clever,
+        combat_stats,
+        social_stats,
+    }
+}
+
+struct MessageContent {
+    content: String,
+    ephemeral: bool,
+    components: Vec<CreateActionRow>,
+}
+
+impl Into<CreateInteractionResponseMessage> for MessageContent {
+    fn into(self) -> CreateInteractionResponseMessage {
+        CreateInteractionResponseMessage::new()
+            .content(self.content)
+            .ephemeral(self.ephemeral)
+            .components(self.components)
+    }
+}
+
+impl Into<EditMessage> for MessageContent {
+    fn into(self) -> EditMessage {
+        EditMessage::new()
+            .content(self.content)
+            .components(self.components)
+    }
+}
+
+impl Into<EditInteractionResponse> for MessageContent {
+    fn into(self) -> EditInteractionResponse {
+        EditInteractionResponse::new()
+            .content(self.content)
+            .components(self.components)
     }
 }
 
@@ -234,42 +283,19 @@ async fn create_stat_edit_overview_message(
     data: &Data,
     character_id: i64,
     stat_type: StatType,
-) -> CreateInteractionResponseMessage {
+) -> MessageContent {
     let character_data = get_character_data_for_edit(data, character_id).await;
 
     let (stats, remaining_points) = match stat_type {
         StatType::Combat => {
-            let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
-                character_data.level,
-                character_data.pokemon,
-                data,
-            );
-            let combat_stats = GenericCharacterStats::from_combat(
-                pokemon_evolution_form_for_stats,
-                character_data.strength,
-                character_data.dexterity,
-                character_data.vitality,
-                character_data.special,
-                character_data.insight,
-            );
-
-            let remaining_points = helpers::calculate_available_combat_points(character_data.level)
-                - combat_stats.calculate_invested_stat_points();
+            let combat_stats = &character_data.combat_stats;
+            let remaining_points = character_data.remaining_combat_points();
 
             (combat_stats, remaining_points)
         }
         StatType::Social => {
-            let social_stats = GenericCharacterStats::from_social(
-                character_data.tough,
-                character_data.cool,
-                character_data.beauty,
-                character_data.cute,
-                character_data.clever,
-            );
-
-            let remaining_points = helpers::calculate_available_social_points(&character_data.rank)
-                as i64
-                - social_stats.calculate_invested_stat_points();
+            let social_stats = &character_data.social_stats;
+            let remaining_points = character_data.remaining_social_points();
 
             (social_stats, remaining_points)
         }
@@ -283,11 +309,12 @@ async fn create_stat_edit_overview_message(
         remaining_points
     );
 
-    CreateInteractionResponseMessage::new()
-        .content(message)
-        .ephemeral(true)
-        .components(match stat_type {
+    MessageContent {
+        content: message,
+        ephemeral: true,
+        components: match stat_type {
             StatType::Combat => create_combat_buttons(character_id),
             StatType::Social => create_social_buttons(character_id),
-        })
+        },
+    }
 }

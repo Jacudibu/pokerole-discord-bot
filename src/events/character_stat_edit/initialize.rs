@@ -90,7 +90,8 @@ async fn initialize_combat(
                         ctx,
                         CreateInteractionResponse::Message(
                             create_stat_edit_overview_message(data, character_id, StatType::Combat)
-                                .await,
+                                .await
+                                .into(),
                         ),
                     )
                     .await;
@@ -176,7 +177,8 @@ async fn initialize_social(
                         ctx,
                         CreateInteractionResponse::Message(
                             create_stat_edit_overview_message(data, character_id, StatType::Social)
-                                .await,
+                                .await
+                                .into(),
                         ),
                     )
                     .await;

@@ -7,6 +7,24 @@ enum CharacterStatType {
     Social,
 }
 
+#[derive(Debug, Copy, Clone)]
+pub enum CharacterCombatStats {
+    Strength,
+    Dexterity,
+    Vitality,
+    Special,
+    Insight,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum CharacterSocialStats {
+    Tough,
+    Cool,
+    Beauty,
+    Cute,
+    Clever,
+}
+
 pub struct GenericCharacterStats {
     kind: CharacterStatType,
     strength_or_tough: CharacterStat,
@@ -16,10 +34,32 @@ pub struct GenericCharacterStats {
     insight_or_clever: CharacterStat,
 }
 
-struct CharacterStat {
-    current: i64,
-    min: i64,
-    max: i64,
+impl GenericCharacterStats {
+    pub fn get_combat(&self, stat: CharacterCombatStats) -> &CharacterStat {
+        match stat {
+            CharacterCombatStats::Strength => &self.strength_or_tough,
+            CharacterCombatStats::Dexterity => &self.dexterity_or_cool,
+            CharacterCombatStats::Vitality => &self.vitality_or_beauty,
+            CharacterCombatStats::Special => &self.special_or_cute,
+            CharacterCombatStats::Insight => &self.insight_or_clever,
+        }
+    }
+
+    pub fn get_social(&self, stat: CharacterSocialStats) -> &CharacterStat {
+        match stat {
+            CharacterSocialStats::Tough => &self.strength_or_tough,
+            CharacterSocialStats::Cool => &self.dexterity_or_cool,
+            CharacterSocialStats::Beauty => &self.vitality_or_beauty,
+            CharacterSocialStats::Cute => &self.special_or_cute,
+            CharacterSocialStats::Clever => &self.insight_or_clever,
+        }
+    }
+}
+
+pub struct CharacterStat {
+    pub current: i64,
+    pub min: i64,
+    pub max: i64,
 }
 
 impl CharacterStat {
@@ -214,7 +254,7 @@ Special Defense: {}
     pub fn calculate_invested_stat_points(&self) -> i64 {
         let limit_breaks = self.count_limit_breaks();
         let used_extra_points_for_limit_breaks = if limit_breaks > 0 {
-            1 + limit_breaks + limit_breaks * (limit_breaks + 1) / 2
+            (limit_breaks * limit_breaks + limit_breaks) / 2
         } else {
             0
         };
