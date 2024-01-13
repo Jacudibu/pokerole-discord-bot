@@ -182,7 +182,8 @@ async fn get_character_data_for_edit(
                       stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight,
                       stat_edit_strength, stat_edit_dexterity, stat_edit_vitality, stat_edit_special, stat_edit_insight,
                       stat_tough, stat_cool, stat_beauty, stat_cute, stat_clever,
-                      stat_edit_tough, stat_edit_cool, stat_edit_beauty, stat_edit_cute, stat_edit_clever
+                      stat_edit_tough, stat_edit_cool, stat_edit_beauty, stat_edit_cute, stat_edit_clever,
+                      species_override_for_stats
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -215,8 +216,12 @@ async fn get_character_data_for_edit(
     .await
     .unwrap_or(format!("[{}]", pokemon.name));
 
-    let pokemon_evolution_form_for_stats =
-        helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+    let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+        level,
+        pokemon,
+        data,
+        record.species_override_for_stats,
+    );
     let combat_stats = GenericCharacterStats::from_combat_with_current_min(
         pokemon_evolution_form_for_stats,
         record.stat_edit_strength,

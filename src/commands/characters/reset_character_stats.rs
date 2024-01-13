@@ -41,7 +41,7 @@ pub async fn reset_db_stats(
     character: &CharacterCacheItem,
 ) -> Result<(), Error> {
     let record = sqlx::query!(
-        "SELECT name, species_api_id, experience FROM character WHERE id = ?",
+        "SELECT name, species_api_id, experience, species_override_for_stats FROM character WHERE id = ?",
         character.id
     )
     .fetch_one(&ctx.data().database)
@@ -57,8 +57,12 @@ pub async fn reset_db_stats(
 
     let level = helpers::calculate_level_from_experience(record.experience);
 
-    let pokemon_evolution_form_for_stats =
-        helpers::get_usual_evolution_stage_for_level(level, used_poke_species, ctx.data());
+    let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+        level,
+        used_poke_species,
+        ctx.data(),
+        record.species_override_for_stats,
+    );
 
     let _ = sqlx::query!(
         "UPDATE character SET 

@@ -10,6 +10,7 @@ use crate::commands::{
 };
 use crate::enums::Gender;
 use crate::game_data::PokemonApiId;
+use crate::helpers::ADMIN_PING_STRING;
 
 /// Update character data.
 #[allow(clippy::too_many_arguments)]
@@ -27,12 +28,15 @@ pub async fn edit_character(
     #[description = "Change their species?"]
     #[autocomplete = "autocomplete_pokemon"]
     species: Option<String>,
+    #[description = "Change from which pokemon their stats should be taken? Useful for unevolved mons at high levels."]
+    #[autocomplete = "autocomplete_pokemon"]
+    species_override_for_stats: Option<String>,
 ) -> Result<(), Error> {
     let guild_id = ctx.guild_id().expect("Command is guild_only").get();
     let character = find_character(ctx.data(), guild_id, &character).await?;
 
     let record = sqlx::query!(
-        "SELECT name, species_api_id, phenotype, is_shiny FROM character WHERE id = ?",
+        "SELECT name, species_api_id, phenotype, is_shiny, species_override_for_stats FROM character WHERE id = ?",
         character.id
     )
     .fetch_one(&ctx.data().database)
@@ -59,6 +63,19 @@ pub async fn edit_character(
             .expect("Species IDs in database should always be valid!")
     };
 
+    let species_override_for_stats =
+        if let Some(species_override_for_stats) = species_override_for_stats {
+            let species = pokemon_from_autocomplete_string(&ctx, &species_override_for_stats)?;
+            if species.poke_api_id.0 as i64 != record.species_api_id {
+                action_log.push(format!("species stat override to {}", species.name));
+                should_stats_be_reset = true;
+            }
+
+            Some(species.poke_api_id.0 as i64)
+        } else {
+            record.species_override_for_stats
+        };
+
     let name = if let Some(name) = name {
         action_log.push(format!("name to {}", name));
         name
@@ -71,14 +88,15 @@ pub async fn edit_character(
         return Ok(());
     }
 
-    let _ = sqlx::query!(
-        "UPDATE character SET name = ?, species_api_id = ? WHERE id = ?",
+    sqlx::query!(
+        "UPDATE character SET name = ?, species_api_id = ?, species_override_for_stats = ? WHERE id = ?",
         name,
         species.poke_api_id.0,
-        character.id
+        species_override_for_stats,
+        character.id,
     )
     .execute(&ctx.data().database)
-    .await;
+    .await?;
 
     if should_stats_be_reset {
         let _ = reset_character_stats::reset_db_stats(&ctx, &character).await;

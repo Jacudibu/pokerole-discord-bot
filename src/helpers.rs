@@ -1,6 +1,7 @@
 use crate::data::Data;
 use crate::enums::{MysteryDungeonRank, QuestParticipantSelectionMechanism};
 use crate::game_data::pokemon::Pokemon;
+use crate::game_data::PokemonApiId;
 use crate::{emoji, Error};
 use serenity::all::{
     ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, EditMessage, MessageId,
@@ -275,7 +276,13 @@ pub fn get_usual_evolution_stage_for_level<'a>(
     level: i64,
     pokemon: &'a Pokemon,
     data: &'a Data,
+    stat_override: Option<i64>,
 ) -> &'a Pokemon {
+    if let Some(stat_override) = stat_override {
+        let api_id = PokemonApiId(stat_override as u16);
+        return data.game.pokemon_by_api_id.get(&api_id).unwrap();
+    }
+
     if pokemon.evolves_from.is_none() {
         return pokemon;
     }

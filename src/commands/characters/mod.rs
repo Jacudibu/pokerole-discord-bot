@@ -150,7 +150,7 @@ pub async fn build_character_string(
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(
         "SELECT name, guild_id, experience, money, stat_message_id, stat_channel_id, backpack_upgrade_count, total_spar_count, total_new_player_tour_count, total_new_player_combat_tutorial_count, species_api_id, is_shiny, phenotype, \
-                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight, stat_tough, stat_cool, stat_beauty, stat_cute, stat_clever
+                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight, stat_tough, stat_cool, stat_beauty, stat_cute, stat_clever, species_override_for_stats
                 FROM character WHERE id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -196,8 +196,12 @@ pub async fn build_character_string(
                 emoji::type_to_emoji(&pokemon.type1).to_string()
             };
 
-            let pokemon_evolution_form_for_stats =
-                helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+            let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+                level,
+                pokemon,
+                data,
+                record.species_override_for_stats,
+            );
             let combat_stats = GenericCharacterStats::from_combat(
                 pokemon_evolution_form_for_stats,
                 record.stat_strength,

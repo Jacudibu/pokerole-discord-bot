@@ -1,3 +1,5 @@
+ALTER TABLE character ADD COLUMN species_override_for_stats INTEGER;
+
 ALTER TABLE character ADD COLUMN stat_strength INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE character ADD COLUMN stat_dexterity INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE character ADD COLUMN stat_vitality INTEGER NOT NULL DEFAULT 1;

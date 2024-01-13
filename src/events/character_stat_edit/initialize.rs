@@ -34,8 +34,8 @@ async fn initialize_combat(
     if let Some(character_id) = args.first() {
         let character_id = i64::from_str(character_id)?;
         let record = sqlx::query!(
-            "SELECT experience, species_api_id, \
-                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight
+            "SELECT experience, species_api_id, species_override_for_stats,\
+                      stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight 
                 FROM character WHERE id = ? AND user_id = ? \
                 ORDER BY rowid \
                 LIMIT 1",
@@ -61,8 +61,12 @@ async fn initialize_combat(
                     ))
                     .expect("All mons inside the Database should have a valid API ID assigned.");
 
-                let pokemon_evolution_form_for_stats =
-                    helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+                let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+                    level,
+                    pokemon,
+                    data,
+                    record.species_override_for_stats,
+                );
                 let combat_stats = GenericCharacterStats::from_combat(
                     pokemon_evolution_form_for_stats,
                     record.stat_strength,
@@ -122,7 +126,7 @@ async fn initialize_social(
     if let Some(character_id) = args.first() {
         let character_id = i64::from_str(character_id)?;
         let record = sqlx::query!(
-            "SELECT experience, species_api_id, \
+            "SELECT experience, species_api_id, species_override_for_stats, \
                     stat_tough, stat_cool, stat_beauty, stat_cute, stat_clever
                 FROM character WHERE id = ? AND user_id = ? \
                 ORDER BY rowid \
@@ -149,8 +153,12 @@ async fn initialize_social(
                     ))
                     .expect("All mons inside the Database should have a valid API ID assigned.");
 
-                let pokemon_evolution_form_for_stats =
-                    helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+                let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+                    level,
+                    pokemon,
+                    data,
+                    record.species_override_for_stats,
+                );
                 let social_stats = GenericCharacterStats::from_social(
                     record.stat_tough,
                     record.stat_cool,
