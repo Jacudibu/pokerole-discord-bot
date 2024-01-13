@@ -6,8 +6,8 @@ use crate::commands::{
     create_emojis, ensure_guild_exists, ensure_user_exists, pokemon_from_autocomplete_string,
     send_ephemeral_reply, send_error, Context, Error,
 };
-use crate::emoji;
 use crate::enums::Gender;
+use crate::{emoji, helpers};
 use serenity::all::CreateMessage;
 use serenity::model::user::User;
 
@@ -66,8 +66,13 @@ pub async fn initialize_character(
     let stat_channel_id = message.channel_id.get() as i64;
     let creation_date = chrono::Utc::now().date_naive();
 
+    let level = helpers::calculate_level_from_experience(exp);
+    let mon = helpers::get_usual_evolution_stage_for_level(level, pokemon, &ctx.data());
+
     let record = sqlx::query!(
-        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money, species_api_id, is_shiny, phenotype) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
+        "INSERT INTO character (user_id, guild_id, name, stat_message_id, stat_channel_id, creation_date, experience, money, species_api_id, is_shiny, phenotype,\
+                                stat_strength, stat_dexterity, stat_vitality, stat_special, stat_insight
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id",
         user_id,
         guild_id,
         name,
@@ -78,7 +83,12 @@ pub async fn initialize_character(
         money,
         pokemon.poke_api_id.0,
         is_shiny,
-        phenotype
+        phenotype,
+        mon.strength.min,
+        mon.dexterity.min,
+        mon.vitality.min,
+        mon.special.min,
+        mon.insight.min,
     ).fetch_one(&ctx.data().database)
         .await;
 

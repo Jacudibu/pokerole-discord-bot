@@ -102,7 +102,7 @@ async fn initialize_combat(
                 send_error(
                     &interaction,
                     ctx,
-                    "You don't seem to own this character. No touchies! *hiss*?",
+                    "You don't seem to own this character. No touchies! *hiss*",
                 )
                 .await
             }
@@ -189,7 +189,7 @@ async fn initialize_social(
                 send_error(
                     &interaction,
                     ctx,
-                    "You don't seem to own this character. No touchies! *hiss*?",
+                    "You don't seem to own this character. No touchies! *hiss*",
                 )
                 .await
             }
