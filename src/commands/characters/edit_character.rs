@@ -3,10 +3,12 @@ use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::characters::{
     log_action, reset_character_stats, update_character_post, ActionType,
 };
+use crate::commands::create_emojis::create_emojis_for_pokemon;
 use crate::commands::{
     find_character, pokemon_from_autocomplete_string, send_ephemeral_reply, send_error, Context,
     Error,
 };
+use crate::enums::Gender;
 use crate::game_data::PokemonApiId;
 
 /// Update character data.
@@ -30,7 +32,7 @@ pub async fn edit_character(
     let character = find_character(ctx.data(), guild_id, &character).await?;
 
     let record = sqlx::query!(
-        "SELECT name, species_api_id FROM character WHERE id = ?",
+        "SELECT name, species_api_id, phenotype, is_shiny FROM character WHERE id = ?",
         character.id
     )
     .fetch_one(&ctx.data().database)
@@ -45,6 +47,9 @@ pub async fn edit_character(
             action_log.push(format!("species to {}", species.name));
             should_stats_be_reset = true;
         }
+
+        let gender = Gender::from_phenotype(record.phenotype);
+        create_emojis_for_pokemon(&ctx, species, &gender, record.is_shiny).await;
         species
     } else {
         ctx.data()
