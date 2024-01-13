@@ -6,6 +6,7 @@ use serenity::all::{
     ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, EditMessage, MessageId,
 };
 
+pub const ADMIN_ID: u64 = 878982444412448829;
 pub const ADMIN_PING_STRING: &str = "<@878982444412448829>";
 pub const ERROR_LOG_CHANNEL: ChannelId = ChannelId::new(1188864512439369779);
 

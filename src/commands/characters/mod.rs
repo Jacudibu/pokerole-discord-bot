@@ -1,12 +1,13 @@
 use crate::cache::CharacterCacheItem;
 use crate::character_stats::GenericCharacterStats;
 use crate::commands::{
-    handle_error_during_message_edit, parse_character_names, send_error,
+    handle_error_during_message_edit, parse_character_names, send_ephemeral_reply, send_error,
     BuildUpdatedStatMessageStringResult, Context,
 };
 use crate::data::Data;
 use crate::enums::{Gender, MysteryDungeonRank};
 use crate::game_data::PokemonApiId;
+use crate::helpers::{ADMIN_ID, ADMIN_PING_STRING};
 use crate::{emoji, helpers, Error};
 use core::fmt;
 use poise::Command;
@@ -37,6 +38,7 @@ const DEFAULT_BACKPACK_SLOTS: i64 = 6;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     vec![
+        update_all_character_posts(),
         edit_character::edit_character(),
         give_money::give_money(),
         initialize_character::initialize_character(),
@@ -52,6 +54,37 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         cs_mock::cs_mock_2(),
         reset_character_stats::reset_character_stats(),
     ]
+}
+
+/// Trigger an update for all character sheets.
+#[poise::command(
+    slash_command,
+    guild_only,
+    default_member_permissions = "ADMINISTRATOR"
+)]
+async fn update_all_character_posts(ctx: Context<'_>) -> Result<(), Error> {
+    if ctx.author().id.get() != ADMIN_ID {
+        return send_error(
+            &ctx,
+            &format!(
+                "Sorry, but this command is so unbelievably spam-inducing that it's only available for {}.",
+                ADMIN_PING_STRING
+            ),
+        )
+        .await;
+    }
+
+    let _ = ctx.defer_ephemeral().await;
+    for record in sqlx::query!("SELECT id from character")
+        .fetch_all(&ctx.data().database)
+        .await
+        .unwrap()
+    {
+        update_character_post(&ctx, record.id).await;
+    }
+
+    let _ = send_ephemeral_reply(&ctx, "Done!").await;
+    Ok(())
 }
 
 pub async fn send_stale_data_error<'a>(ctx: &Context<'a>) -> Result<(), Error> {
