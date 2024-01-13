@@ -6,7 +6,7 @@ use crate::events::character_stat_edit::{
 };
 use crate::events::send_error;
 use crate::Error;
-use serenity::all::{ComponentInteraction, Context};
+use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
 use std::str::FromStr;
 
 pub async fn handle_combat_stat_request(
@@ -18,8 +18,63 @@ pub async fn handle_combat_stat_request(
     match args.remove(0) {
         "add" => edit_combat_stat(ctx, interaction, data, args, 1).await,
         "subtract" => edit_combat_stat(ctx, interaction, data, args, -1).await,
+        "apply" => apply_combat_stats(ctx, interaction, data, args).await,
+        "cancel" => cancel_combat_stats(ctx, interaction).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
+}
+
+async fn apply_combat_stats(
+    ctx: &Context,
+    interaction: &ComponentInteraction,
+    data: &Data,
+    mut args: Vec<&str>,
+) -> Result<(), Error> {
+    let deferred_interaction = interaction.defer(ctx);
+    let character_id = i64::from_str(args.remove(0))?;
+
+    let _ = sqlx::query!(
+        "UPDATE character
+SET
+    stat_strength = stat_edit_strength,
+    stat_dexterity = stat_edit_dexterity,
+    stat_vitality = stat_edit_vitality,
+    stat_special = stat_edit_special,
+    stat_insight = stat_edit_insight
+WHERE id = ?",
+        character_id
+    )
+    .execute(&data.database)
+    .await;
+
+    let _ = deferred_interaction.await;
+    let _ = interaction
+        .edit_response(
+            ctx,
+            EditInteractionResponse::new()
+                .content("Successfully applied your stats.")
+                .components(Vec::new()),
+        )
+        .await;
+
+    Ok(())
+}
+
+async fn cancel_combat_stats(
+    ctx: &Context,
+    interaction: &ComponentInteraction,
+) -> Result<(), Error> {
+    let _ = interaction.defer(ctx).await;
+    let _ = interaction
+        .edit_response(
+            ctx,
+            EditInteractionResponse::new()
+                .content("Operation cancelled.")
+                .components(Vec::new()),
+        )
+        .await;
+
+    Ok(())
 }
 
 #[rustfmt::skip]
