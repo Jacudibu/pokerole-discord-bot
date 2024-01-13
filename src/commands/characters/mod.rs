@@ -185,6 +185,21 @@ pub async fn build_character_string(
             )
             .await
             .unwrap_or(format!("[{}]", pokemon.name));
+            let species_override_for_stats =
+                if let Some(species_override_for_stats) = record.species_override_for_stats {
+                    let species_override_for_stats = data
+                        .game
+                        .pokemon_by_api_id
+                        .get(&PokemonApiId(species_override_for_stats as u16))
+                        .unwrap();
+
+                    format!(
+                        "| [Override: Using base stats for {}]",
+                        species_override_for_stats.name
+                    )
+                } else {
+                    String::new()
+                };
 
             let type_emojis = if let Some(type2) = pokemon.type2 {
                 format!(
@@ -226,7 +241,7 @@ pub async fn build_character_string(
 ## {} {} {}
 **Level {}** `({} / 100)`
 {} {}
-### Stats {}
+### Stats {}{}
 ```
 {}
 {}
@@ -242,6 +257,7 @@ pub async fn build_character_string(
                 record.money,
                 emoji::POKE_COIN,
                 type_emojis,
+                species_override_for_stats,
                 combat_stats.build_string(),
                 social_stats.build_string(),
                 ability_list,
