@@ -2,13 +2,14 @@ mod initialize;
 
 use crate::character_stats::GenericCharacterStats;
 use crate::data::Data;
-use crate::enums::{CombatOrSocialStat, Gender, MysteryDungeonRank};
-use crate::events::{character_stat_edit, send_error};
+use crate::enums::{Gender, MysteryDungeonRank};
+use crate::events::send_error;
+use crate::game_data::pokemon::Pokemon;
 use crate::game_data::PokemonApiId;
 use crate::{emoji, helpers, Error};
 use serenity::all::{
-    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponse,
-    CreateInteractionResponseMessage, ReactionType,
+    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
+    ReactionType,
 };
 use serenity::builder::CreateButton;
 use serenity::client::Context;
@@ -54,36 +55,39 @@ WHERE id = ?",
 fn create_combat_buttons(character_id: i64) -> Vec<CreateActionRow> {
     vec![
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_combat-stat_add_{}_str", character_id))
+            CreateButton::new(format!("ce_combat-stat_add_{}_strength", character_id))
                 .label("+STR")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_dex", character_id))
+            CreateButton::new(format!("ce_combat-stat_add_{}_dexterity", character_id))
                 .label("+DEX")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_vit", character_id))
+            CreateButton::new(format!("ce_combat-stat_add_{}_vitality", character_id))
                 .label("+VIT")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_spe", character_id))
+            CreateButton::new(format!("ce_combat-stat_add_{}_special", character_id))
                 .label("+SPE")
                 .style(ButtonStyle::Success),
-            CreateButton::new(format!("ce_combat-stat_add_{}_ins", character_id))
+            CreateButton::new(format!("ce_combat-stat_add_{}_insight", character_id))
                 .label("+INS")
                 .style(ButtonStyle::Success),
         ]),
         CreateActionRow::Buttons(vec![
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_str", character_id))
+            CreateButton::new(format!("ce_combat-stat_subtract_{}_strength", character_id))
                 .label("-STR")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_dex", character_id))
-                .label("-DEX")
-                .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_vit", character_id))
+            CreateButton::new(format!(
+                "ce_combat-stat_subtract_{}_dexterity",
+                character_id
+            ))
+            .label("-DEX")
+            .style(ButtonStyle::Danger),
+            CreateButton::new(format!("ce_combat-stat_subtract_{}_vitality", character_id))
                 .label("-VIT")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_spe", character_id))
+            CreateButton::new(format!("ce_combat-stat_subtract_{}_special", character_id))
                 .label("-SPE")
                 .style(ButtonStyle::Danger),
-            CreateButton::new(format!("ce_combat-stat_subtract_{}_ins", character_id))
+            CreateButton::new(format!("ce_combat-stat_subtract_{}_insight", character_id))
                 .label("-INS")
                 .style(ButtonStyle::Danger),
         ]),
@@ -149,11 +153,28 @@ fn create_social_buttons(character_id: i64) -> Vec<CreateActionRow> {
     ]
 }
 
-async fn create_stat_edit_overview_message(
+struct CharacterDataForStatEditing<'a> {
+    pokemon: &'a Pokemon,
+    name: String,
+    emoji: String,
+    level: i64,
+    rank: MysteryDungeonRank,
+    strength: i64,
+    dexterity: i64,
+    vitality: i64,
+    special: i64,
+    insight: i64,
+    tough: i64,
+    cool: i64,
+    beauty: i64,
+    cute: i64,
+    clever: i64,
+}
+
+async fn get_character_data_for_edit(
     data: &Data,
     character_id: i64,
-    stat_type: StatType,
-) -> CreateInteractionResponseMessage {
+) -> CharacterDataForStatEditing {
     let record = sqlx::query!(
         "SELECT name, guild_id, experience, species_api_id, is_shiny, phenotype, \
                       stat_edit_strength, stat_edit_dexterity, stat_edit_vitality, stat_edit_special, stat_edit_insight, stat_edit_tough, stat_edit_cool, stat_edit_beauty, stat_edit_cute, stat_edit_clever
@@ -190,34 +211,64 @@ async fn create_stat_edit_overview_message(
     .await
     .unwrap_or(format!("[{}]", pokemon.name));
 
+    CharacterDataForStatEditing {
+        name: record.name,
+        emoji,
+        pokemon,
+        level,
+        rank,
+        strength: record.stat_edit_strength,
+        dexterity: record.stat_edit_dexterity,
+        vitality: record.stat_edit_vitality,
+        special: record.stat_edit_special,
+        insight: record.stat_edit_insight,
+        tough: record.stat_edit_tough,
+        cool: record.stat_edit_cool,
+        beauty: record.stat_edit_beauty,
+        cute: record.stat_edit_cute,
+        clever: record.stat_edit_clever,
+    }
+}
+
+async fn create_stat_edit_overview_message(
+    data: &Data,
+    character_id: i64,
+    stat_type: StatType,
+) -> CreateInteractionResponseMessage {
+    let character_data = get_character_data_for_edit(data, character_id).await;
+
     let (stats, remaining_points) = match stat_type {
         StatType::Combat => {
-            let pokemon_evolution_form_for_stats =
-                helpers::get_usual_evolution_stage_for_level(level, pokemon, data);
+            let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+                character_data.level,
+                character_data.pokemon,
+                data,
+            );
             let combat_stats = GenericCharacterStats::from_combat(
                 pokemon_evolution_form_for_stats,
-                record.stat_edit_strength,
-                record.stat_edit_dexterity,
-                record.stat_edit_vitality,
-                record.stat_edit_special,
-                record.stat_edit_insight,
+                character_data.strength,
+                character_data.dexterity,
+                character_data.vitality,
+                character_data.special,
+                character_data.insight,
             );
 
-            let remaining_points = helpers::calculate_available_combat_points(level)
+            let remaining_points = helpers::calculate_available_combat_points(character_data.level)
                 - combat_stats.calculate_invested_stat_points();
 
             (combat_stats, remaining_points)
         }
         StatType::Social => {
             let social_stats = GenericCharacterStats::from_social(
-                record.stat_edit_tough,
-                record.stat_edit_cool,
-                record.stat_edit_beauty,
-                record.stat_edit_cute,
-                record.stat_edit_clever,
+                character_data.tough,
+                character_data.cool,
+                character_data.beauty,
+                character_data.cute,
+                character_data.clever,
             );
 
-            let remaining_points = helpers::calculate_available_social_points(&rank) as i64
+            let remaining_points = helpers::calculate_available_social_points(&character_data.rank)
+                as i64
                 - social_stats.calculate_invested_stat_points();
 
             (social_stats, remaining_points)
@@ -226,8 +277,8 @@ async fn create_stat_edit_overview_message(
 
     let message = format!(
         "### {}{}\n```\n{}```\n{} Remaining Points.",
-        emoji,
-        record.name,
+        character_data.emoji,
+        character_data.name,
         stats.build_string(),
         remaining_points
     );

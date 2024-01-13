@@ -214,7 +214,7 @@ Special Defense: {}
     pub fn calculate_invested_stat_points(&self) -> i64 {
         let limit_breaks = self.count_limit_breaks();
         let used_extra_points_for_limit_breaks = if limit_breaks > 0 {
-            1 + limit_breaks * (limit_breaks + 1) / 2
+            1 + limit_breaks + limit_breaks * (limit_breaks + 1) / 2
         } else {
             0
         };
