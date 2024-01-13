@@ -37,7 +37,7 @@ pub mod status;
 pub mod timestamp;
 pub mod weather;
 
-mod characters;
+pub mod characters;
 mod prune_emojis;
 mod quests;
 mod say;

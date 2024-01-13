@@ -87,6 +87,9 @@ impl CharacterStat {
             0
         }
     }
+    pub fn is_at_or_above_max(&self) -> bool {
+        self.current >= self.max
+    }
 }
 
 const COMBAT_PADDING: usize = 10;
@@ -273,5 +276,13 @@ Special Defense: {}
             + self.special_or_cute.count_limit_breaks()
             + self.vitality_or_beauty.count_limit_breaks()
             + self.dexterity_or_cool.count_limit_breaks()
+    }
+
+    pub fn is_any_stat_at_or_above_max(&self) -> bool {
+        self.strength_or_tough.is_at_or_above_max()
+            || self.insight_or_clever.is_at_or_above_max()
+            || self.special_or_cute.is_at_or_above_max()
+            || self.vitality_or_beauty.is_at_or_above_max()
+            || self.dexterity_or_cool.is_at_or_above_max()
     }
 }

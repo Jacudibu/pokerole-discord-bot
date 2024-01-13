@@ -8,8 +8,9 @@ use crate::events::send_error;
 use crate::game_data::PokemonApiId;
 use crate::{emoji, helpers, Error};
 use serenity::all::{
-    ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
-    EditInteractionResponse, EditMessage, ReactionType,
+    ButtonStyle, ChannelId, ComponentInteraction, CreateActionRow,
+    CreateInteractionResponseMessage, EditInteractionResponse, EditMessage, MessageId,
+    ReactionType,
 };
 use serenity::builder::CreateButton;
 use serenity::client::Context;
@@ -297,12 +298,22 @@ async fn create_stat_edit_overview_message(
         }
     };
 
+    let limit_break_substring = if stats.is_any_stat_at_or_above_max() {
+        format!(
+            "\nLimit breaking would cost you {}.",
+            helpers::calculate_next_limit_break_cost(stats.count_limit_breaks())
+        )
+    } else {
+        String::new()
+    };
+
     let message = format!(
-        "### {}{}\n```\n{}```\n{} Remaining Points.",
+        "### {}{}\n```\n{}```\n{} Remaining Points.{}",
         character_data.emoji,
         character_data.name,
         stats.build_string(),
-        remaining_points
+        remaining_points,
+        limit_break_substring
     );
 
     MessageContent {
@@ -312,5 +323,39 @@ async fn create_stat_edit_overview_message(
             StatType::Combat => create_combat_buttons(character_id),
             StatType::Social => create_social_buttons(character_id),
         },
+    }
+}
+
+pub async fn update_character_post<'a>(ctx: &Context, data: &Data, id: i64) {
+    if let Some(result) = crate::commands::characters::build_character_string(data, id).await {
+        let message = ctx
+            .http
+            .get_message(
+                ChannelId::from(result.stat_channel_id as u64),
+                MessageId::from(result.stat_message_id as u64),
+            )
+            .await;
+        if let Ok(mut message) = message {
+            if let Err(e) = message
+                .edit(
+                    ctx,
+                    EditMessage::new()
+                        .content(&result.message)
+                        .components(result.components.clone()),
+                )
+                .await
+            {
+                // TODO: Figure out how to do this when we only got a serenity context...
+                // crate::commands::handle_error_during_message_edit(
+                //     ctx,
+                //     e,
+                //     message,
+                //     result.message,
+                //     Some(result.components),
+                //     result.name,
+                // )
+                // .await;
+            }
+        }
     }
 }

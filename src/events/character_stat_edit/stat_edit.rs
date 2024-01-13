@@ -1,11 +1,11 @@
 use crate::character_stats::CharacterCombatStats;
 use crate::data::Data;
 use crate::events::character_stat_edit::{
-    create_stat_edit_overview_message, get_character_data_for_edit, CharacterDataForStatEditing,
-    StatType,
+    create_stat_edit_overview_message, get_character_data_for_edit, update_character_post,
+    CharacterDataForStatEditing, StatType,
 };
 use crate::events::send_error;
-use crate::Error;
+use crate::{helpers, Error};
 use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
 use std::str::FromStr;
 
@@ -57,6 +57,7 @@ WHERE id = ?",
         )
         .await;
 
+    update_character_post(ctx, data, character_id).await;
     Ok(())
 }
 
@@ -119,7 +120,8 @@ async fn edit_combat_stat_bla(
             .await;
         }
 
-        let points_required_for_limit_break = 2 + character.combat_stats.count_limit_breaks();
+        let points_required_for_limit_break =
+            helpers::calculate_next_limit_break_cost(character.combat_stats.count_limit_breaks());
         if edited_stat.current + 1 > edited_stat.max
             && remaining_points < points_required_for_limit_break
         {
