@@ -1,11 +1,10 @@
-use std::cmp::Ordering;
-
 use crate::commands::Context;
 use crate::enums::PokemonTypeWithoutShadow;
+use std::cmp::Ordering;
 
 fn filter_and_sort<'a>(
     partial: &str,
-    commands: impl Iterator<Item=&'a String>,
+    commands: impl Iterator<Item = &'a String>,
     minimum_query_length: usize,
 ) -> Vec<String> {
     if partial.len() < minimum_query_length {
@@ -60,7 +59,16 @@ pub async fn autocomplete_status_effect<'a>(ctx: Context<'a>, partial: &'a str) 
 }
 
 pub async fn autocomplete_rule<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    filter_and_sort(partial, ctx.data().game.rule_names.iter(), 0)
+    let guild_id = ctx.guild_id().expect("Command should be guild_only!").get() as i64;
+    let entries = sqlx::query!("SELECT name FROM guild_rules WHERE guild_id = ?", guild_id)
+        .fetch_all(&ctx.data().database)
+        .await;
+
+    if let Ok(entries) = entries {
+        filter_and_sort(partial, entries.iter().map(|x| &x.name), 0)
+    } else {
+        Vec::new()
+    }
 }
 
 pub async fn autocomplete_nature<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
@@ -96,8 +104,8 @@ pub async fn autocomplete_wallet_name<'a>(ctx: Context<'a>, partial: &'a str) ->
         "SELECT name FROM wallet WHERE wallet.guild_id = ?",
         guild_id
     )
-        .fetch_all(&ctx.data().database)
-        .await;
+    .fetch_all(&ctx.data().database)
+    .await;
 
     if let Ok(entries) = entries {
         filter_and_sort(partial, entries.iter().map(|x| &x.name), 0)
