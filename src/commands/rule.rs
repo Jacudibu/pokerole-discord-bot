@@ -1,7 +1,7 @@
 use crate::commands::autocompletion::autocomplete_rule;
-use crate::commands::{Context, Error};
+use crate::commands::{edit_rules, Context, Error};
 use crate::errors::ValidationError;
-use crate::{game_data, helpers};
+use crate::helpers;
 
 /// Display rule
 #[poise::command(slash_command, guild_only)]
@@ -15,7 +15,7 @@ pub async fn rule(
     let guild_id = ctx.guild_id().expect("Command is guild_only").get() as i64;
 
     match sqlx::query_as!(
-        game_data::rule::Rule,
+        edit_rules::Rule,
         "SELECT name, text, flavor, example FROM guild_rules WHERE guild_id = ? AND name = ?",
         guild_id,
         name,

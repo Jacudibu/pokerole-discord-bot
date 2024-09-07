@@ -8,7 +8,6 @@ pub(crate) mod r#move;
 pub(crate) mod nature;
 pub(crate) mod pokemon;
 pub(crate) mod potion;
-pub(crate) mod rule;
 pub(crate) mod status_effect;
 pub(crate) mod weather;
 
@@ -39,7 +38,5 @@ pub struct GameData {
     pub status_effects_names: Arc<Vec<String>>,
     pub weather: Arc<HashMap<String, weather::Weather>>,
     pub weather_names: Arc<Vec<String>>,
-    pub rule_names: Arc<Vec<String>>,
-    pub rules: Arc<HashMap<String, rule::Rule>>,
     pub type_efficiency: Arc<type_efficiency::TypeEfficiency>,
 }
