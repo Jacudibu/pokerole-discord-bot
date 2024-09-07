@@ -1,5 +1,6 @@
 use crate::game_data::parser::custom_data::custom_item::CustomItem;
 use crate::game_data::pokerole_data::raw_item::RawPokeroleItem;
+use std::ops::Not;
 use std::str::FromStr;
 
 #[derive(Debug)]
@@ -13,7 +14,7 @@ pub struct Item {
 }
 
 impl Item {
-    pub(crate) fn build_string(&self) -> impl Into<String> + Sized {
+    pub(crate) fn build_string(&self) -> impl Into<String> {
         let mut result: String = std::format!("### {}\n", &self.name);
 
         if let Some(health_restored) = &self.health_restored {
@@ -21,6 +22,9 @@ impl Item {
         }
         if let Some(price) = &self.price {
             result.push_str(&format!("**Price**: {}\n", price));
+        }
+        if self.category.is_empty().not() {
+            result.push_str(&format!("**Category**: {}\n", self.category));
         }
         result.push_str(&self.description);
 
