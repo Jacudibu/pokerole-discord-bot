@@ -1,5 +1,5 @@
 use crate::commands::autocompletion::autocomplete_rule;
-use crate::commands::Context;
+use crate::commands::{send_ephemeral_reply, Context};
 use crate::errors::{DatabaseError, ValidationError};
 use crate::Error;
 
@@ -62,7 +62,7 @@ ON CONFLICT (guild_id, name) DO UPDATE SET (text, flavor, example) = (excluded.t
     .await
     {
         Ok(_) => {
-            ctx.say("Success!").await?;
+            send_ephemeral_reply(&ctx, "Rule was created (or updated)!").await?;
             Ok(())
         }
         Err(e) => Err(Box::new(DatabaseError::new(e.to_string()))),
@@ -78,6 +78,21 @@ pub async fn delete(
     #[autocomplete = "autocomplete_rule"]
     name: String,
 ) -> Result<(), Error> {
-    ctx.say(format!("Delete was called for {name}")).await?;
-    Ok(())
+    let guild_id = ctx.guild().expect("Command should be guild_only").id.get() as i64;
+    match sqlx::query!(
+        "DELETE FROM guild_rules WHERE guild_id = ? AND name = ?",
+        guild_id,
+        name
+    )
+    .execute(&ctx.data().database)
+    .await
+    {
+        Ok(_) => {
+            send_ephemeral_reply(&ctx, "Rule was deleted!").await?;
+            Ok(())
+        }
+        Err(e) => Err(Box::new(DatabaseError::new(format!(
+            "Was unable to delete a rule with name {name}: {e}"
+        )))),
+    }
 }
