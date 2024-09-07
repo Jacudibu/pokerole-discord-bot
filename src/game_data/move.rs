@@ -86,7 +86,7 @@ impl Move {
             return None;
         }
 
-        return match Stat::from_str(&raw) {
+        match Stat::from_str(&raw) {
             Ok(result) => Some(result),
             Err(_) => match raw.as_str() {
                 "Strength/special" => Some(Stat::StrengthOrSpecial),
@@ -98,7 +98,7 @@ impl Move {
                     None
                 }
             },
-        };
+        }
     }
 
     fn parse_happiness_damage(raw: String) -> Option<HappinessDamageModifier> {
@@ -106,14 +106,14 @@ impl Move {
             return None;
         }
 
-        return match raw.as_str() {
+        match raw.as_str() {
             "Happiness" => Some(HappinessDamageModifier::Happiness),
             "Missing happiness" => Some(HappinessDamageModifier::MissingHappiness),
             _ => {
                 error!("Cannot parse happiness damage modifier: {}", &raw);
                 None
             }
-        };
+        }
     }
 
     fn parse_accuracy(raw: String) -> Option<CombatOrSocialStat> {
@@ -121,7 +121,7 @@ impl Move {
             return None;
         }
 
-        return match CombatOrSocialStat::from_str(&raw) {
+        match CombatOrSocialStat::from_str(&raw) {
             Ok(result) => Some(result),
             Err(_) => match raw.as_str() {
                 "Missing beauty" => Some(CombatOrSocialStat::MissingBeauty),
@@ -136,7 +136,7 @@ impl Move {
                     None
                 }
             },
-        };
+        }
     }
 
     pub(crate) fn build_string(&self) -> String {

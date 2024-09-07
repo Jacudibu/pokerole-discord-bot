@@ -179,8 +179,7 @@ pub async fn build_character_string(
                 if let Some(species_override_for_stats) = record.species_override_for_stats {
                     let species_override_for_stats = game_data
                         .pokemon_by_api_id
-                        .get(&PokemonApiId(species_override_for_stats as u16))
-                        .unwrap();
+                        .get(&PokemonApiId(species_override_for_stats as u16))?;
 
                     format!(
                         " | [Override: Using base stats for {}]",

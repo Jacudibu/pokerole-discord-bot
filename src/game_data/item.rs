@@ -51,7 +51,7 @@ impl Item {
             description: raw.description.clone(),
             category: raw.category.clone(),
             single_use: raw.single_use,
-            health_restored: raw.health_restored.clone(),
+            health_restored: raw.health_restored,
         }
     }
 
