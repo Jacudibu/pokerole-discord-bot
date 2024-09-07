@@ -29,15 +29,23 @@ pub fn create_button(label: &str, custom_id: &str, is_disabled: bool) -> CreateB
         .disabled(is_disabled)
 }
 
+pub const DISCORD_MESSAGE_LENGTH_LIMIT: usize = 2000;
 pub fn split_long_messages(message: String) -> Vec<String> {
-    if message.len() < 2000 {
+    split_long_messages_with_custom_max_length(message, DISCORD_MESSAGE_LENGTH_LIMIT)
+}
+
+pub fn split_long_messages_with_custom_max_length(
+    message: String,
+    max_length: usize,
+) -> Vec<String> {
+    if message.len() < max_length {
         return vec![message];
     }
 
     let mut remaining = message.as_str();
     let mut result = Vec::default();
-    while remaining.len() > 2000 {
-        let split_index = find_best_split_pos(remaining);
+    while remaining.len() > max_length {
+        let split_index = find_best_split_pos(remaining, max_length);
         let split = remaining.split_at(split_index);
 
         result.push(split.0.to_string());
@@ -50,8 +58,8 @@ pub fn split_long_messages(message: String) -> Vec<String> {
 
 const MIN_SIZE: usize = 500;
 
-fn find_best_split_pos(message: &str) -> usize {
-    let split = message.split_at(2000).0;
+fn find_best_split_pos(message: &str, max_length: usize) -> usize {
+    let split = message.split_at(max_length).0;
     if let Some(index) = split.rfind("\n# ") {
         if index > MIN_SIZE {
             return index;
@@ -80,7 +88,7 @@ fn find_best_split_pos(message: &str) -> usize {
         return index;
     }
 
-    2000
+    max_length
 }
 
 struct Signup {
