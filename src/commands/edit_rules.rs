@@ -36,7 +36,7 @@ pub async fn create_or_update(
     #[description = "A little flavor text for the rule?"] flavor: Option<String>,
     #[description = "Got an example?"] example: Option<String>,
 ) -> Result<(), Error> {
-    validate("name", 30, &name)?;
+    validate("name", 100, &name)?;
     validate("text", 6000, &text)?;
     if let Some(flavor) = &flavor {
         validate("flavor", 6000, flavor)?;
