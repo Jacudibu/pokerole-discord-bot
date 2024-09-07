@@ -113,7 +113,7 @@ pub async fn send_error<'a>(ctx: &Context<'a>, content: &str) -> Result<(), Erro
 
 pub async fn send_ephemeral_reply<'a>(
     ctx: &Context<'a>,
-    content: &str,
+    content: impl Into<String>,
 ) -> Result<ReplyHandle<'a>, serenity::Error> {
     ctx.send(CreateReply::default().content(content).ephemeral(true))
         .await
@@ -486,4 +486,28 @@ fn pokemon_from_autocomplete_string<'a>(
     } else {
         Err(ParseError::new(&std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name)))
     }
+}
+
+pub struct ServerData {
+    id: i64,
+    name: Option<String>,
+}
+
+async fn get_servers_this_user_is_active_in(
+    ctx: &Context<'_>,
+) -> Result<Vec<ServerData>, sqlx::Error> {
+    let user_id = ctx.author().id.get() as i64;
+
+    sqlx::query_as!(
+        ServerData,
+        "
+SELECT guild.id as id, guild.name as name
+FROM guild
+JOIN user_in_guild
+    ON guild.id = user_in_guild.guild_id
+WHERE user_in_guild.user_id = ? and guild.name IS NOT NULL",
+        user_id
+    )
+    .fetch_all(&ctx.data().database)
+    .await
 }

@@ -3,7 +3,6 @@ use std::fmt::Formatter;
 use std::sync::Arc;
 
 use poise::Command;
-use regex::Regex;
 use serenity::all::{
     ButtonStyle, CreateActionRow, CreateAllowedMentions, CreateButton, CreateMessage, GetMessages,
 };
@@ -397,6 +396,7 @@ pub enum ActionType {
     UseGMExperience,
     RuleUpdate,
     RuleDelete,
+    RuleClone,
     DoNotLog,
 }
 
@@ -427,6 +427,7 @@ impl fmt::Display for ActionType {
             ActionType::UseGMExperience => "🏦➡️ [GM Experience]",
             ActionType::RuleUpdate => "⚖️🌟 [Rule Update]",
             ActionType::RuleDelete => "⚖️❌ [Rule Deletion]",
+            ActionType::RuleClone => "⚖️⚖️⚖️ [Rule Clone]",
             ActionType::DoNotLog => "",
         })
     }
