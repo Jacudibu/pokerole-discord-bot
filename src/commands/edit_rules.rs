@@ -1,4 +1,5 @@
 use crate::commands::autocompletion::autocomplete_rule;
+use crate::commands::characters::{log_action, ActionType};
 use crate::commands::{send_ephemeral_reply, Context};
 use crate::errors::{DatabaseError, ValidationError};
 use crate::Error;
@@ -63,6 +64,7 @@ ON CONFLICT (guild_id, name) DO UPDATE SET (text, flavor, example) = (excluded.t
     {
         Ok(_) => {
             send_ephemeral_reply(&ctx, "Rule was created (or updated)!").await?;
+            log_action(&ActionType::RuleUpdate, &ctx, format!("Created (or updated) a rule named {name}")).await?;
             Ok(())
         }
         Err(e) => Err(Box::new(DatabaseError::new(e.to_string()))),
@@ -89,6 +91,12 @@ pub async fn delete(
     {
         Ok(_) => {
             send_ephemeral_reply(&ctx, "Rule was deleted!").await?;
+            log_action(
+                &ActionType::RuleDelete,
+                &ctx,
+                format!("Deleted a rule named {name}"),
+            )
+            .await?;
             Ok(())
         }
         Err(e) => Err(Box::new(DatabaseError::new(format!(

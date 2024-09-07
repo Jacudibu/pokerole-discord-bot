@@ -395,6 +395,8 @@ pub enum ActionType {
     TerastallizationUnlock,
     StoreGMExperience,
     UseGMExperience,
+    RuleUpdate,
+    RuleDelete,
     DoNotLog,
 }
 
@@ -423,6 +425,8 @@ impl fmt::Display for ActionType {
             ActionType::TerastallizationUnlock => "💎 [Terastallization Unlock]",
             ActionType::StoreGMExperience => "🏦⬅️ [GM Experience]",
             ActionType::UseGMExperience => "🏦➡️ [GM Experience]",
+            ActionType::RuleUpdate => "⚖️🌟 [Rule Update]",
+            ActionType::RuleDelete => "⚖️❌ [Rule Deletion]",
             ActionType::DoNotLog => "",
         })
     }
