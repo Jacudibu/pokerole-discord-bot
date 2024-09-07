@@ -1,10 +1,10 @@
 use crate::commands::autocompletion::autocomplete_rule;
 use crate::commands::{Context, Error};
-use crate::helpers;
-use poise::CreateReply;
+use crate::errors::ValidationError;
+use crate::{game_data, helpers};
 
 /// Display rule
-#[poise::command(slash_command)]
+#[poise::command(slash_command, guild_only)]
 pub async fn rule(
     ctx: Context<'_>,
     #[description = "Which rule?"]
@@ -12,25 +12,31 @@ pub async fn rule(
     #[autocomplete = "autocomplete_rule"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(rule) = ctx.data().game.rules.get(&name.to_lowercase()) {
-        for split in helpers::split_long_messages(rule.build_string().into()) {
-            if let Err(e) = ctx.say(split).await {
-                let _ = ctx
-                    .reply(&format!("Encountered an unexpected error:\n```{}```", e))
-                    .await;
-            }
-        }
-    } else {
-        ctx.send(
-            CreateReply::default()
-                .content(std::format!(
-                    "Unable to find a rule named **{}**, sorry!",
-                    name
-                ))
-                .ephemeral(true),
-        )
-        .await?;
-    }
+    let guild_id = ctx.guild_id().expect("Command is guild_only").get() as i64;
 
-    Ok(())
+    match sqlx::query_as!(
+        game_data::rule::Rule,
+        "SELECT name, text, flavor, example FROM guild_rules WHERE guild_id = ? AND name = ?",
+        guild_id,
+        name,
+    )
+    .fetch_one(&ctx.data().database)
+    .await
+    {
+        Ok(rule) => {
+            for split in helpers::split_long_messages(rule.build_string().into()) {
+                if let Err(e) = ctx.say(split).await {
+                    let _ = ctx
+                        .reply(&format!("Encountered an unexpected error:\n```{}```", e))
+                        .await;
+                }
+            }
+            Ok(())
+        }
+
+        Err(e) => Err(Box::new(ValidationError::new(format!(
+            "Unable to find a rule named **{}** on this server, sorry!",
+            name
+        )))),
+    }
 }
