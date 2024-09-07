@@ -501,22 +501,14 @@ pub async fn change_character_stat<'a>(
         .expect("Commands using this function are marked as guild_only")
         .get();
 
-    match parse_character_names(ctx, guild_id, names).await {
-        Ok(characters) => {
-            for x in &characters {
-                let _ = change_character_stat_after_validation(
-                    ctx,
-                    database_column,
-                    x,
-                    amount,
-                    &action_type,
-                )
+    let characters = parse_character_names(ctx, guild_id, names).await?;
+    for x in &characters {
+        let _ =
+            change_character_stat_after_validation(ctx, database_column, x, amount, &action_type)
                 .await;
-            }
-            Ok(characters)
-        }
-        Err(error) => Err(error),
     }
+
+    Ok(characters)
 }
 
 pub async fn change_character_stat_after_validation<'a>(
