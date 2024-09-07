@@ -610,17 +610,7 @@ pub async fn change_character_stat_after_validation<'a>(
 }
 
 pub fn validate_user_input<'a>(text: &str) -> Result<(), &'a str> {
-    if text.len() > 30 {
-        return Err("Query string too long!");
-    }
-
-    // TODO: Move that thing into some static context
-    let regex = Regex::new(r"^[\w ']*$").unwrap();
-    if regex.is_match(text) {
-        Ok(())
-    } else {
-        Err("Failed to validate input string!")
-    }
+    helpers::validate_user_input(text, 30)
 }
 
 pub fn build_character_list(characters: &[CharacterCacheItem]) -> String {
