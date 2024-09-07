@@ -40,6 +40,7 @@ pub mod timestamp;
 pub mod weather;
 
 pub mod characters;
+mod edit_rules;
 mod pin_or_unpin;
 mod player_info;
 mod prune_emojis;
@@ -65,6 +66,7 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         stats::stats(),
         stats::pokemon(),
         status::status(),
+        edit_rules::edit_rules(),
         rule::rule(),
         learns::learns(),
         nature::nature(),

@@ -1,14 +1,14 @@
-use serenity::all::{
-    ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, CreateMessage, EditMessage,
-    EditThread, HttpError, Message, MessageId,
-};
-use std::sync::Arc;
-
 use crate::data::Data;
 use crate::enums::{MysteryDungeonRank, QuestParticipantSelectionMechanism};
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::{GameData, PokemonApiId};
 use crate::{discord_error_codes, emoji, Error};
+use regex::Regex;
+use serenity::all::{
+    ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, CreateMessage, EditMessage,
+    EditThread, HttpError, Message, MessageId,
+};
+use std::sync::Arc;
 
 pub const ADMIN_PING_STRING: &str = "<@878982444412448829>";
 pub const ERROR_LOG_CHANNEL: ChannelId = ChannelId::new(1188864512439369779);
@@ -467,5 +467,18 @@ pub async fn handle_error_during_message_edit(
         let _ = reply_channel_id.say(ctx, &format!(
             "Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n*This has been logged.*",
             &name)).await;
+    }
+}
+
+pub fn validate_user_input<'a>(text: &str, max_length: usize) -> Result<(), &'a str> {
+    if text.len() > max_length {
+        return Err("Input string too long!");
+    }
+
+    let regex = Regex::new(r"^[\w ']*$").unwrap();
+    if regex.is_match(text) {
+        Ok(())
+    } else {
+        Err("Failed to validate input string!")
     }
 }
