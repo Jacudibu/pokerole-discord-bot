@@ -1,7 +1,7 @@
-use crate::commands::autocompletion::autocomplete_rule;
+use crate::commands::autocompletion::{autocomplete_rule, autocomplete_server_name};
 use crate::commands::characters::{log_action, ActionType};
-use crate::commands::{send_ephemeral_reply, Context};
-use crate::errors::{DatabaseError, ValidationError};
+use crate::commands::{get_servers_this_user_is_active_in, send_ephemeral_reply, Context};
+use crate::errors::{CommandInvocationError, DatabaseError, ValidationError};
 use crate::Error;
 
 /// Edit this server's rules.
@@ -9,7 +9,7 @@ use crate::Error;
     prefix_command,
     slash_command,
     guild_only,
-    subcommands("create_or_update", "delete"),
+    subcommands("create_or_update", "delete", "clone"),
     subcommand_required,
     default_member_permissions = "ADMINISTRATOR"
 )]
@@ -76,7 +76,6 @@ ON CONFLICT (guild_id, name) DO UPDATE SET (text, flavor, example) = (excluded.t
 pub async fn delete(
     ctx: Context<'_>,
     #[description = "Which rule?"]
-    #[rename = "name"]
     #[autocomplete = "autocomplete_rule"]
     name: String,
 ) -> Result<(), Error> {
@@ -102,5 +101,81 @@ pub async fn delete(
         Err(e) => Err(Box::new(DatabaseError::new(format!(
             "Was unable to delete a rule with name {name}: {e}"
         )))),
+    }
+}
+
+/// Clone all rules from a different server. You need to own a character on the server to do this.
+#[poise::command(prefix_command, slash_command)]
+pub async fn clone(
+    ctx: Context<'_>,
+    #[description = "Which server?"]
+    #[autocomplete = "autocomplete_server_name"]
+    server_name: String,
+) -> Result<(), Error> {
+    let valid_servers = get_servers_this_user_is_active_in(&ctx).await?;
+    let Some(position) = valid_servers.iter().position(|x| {
+        x.name
+            .as_ref()
+            .is_some_and(|x| x.to_lowercase() == server_name.to_lowercase())
+    }) else {
+        return Err(Box::new(ValidationError::new(format!("Unable to find a server named {server_name}. You need to own at least one character on it, and the server has to be set up with a server name."))));
+    };
+
+    let guild_id = ctx.guild().expect("Command should be guild_only").id.get() as i64;
+    if count_existing_guild_rules(&ctx, guild_id).await > 0 {
+        return Err(Box::new(ValidationError::new("You can only clone rules from another server when your own server has no rules set up!")));
+    }
+
+    if let Some(server) = valid_servers.get(position) {
+        send_ephemeral_reply(
+            &ctx,
+            format!("Selected server {:?} with id {}", server.name, server.id),
+        )
+        .await?;
+        clone_all_rules(&ctx, server.id, guild_id).await;
+        log_action(
+            &ActionType::RuleClone,
+            &ctx,
+            format!("Cloned the rules from {:?}", server.name),
+        )
+        .await?;
+        Ok(())
+    } else {
+        Err(Box::new(CommandInvocationError::new(
+            "Something just went horribly wrong, hurray!",
+        )))
+    }
+}
+
+async fn count_existing_guild_rules(ctx: &Context<'_>, guild_id: i64) -> i64 {
+    if let Ok(existing_rule_count) = sqlx::query!(
+        "SELECT COUNT(*) as count FROM guild_rules WHERE guild_id = ?",
+        guild_id
+    )
+    .fetch_one(&ctx.data().database)
+    .await
+    {
+        existing_rule_count.count
+    } else {
+        0
+    }
+}
+
+async fn clone_all_rules(ctx: &Context<'_>, from: i64, to: i64) {
+    for record in sqlx::query!("SELECT * FROM guild_rules WHERE guild_id = ?", from)
+        .fetch_all(&ctx.data().database)
+        .await
+        .unwrap()
+    {
+        let _ = sqlx::query!(
+        "INSERT INTO guild_rules (guild_id, name, text, flavor, example) VALUES (?, ?, ?, ?, ?)",
+        to,
+        record.name,
+        record.text,
+        record.flavor,
+        record.example
+    )
+        .execute(&ctx.data().database)
+        .await;
     }
 }

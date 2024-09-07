@@ -1,4 +1,4 @@
-use crate::commands::Context;
+use crate::commands::{get_servers_this_user_is_active_in, Context};
 use crate::enums::PokemonTypeWithoutShadow;
 use std::cmp::Ordering;
 
@@ -66,6 +66,17 @@ pub async fn autocomplete_rule<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<St
 
     if let Ok(entries) = entries {
         filter_and_sort(partial, entries.iter().map(|x| &x.name), 0)
+    } else {
+        Vec::new()
+    }
+}
+
+/// Lists names for servers the user has been registered on.
+pub async fn autocomplete_server_name<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
+    let known_servers = get_servers_this_user_is_active_in(&ctx).await;
+
+    if let Ok(entries) = known_servers {
+        filter_and_sort(partial, entries.iter().map(|x| x.name.as_ref().unwrap()), 0)
     } else {
         Vec::new()
     }

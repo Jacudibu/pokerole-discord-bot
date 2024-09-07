@@ -34,7 +34,7 @@ pub async fn rule(
             Ok(())
         }
 
-        Err(e) => Err(Box::new(ValidationError::new(format!(
+        Err(_) => Err(Box::new(ValidationError::new(format!(
             "Unable to find a rule named **{}** on this server, sorry!",
             name
         )))),
