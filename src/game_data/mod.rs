@@ -61,7 +61,16 @@ impl MultiSourceGameData {
         database: &Pool<Sqlite>,
     ) -> &GameData {
         let custom_data_id = if let Some(guild_id) = guild_id {
-            guild_id.get() as i64
+            let guild_id = guild_id.get() as i64;
+            if let Ok(record) =
+                sqlx::query!("SELECT data_source_id FROM guild WHERE id = ?", guild_id)
+                    .fetch_one(database)
+                    .await
+            {
+                record.data_source_id
+            } else {
+                guild_id
+            }
         } else {
             let user_id = user_id.get() as i64;
             if let Ok(record) =
