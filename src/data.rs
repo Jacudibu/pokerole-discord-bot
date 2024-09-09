@@ -4,11 +4,12 @@ use std::sync::Arc;
 use sqlx::{Pool, Sqlite};
 
 use crate::cache::Cache;
-use crate::game_data::GameData;
+use crate::game_data::{GameData, MultiSourceGameData};
 
 pub struct Data {
     pub database: Pool<Sqlite>,
     pub game: Arc<GameData>,
+    pub game_multi_source: Arc<MultiSourceGameData>,
     pub cache: Arc<Cache>,
     pub is_backup_thread_running: AtomicBool,
     pub is_weekly_reset_thread_running: AtomicBool,
@@ -20,6 +21,7 @@ impl Data {
         let result = Data {
             database,
             game,
+            game_multi_source: todo!(),
             cache: Arc::new(Cache::new()),
             is_backup_thread_running: AtomicBool::new(false),
             is_weekly_reset_thread_running: AtomicBool::new(false),

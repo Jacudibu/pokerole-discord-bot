@@ -73,7 +73,7 @@ pub async fn efficiency(
     ctx.say(get_type_resistances_string(
         pokemon,
         emoji,
-        &ctx.data().game.type_efficiency,
+        &ctx.data().game_multi_source.type_efficiency,
     ))
     .await?;
 

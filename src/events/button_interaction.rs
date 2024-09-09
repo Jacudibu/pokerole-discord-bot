@@ -72,7 +72,7 @@ pub async fn handle_button_interaction(
                     efficiency::get_type_resistances_string(
                         pokemon,
                         emoji,
-                        &framework.user_data.game.type_efficiency,
+                        &framework.user_data.game_multi_source.type_efficiency,
                     ),
                 )
                 .await?;
