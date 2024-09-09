@@ -11,7 +11,9 @@ pub async fn item(
     #[autocomplete = "autocomplete_item"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(item) = ctx.data().game.items.get(&name.to_lowercase()) {
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+
+    if let Some(item) = game_data.items.get(&name.to_lowercase()) {
         ctx.say(item.build_string()).await?;
     } else {
         ctx.send(

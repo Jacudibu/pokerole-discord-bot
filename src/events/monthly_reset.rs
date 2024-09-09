@@ -1,5 +1,5 @@
-use std::sync::Arc;
 use std::sync::atomic::Ordering;
+use std::sync::Arc;
 
 use chrono::{Datelike, NaiveDate, Utc};
 use serenity::all::CreateMessage;
@@ -16,7 +16,7 @@ pub async fn start_monthly_reset_thread(ctx: &Context, data: &Data) {
     if !data.is_monthly_reset_thread_running.load(Ordering::Relaxed) {
         let ctx_in_thread = Arc::clone(&ctx);
         let database = data.database.clone();
-        let game_data_in_thread = Arc::clone(&data.game);
+        let game_data_in_thread = Arc::clone(&data.game_multi_source.base_data);
         tokio::spawn(async move {
             loop {
                 tokio::time::sleep(calculate_duration_until_next_run()).await;
