@@ -15,7 +15,7 @@ const REJECTED_DATA_FILE_NAMES: [&str; 7] = [
     "Full Restore.json",
 ];
 
-fn parse_file<T: DeserializeOwned>(file_path: &str) -> Result<T, Box<dyn std::error::Error>> {
+pub fn parse_file<T: DeserializeOwned>(file_path: &str) -> Result<T, Box<dyn std::error::Error>> {
     let mut file = File::open(file_path)?;
     let mut json_data = String::new();
     file.read_to_string(&mut json_data)?;

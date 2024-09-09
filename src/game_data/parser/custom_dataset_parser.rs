@@ -1,7 +1,7 @@
 use crate::game_data::ability::Ability;
 use crate::game_data::item::Item;
-use crate::game_data::parser::custom_data;
 use crate::game_data::parser::custom_data::parser::CustomDataParseResult;
+use crate::game_data::parser::{custom_data, helpers};
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
 use crate::game_data::potion::Potion;
@@ -9,7 +9,7 @@ use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::GameData;
-use log::error;
+use log::{error, info};
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -26,11 +26,15 @@ pub fn parse(
     base_data: &GameData,
     pokemon_api_data: &HashMap<String, PokemonApiData>,
 ) -> HashMap<i64, GameData> {
-    let custom_data_sets: Vec<CustomDataSet> = Default::default();
+    let custom_data_sets = helpers::parse_file::<Vec<CustomDataSet>>(&format!(
+        "{base_path}custom_server_data/data_mapping.json"
+    ))
+    .expect("This file should always exist!");
 
     let mut result = HashMap::default();
     // TODO: Parse in order of fallback_id, allowing datasets to "depend" upon each other
     for x in custom_data_sets {
+        info!("Parsing custom data set: {}", x.path);
         let parsed_data = custom_data::parser::parse(&format!("{base_path}{}/", x.path));
         let parsed_data_set = parse_custom(
             base_data,
