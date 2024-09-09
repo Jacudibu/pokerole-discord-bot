@@ -2,7 +2,7 @@ use crate::game_data::parser::custom_data::custom_ability::CustomAbility;
 use crate::game_data::pokerole_data::raw_ability::RawPokeroleAbility;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub struct Ability {
     pub name: String,

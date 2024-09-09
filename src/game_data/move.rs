@@ -6,6 +6,7 @@ use crate::enums::{CombatOrSocialStat, HappinessDamageModifier, MoveCategory, Mo
 use crate::game_data::parser::custom_data::custom_move::CustomMove;
 use crate::game_data::pokerole_data::raw_move::RawPokeroleMove;
 
+#[derive(Clone)]
 pub struct Move {
     pub name: String,
     pub typing: MoveType,

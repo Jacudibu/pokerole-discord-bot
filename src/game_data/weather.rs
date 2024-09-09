@@ -1,6 +1,6 @@
 use crate::game_data::parser::custom_data::custom_weather::CustomWeather;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Weather {
     pub name: String,
     pub description: String,

@@ -14,7 +14,6 @@ use std::collections::HashMap;
 use std::fmt;
 use std::fmt::Formatter;
 use std::str::FromStr;
-use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct PokemonSpeciesData {
@@ -144,7 +143,7 @@ impl Pokemon {
     pub(crate) fn build_ability_string(
         &self,
         emoji: String,
-        abilities: &Arc<HashMap<String, Ability>>,
+        abilities: &HashMap<String, Ability>,
     ) -> impl Into<String> + Sized {
         let mut result = std::format!("## {}{} Abilities\n", emoji, self.name);
         Pokemon::push_ability(&mut result, &self.ability1, abilities, "");
@@ -191,7 +190,7 @@ impl Pokemon {
     fn push_ability(
         result: &mut String,
         ability_name: &String,
-        abilities: &Arc<HashMap<String, Ability>>,
+        abilities: &HashMap<String, Ability>,
         suffix: &str,
     ) {
         match abilities.get(ability_name.to_lowercase().as_str()) {
