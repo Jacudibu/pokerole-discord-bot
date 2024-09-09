@@ -4,6 +4,8 @@
 
 database.sqlite*
 *backup.sqlite
+backup.sqlite-shm
+backup.sqlite-wal
 
 # Semi-Temporary files until we got Github Actions set up properly
 .env
