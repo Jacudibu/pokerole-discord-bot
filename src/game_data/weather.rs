@@ -8,7 +8,7 @@ pub struct Weather {
 }
 
 impl Weather {
-    pub(crate) fn from_custom(raw: &CustomWeather) -> Weather {
+    pub(crate) fn from_custom_data(raw: &CustomWeather) -> Weather {
         Weather {
             name: raw.name.clone(),
             description: raw.description.clone(),

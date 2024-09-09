@@ -58,7 +58,7 @@ impl Move {
         }
     }
 
-    pub(in crate::game_data) fn from_custom(raw: &CustomMove) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: &CustomMove) -> Self {
         Move {
             name: raw.name.clone(),
             typing: raw.r#type,
