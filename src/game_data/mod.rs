@@ -1,4 +1,5 @@
 pub use crate::game_data::pokemon_api::PokemonApiId;
+use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -21,6 +22,8 @@ pub(crate) mod type_efficiency;
 
 /// Data which is stored and accessible in all command invocations
 pub struct GameData {
+    pub name: String,
+    pub id: i64,
     pub abilities: Arc<HashMap<String, ability::Ability>>,
     pub ability_names: Arc<Vec<String>>,
     pub potions: Arc<HashMap<String, potion::Potion>>,
@@ -38,5 +41,21 @@ pub struct GameData {
     pub status_effects_names: Arc<Vec<String>>,
     pub weather: Arc<HashMap<String, weather::Weather>>,
     pub weather_names: Arc<Vec<String>>,
+}
+
+pub struct MultiSourceGameData {
+    pub base_data: Arc<GameData>,
+    pub custom_data: Arc<HashMap<i64, GameData>>,
+
     pub type_efficiency: Arc<type_efficiency::TypeEfficiency>,
+}
+
+impl MultiSourceGameData {
+    pub fn get(&self, id: i64) -> &GameData {
+        if let Some(data) = self.custom_data.get(&id) {
+            data
+        } else {
+            &self.base_data
+        }
+    }
 }

@@ -39,6 +39,8 @@ pub async fn initialize_data() -> GameData {
     let (item_names, item_hash_map) = parse_items(pokerole_data, &custom_data);
     let (potion_names, potion_hash_map) = parse_potions(&custom_data);
     GameData {
+        id: 0,
+        name: "Base Data".into(),
         abilities: Arc::new(ability_hash_map),
         ability_names: Arc::new(ability_names),
         potions: Arc::new(potion_hash_map),
@@ -56,7 +58,7 @@ pub async fn initialize_data() -> GameData {
         status_effects_names: Arc::new(status_names),
         weather: Arc::new(weather_hash_map),
         weather_names: Arc::new(weather_names),
-        type_efficiency: Arc::new(type_efficiency),
+        //type_efficiency: Arc::new(type_efficiency),
     }
 }
 
