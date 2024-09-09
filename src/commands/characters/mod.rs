@@ -1,6 +1,5 @@
 use core::fmt;
 use std::fmt::Formatter;
-use std::sync::Arc;
 
 use poise::Command;
 use serenity::all::{
