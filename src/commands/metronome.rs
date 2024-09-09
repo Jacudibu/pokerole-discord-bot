@@ -5,7 +5,7 @@ use rand::seq::SliceRandom;
 /// Use the most randomest of moves!
 #[poise::command(slash_command)]
 pub async fn metronome(ctx: Context<'_>) -> Result<(), Error> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
 
     ctx.say(get_metronome_text(&game_data)).await?;
     Ok(())

@@ -35,32 +35,32 @@ fn filter_and_sort<'a>(
 }
 
 pub async fn autocomplete_move<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.move_names.iter(), 2)
 }
 
 pub async fn autocomplete_ability<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.ability_names.iter(), 2)
 }
 
 pub async fn autocomplete_pokemon<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.pokemon_names.iter(), 2)
 }
 
 pub async fn autocomplete_item<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.item_names.iter(), 2)
 }
 
 pub async fn autocomplete_weather<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.weather_names.iter(), 0)
 }
 
 pub async fn autocomplete_status_effect<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.status_effects_names.iter(), 0)
 }
 
@@ -89,12 +89,12 @@ pub async fn autocomplete_server_name<'a>(ctx: Context<'a>, partial: &'a str) ->
 }
 
 pub async fn autocomplete_nature<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.nature_names.iter(), 0)
 }
 
 pub async fn autocomplete_potion<'a>(ctx: Context<'a>, partial: &'a str) -> Vec<String> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     filter_and_sort(partial, game_data.potion_names.iter(), 0)
 }
 
