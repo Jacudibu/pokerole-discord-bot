@@ -477,11 +477,17 @@ async fn handle_error_during_message_edit<'a>(
     .await;
 }
 
-fn pokemon_from_autocomplete_string<'a>(
+async fn pokemon_from_autocomplete_string<'a>(
     ctx: &Context<'a>,
     name: &String,
 ) -> Result<&'a Pokemon, ParseError> {
-    let pokemon = ctx.data().game.base_data.pokemon.get(&name.to_lowercase());
+    let pokemon = ctx
+        .data()
+        .game
+        .get_by_context(ctx)
+        .await
+        .pokemon
+        .get(&name.to_lowercase());
     if let Some(pokemon) = pokemon {
         Ok(pokemon)
     } else {

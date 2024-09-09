@@ -63,7 +63,11 @@ pub fn parse_custom(
 
     for x in custom.pokemon {
         if let Some(pokemon) = Pokemon::from_custom_data(&x, pokemon_api_data) {
-            if data.pokemon.insert(x.name.clone(), pokemon).is_none() {
+            if data
+                .pokemon
+                .insert(x.name.to_lowercase(), pokemon)
+                .is_none()
+            {
                 data.pokemon_names.push(x.name)
             };
         } else {
@@ -139,7 +143,10 @@ fn add_custom_data<TInput, TOutput, FnCreate, FnName>(
 {
     for x in data_to_add {
         let name = name_fn(&x);
-        if collection.insert(name.clone(), create_fn(&x)).is_none() {
+        if collection
+            .insert(name.to_lowercase(), create_fn(&x))
+            .is_none()
+        {
             item_names.push(name)
         };
     }

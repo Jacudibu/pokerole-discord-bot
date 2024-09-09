@@ -68,7 +68,7 @@ You can't (and probably also don't really want to) edit a character's species an
     let mut should_stats_be_reset = false;
     let mut reset_species_override = false;
     let species = if let Some(species) = species {
-        let species = pokemon_from_autocomplete_string(&ctx, &species)?;
+        let species = pokemon_from_autocomplete_string(&ctx, &species).await?;
         if species.poke_api_id.0 as i64 != record.species_api_id {
             action_log.push(format!("species to {}", species.name));
             should_stats_be_reset = record.species_override_for_stats.is_none();
@@ -92,23 +92,24 @@ You can't (and probably also don't really want to) edit a character's species an
             .expect("Species IDs in database should always be valid!")
     };
 
-    let species_override_for_stats =
-        if let Some(species_override_for_stats) = species_override_for_stats {
-            let species = pokemon_from_autocomplete_string(&ctx, &species_override_for_stats)?;
-            if species.poke_api_id.0 as i64 != record.species_api_id {
-                action_log.push(format!("species stat override to {}", species.name));
-                should_stats_be_reset = true;
-                Some(species.poke_api_id.0 as i64)
-            } else {
-                action_log.push(String::from("removed species stat override"));
-                None
-            }
-        } else if reset_species_override {
+    let species_override_for_stats = if let Some(species_override_for_stats) =
+        species_override_for_stats
+    {
+        let species = pokemon_from_autocomplete_string(&ctx, &species_override_for_stats).await?;
+        if species.poke_api_id.0 as i64 != record.species_api_id {
+            action_log.push(format!("species stat override to {}", species.name));
+            should_stats_be_reset = true;
+            Some(species.poke_api_id.0 as i64)
+        } else {
             action_log.push(String::from("removed species stat override"));
             None
-        } else {
-            record.species_override_for_stats
-        };
+        }
+    } else if reset_species_override {
+        action_log.push(String::from("removed species stat override"));
+        None
+    } else {
+        record.species_override_for_stats
+    };
 
     let name = if let Some(name) = name {
         action_log.push(format!("name to {}", name));

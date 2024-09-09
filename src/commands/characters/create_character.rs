@@ -100,7 +100,7 @@ async fn execute(
         return send_error(&ctx, e).await;
     }
 
-    let pokemon = pokemon_from_autocomplete_string(&ctx, &pokemon_species)?;
+    let pokemon = pokemon_from_autocomplete_string(&ctx, &pokemon_species).await?;
     let is_shiny = is_shiny.unwrap_or(false);
     let exp = exp.unwrap_or(0);
     let money = money.unwrap_or(500);
