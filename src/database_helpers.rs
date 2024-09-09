@@ -9,7 +9,7 @@ pub mod create_mock {
 
     pub async fn data(db: Pool<Sqlite>) -> Data {
         // TODO: Only initialize game data arc once every cargo test run
-        let game_data = game_data::parser::initialize_data().await;
+        let game_data = game_data::parser::multi_source_parser::parse_data().await;
         Data::new(db, Arc::new(game_data)).await
     }
 
