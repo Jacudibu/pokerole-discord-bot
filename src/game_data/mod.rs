@@ -24,6 +24,7 @@ pub mod parser;
 pub(crate) mod type_efficiency;
 
 /// Data which is stored and accessible in all command invocations
+#[derive(Clone)]
 pub struct GameData {
     pub name: String,
     pub id: i64,
