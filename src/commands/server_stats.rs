@@ -21,7 +21,7 @@ pub async fn server_stats(ctx: Context<'_>) -> Result<(), Error> {
         let species_api_id = PokemonApiId(record.species_api_id as u16);
         let pokemon = ctx
             .data()
-            .game_multi_source
+            .game
             .base_data
             .pokemon_by_api_id
             .get(&species_api_id)

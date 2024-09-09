@@ -103,7 +103,7 @@ async fn build_reply(
         let api_id = PokemonApiId(character.species_api_id as u16);
 
         let pokemon = data
-            .game_multi_source
+            .game
             .base_data
             .pokemon_by_api_id
             .get(&api_id)

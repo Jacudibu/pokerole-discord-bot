@@ -14,7 +14,7 @@ pub async fn poke_move(
     #[autocomplete = "autocomplete_move"]
     name: String,
 ) -> Result<(), Error> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
 
     if let Some(poke_move) = game_data.moves.get(&name.to_lowercase()) {
         if poke_move.name == "Metronome" {

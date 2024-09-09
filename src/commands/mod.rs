@@ -423,7 +423,7 @@ pub async fn ensure_user_owns_wallet_or_is_gm(
 }
 
 async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
     if let Some(result) = build_character_string(&ctx.data().database, game_data, id).await {
         let message = ctx
             .serenity_context()
@@ -481,12 +481,7 @@ fn pokemon_from_autocomplete_string<'a>(
     ctx: &Context<'a>,
     name: &String,
 ) -> Result<&'a Pokemon, ParseError> {
-    let pokemon = ctx
-        .data()
-        .game_multi_source
-        .base_data
-        .pokemon
-        .get(&name.to_lowercase());
+    let pokemon = ctx.data().game.base_data.pokemon.get(&name.to_lowercase());
     if let Some(pokemon) = pokemon {
         Ok(pokemon)
     } else {

@@ -85,7 +85,7 @@ You can't (and probably also don't really want to) edit a character's species an
         species
     } else {
         ctx.data()
-            .game_multi_source
+            .game
             .base_data
             .pokemon_by_api_id
             .get(&PokemonApiId(record.species_api_id as u16))

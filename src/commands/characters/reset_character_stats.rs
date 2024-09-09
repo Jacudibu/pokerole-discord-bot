@@ -50,7 +50,7 @@ pub async fn reset_db_stats(
     let species_id = PokemonApiId(record.species_api_id as u16);
     let used_poke_species = ctx
         .data()
-        .game_multi_source
+        .game
         .base_data
         .pokemon_by_api_id
         .get(&species_id)
@@ -61,7 +61,7 @@ pub async fn reset_db_stats(
     let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
         level,
         used_poke_species,
-        &ctx.data().game_multi_source.base_data,
+        &ctx.data().game.base_data,
         record.species_override_for_stats,
     );
 

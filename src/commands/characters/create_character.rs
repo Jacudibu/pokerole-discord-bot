@@ -138,7 +138,7 @@ async fn execute(
     let mon = helpers::get_usual_evolution_stage_for_level(
         level,
         pokemon,
-        &ctx.data().game_multi_source.base_data,
+        &ctx.data().game.base_data,
         None,
     );
 

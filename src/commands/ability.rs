@@ -11,7 +11,7 @@ pub async fn ability(
     #[autocomplete = "autocomplete_ability"]
     name: String,
 ) -> Result<(), Error> {
-    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    let game_data = ctx.data().game.get_by_context(&ctx).await;
 
     if let Some(ability) = game_data.abilities.get(&name.to_lowercase()) {
         ctx.say(ability.build_string("")).await?;
