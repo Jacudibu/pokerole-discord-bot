@@ -1,29 +1,31 @@
 use std::str::FromStr;
 
-use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
-
 use crate::character_stats::SingleCharacterStatType;
-use crate::data::Data;
 use crate::events::character_stat_edit::{
     create_stat_edit_overview_message, get_character_data_for_edit, CharacterDataForStatEditing,
     StatType,
 };
 use crate::events::{send_error, update_character_post};
+use crate::game_data::GameData;
 use crate::{helpers, Error};
+use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
+use sqlx::{Pool, Sqlite};
 
+#[rustfmt::skip]
 pub async fn handle_edit_stat_request(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     mut args: Vec<&str>,
 ) -> Result<(), Error> {
     let character_id = i64::from_str(args.remove(0))?;
 
     match args.remove(0) {
-        "add" => edit_stat(ctx, interaction, data, character_id, args, 1).await,
-        "subtract" => edit_stat(ctx, interaction, data, character_id, args, -1).await,
-        "apply-combat" => apply_combat_stats(ctx, interaction, data, character_id).await,
-        "apply-social" => apply_social_stats(ctx, interaction, data, character_id).await,
+        "add" => edit_stat(ctx, interaction, database, game_data, character_id, args, 1).await,
+        "subtract" => edit_stat(ctx, interaction, database, game_data, character_id, args, -1).await,
+        "apply-combat" => apply_combat_stats(ctx, interaction, database, game_data, character_id).await,
+        "apply-social" => apply_social_stats(ctx, interaction, database, game_data, character_id).await,
         "cancel" => cancel(ctx, interaction).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
@@ -32,7 +34,8 @@ pub async fn handle_edit_stat_request(
 async fn apply_combat_stats(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     character_id: i64,
 ) -> Result<(), Error> {
     let deferred_interaction = interaction.defer(ctx);
@@ -48,7 +51,7 @@ SET
 WHERE id = ?",
         character_id
     )
-    .execute(&data.database)
+    .execute(database)
     .await;
 
     let _ = deferred_interaction.await;
@@ -61,14 +64,15 @@ WHERE id = ?",
         )
         .await;
 
-    update_character_post(ctx, &data.database, &data.game, character_id).await;
+    update_character_post(ctx, database, game_data, character_id).await;
     Ok(())
 }
 
 async fn apply_social_stats(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     character_id: i64,
 ) -> Result<(), Error> {
     let deferred_interaction = interaction.defer(ctx);
@@ -83,7 +87,7 @@ SET
 WHERE id = ?",
         character_id
     )
-    .execute(&data.database)
+    .execute(database)
     .await;
 
     let _ = deferred_interaction.await;
@@ -96,7 +100,7 @@ WHERE id = ?",
         )
         .await;
 
-    update_character_post(ctx, &data.database, &data.game, character_id).await;
+    update_character_post(ctx, database, game_data, character_id).await;
     Ok(())
 }
 
@@ -118,24 +122,25 @@ async fn cancel(ctx: &Context, interaction: &ComponentInteraction) -> Result<(),
 async fn edit_stat(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     character_id: i64,
     mut args: Vec<&str>,
     amount: i64,
 ) -> Result<(), Error> {
-    let character = get_character_data_for_edit(data, character_id).await;
+    let character = get_character_data_for_edit(database, game_data, character_id).await;
 
     match args.remove(0) {
-        "strength" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Strength).await,
-        "dexterity" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Dexterity).await,
-        "vitality" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Vitality).await,
-        "special" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Special).await,
-        "insight" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Insight).await,
-        "tough" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Tough).await,
-        "cool" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Cool).await,
-        "beauty" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Beauty).await,
-        "cute" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Cute).await,
-        "clever" => edit_specific_stat(ctx, interaction, data, character, amount, SingleCharacterStatType::Clever).await,
+        "strength" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Strength).await,
+        "dexterity" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Dexterity).await,
+        "vitality" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Vitality).await,
+        "special" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Special).await,
+        "insight" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Insight).await,
+        "tough" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Tough).await,
+        "cool" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Cool).await,
+        "beauty" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Beauty).await,
+        "cute" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Cute).await,
+        "clever" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Clever).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
 }
@@ -143,7 +148,8 @@ async fn edit_stat(
 async fn edit_specific_stat(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     character: CharacterDataForStatEditing,
     amount: i64,
     stat: SingleCharacterStatType,
@@ -213,11 +219,12 @@ async fn edit_specific_stat(
     ))
     .bind(edited_stat.current + amount)
     .bind(character.id)
-    .execute(&data.database)
+    .execute(database)
     .await;
 
     let edit_message = create_stat_edit_overview_message(
-        data,
+        database,
+        game_data,
         character.id,
         if stat.is_combat_stat() {
             StatType::Combat

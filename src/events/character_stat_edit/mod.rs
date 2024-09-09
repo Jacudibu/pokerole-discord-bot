@@ -1,16 +1,15 @@
+use crate::character_stats::GenericCharacterStats;
+use crate::enums::{Gender, MysteryDungeonRank};
+use crate::events::send_error;
+use crate::game_data::{GameData, PokemonApiId};
+use crate::{emoji, helpers, Error};
 use serenity::all::{
     ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
     EditInteractionResponse, EditMessage, ReactionType,
 };
 use serenity::builder::CreateButton;
 use serenity::client::Context;
-
-use crate::character_stats::GenericCharacterStats;
-use crate::data::Data;
-use crate::enums::{Gender, MysteryDungeonRank};
-use crate::events::send_error;
-use crate::game_data::PokemonApiId;
-use crate::{emoji, helpers, Error};
+use sqlx::{Pool, Sqlite};
 
 mod initialize;
 mod stat_edit;
@@ -18,12 +17,13 @@ mod stat_edit;
 pub async fn handle_character_editor_command(
     context: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     mut args: Vec<&str>,
 ) -> Result<(), Error> {
     match args.remove(0) {
-        "initialize" => initialize::initialize(context, interaction, data, args).await,
-        "edit-stat" => stat_edit::handle_edit_stat_request(context, interaction, data, args).await,
+        "initialize" => initialize::initialize(context, interaction, database, game_data, args).await,
+        "edit-stat" => stat_edit::handle_edit_stat_request(context, interaction, database, game_data, args).await,
         &_ => { send_error(&interaction, context, "Seems like you are either trying to do something that's not yet implemented or that you are doing something fishy. Mhhhm~").await }
     }
 }
@@ -34,7 +34,7 @@ enum StatType {
     Social,
 }
 
-async fn reset_stat_edit_values(data: &Data, character_id: i64) {
+async fn reset_stat_edit_values(database: &Pool<Sqlite>, character_id: i64) {
     let _ = sqlx::query!(
         "UPDATE character SET 
 stat_edit_strength = stat_strength,
@@ -50,7 +50,7 @@ stat_edit_clever = stat_clever
 WHERE id = ?",
         character_id
     )
-    .execute(&data.database)
+    .execute(database)
     .await;
 }
 
@@ -174,7 +174,8 @@ impl CharacterDataForStatEditing {
 }
 
 async fn get_character_data_for_edit(
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     character_id: i64,
 ) -> CharacterDataForStatEditing {
     let record = sqlx::query!(
@@ -189,14 +190,13 @@ async fn get_character_data_for_edit(
                 LIMIT 1",
         character_id,
     )
-        .fetch_one(&data.database)
+        .fetch_one(database)
         .await
         .unwrap();
 
     let level = helpers::calculate_level_from_experience(record.experience);
     let rank = MysteryDungeonRank::from_level(level as u8);
-    let pokemon = data
-        .game
+    let pokemon = game_data
         .pokemon_by_api_id
         .get(&PokemonApiId(
             record
@@ -206,20 +206,15 @@ async fn get_character_data_for_edit(
         ))
         .expect("All mons inside the Database should have a valid API ID assigned.");
     let gender = Gender::from_phenotype(record.phenotype);
-    let emoji = emoji::get_pokemon_emoji(
-        &data.database,
-        record.guild_id,
-        pokemon,
-        &gender,
-        record.is_shiny,
-    )
-    .await
-    .unwrap_or(format!("[{}]", pokemon.name));
+    let emoji =
+        emoji::get_pokemon_emoji(database, record.guild_id, pokemon, &gender, record.is_shiny)
+            .await
+            .unwrap_or(format!("[{}]", pokemon.name));
 
     let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
         level,
         pokemon,
-        &data.game,
+        game_data,
         record.species_override_for_stats,
     );
     let combat_stats = GenericCharacterStats::from_combat_with_current_min(
@@ -292,11 +287,12 @@ impl From<MessageContent> for EditInteractionResponse {
 }
 
 async fn create_stat_edit_overview_message(
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     character_id: i64,
     stat_type: StatType,
 ) -> MessageContent {
-    let character_data = get_character_data_for_edit(data, character_id).await;
+    let character_data = get_character_data_for_edit(database, game_data, character_id).await;
 
     let (stats, remaining_points) = match stat_type {
         StatType::Combat => {
