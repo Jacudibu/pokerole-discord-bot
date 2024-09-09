@@ -1,4 +1,4 @@
-use log::{error, info};
+use log::{error, info, warn};
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::Read;
@@ -27,7 +27,10 @@ fn parse_file<T: DeserializeOwned>(file_path: &str) -> Result<T, Box<dyn std::er
 pub fn parse_directory<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Vec<T> {
     let mut result = Vec::new();
 
-    let entries = std::fs::read_dir(path).expect("Failed to read directory");
+    let Ok(entries) = std::fs::read_dir(path) else {
+        return result;
+    };
+
     for entry in entries.flatten() {
         if REJECTED_DATA_FILE_NAMES
             .iter()

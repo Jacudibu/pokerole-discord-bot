@@ -2,7 +2,7 @@ use crate::game_data::ability::Ability;
 use crate::game_data::item::Item;
 use crate::game_data::nature::Nature;
 use crate::game_data::parser::custom_data::parser::CustomDataParseResult;
-use crate::game_data::parser::{custom_data, custom_data_parser};
+use crate::game_data::parser::{custom_data, custom_dataset_parser};
 use crate::game_data::pokemon::{ApiIssueType, DataSource, LearnablePokemonMoves, Pokemon};
 use crate::game_data::pokemon_api::pokemon_api_parser;
 use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
@@ -24,17 +24,17 @@ pub async fn parse_data() -> MultiSourceGameData {
     let type_efficiency = pokemon_api_parser::parse_type_efficacy(pokerole_api_path.clone());
     let pokemon_api_data = pokemon_api_parser::parse_pokemon_api(pokerole_api_path);
     let pokerole_data = pokerole_data::parser::parse(&pokerole_data_path);
-    let base_data = custom_data::parser::parse(&format!("{custom_data_path}base_data/"));
+    let custom_base_data = custom_data::parser::parse(&format!("{custom_data_path}base_data/"));
 
-    let (move_names, move_hash_map) = parse_moves(&pokerole_data, &base_data);
+    let (move_names, move_hash_map) = parse_moves(&pokerole_data, &custom_base_data);
     let (nature_names, nature_hash_map) = parse_natures(&pokerole_data);
-    let (ability_names, ability_hash_map) = parse_abilities(&pokerole_data, &base_data);
-    let (weather_names, weather_hash_map) = parse_weather(&base_data);
+    let (ability_names, ability_hash_map) = parse_abilities(&pokerole_data, &custom_base_data);
+    let (weather_names, weather_hash_map) = parse_weather(&custom_base_data);
     let (pokemon_names, pokemon_hash_map, pokemon_by_api_id_hash_map) =
-        parse_pokemon(&pokemon_api_data, &pokerole_data, &base_data);
-    let (status_names, status_hash_map) = parse_status_effects(&base_data);
-    let (item_names, item_hash_map) = parse_items(pokerole_data, &base_data);
-    let (potion_names, potion_hash_map) = parse_potions(&base_data);
+        parse_pokemon(&pokemon_api_data, &pokerole_data, &custom_base_data);
+    let (status_names, status_hash_map) = parse_status_effects(&custom_base_data);
+    let (item_names, item_hash_map) = parse_items(pokerole_data, &custom_base_data);
+    let (potion_names, potion_hash_map) = parse_potions(&custom_base_data);
 
     let base_data = GameData {
         id: 0,
@@ -58,7 +58,7 @@ pub async fn parse_data() -> MultiSourceGameData {
         weather_names,
     };
 
-    let custom_data = custom_data_parser::parse(custom_data_path, &base_data);
+    let custom_data = custom_dataset_parser::parse(custom_data_path, &base_data, &pokemon_api_data);
 
     MultiSourceGameData {
         custom_data: Arc::new(custom_data),
@@ -232,7 +232,7 @@ fn parse_moves(
             move_names.push(x.name.clone());
         }
 
-        move_hash_map.insert(x.name.to_lowercase(), Move::from_custom(x));
+        move_hash_map.insert(x.name.to_lowercase(), Move::from_custom_data(x));
     }
 
     (move_names, move_hash_map)
@@ -243,7 +243,7 @@ fn parse_weather(custom_data: &CustomDataParseResult) -> (Vec<String>, HashMap<S
     let mut weather_hash_map = HashMap::default();
     for x in &custom_data.weather {
         weather_names.push(x.name.clone());
-        weather_hash_map.insert(x.name.to_lowercase(), Weather::from_custom(x));
+        weather_hash_map.insert(x.name.to_lowercase(), Weather::from_custom_data(x));
     }
 
     (weather_names, weather_hash_map)
@@ -267,7 +267,7 @@ fn parse_abilities(
             ability_names.push(x.name.clone());
         }
 
-        ability_hash_map.insert(x.name.to_lowercase(), Ability::from_custom(x));
+        ability_hash_map.insert(x.name.to_lowercase(), Ability::from_custom_data(x));
     }
 
     (ability_names, ability_hash_map)
