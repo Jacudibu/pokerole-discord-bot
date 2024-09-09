@@ -1,6 +1,6 @@
 use crate::game_data::pokerole_data::raw_nature::RawPokeroleNature;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Nature {
     pub name: String,
     pub keywords: String,

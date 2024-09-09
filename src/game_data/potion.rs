@@ -1,6 +1,6 @@
 use crate::game_data::parser::custom_data::custom_potion::CustomPotion;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Potion {
     pub name: String,
     pub description: String,

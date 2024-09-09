@@ -3,7 +3,7 @@ use crate::game_data::pokerole_data::raw_item::RawPokeroleItem;
 use std::ops::Not;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Item {
     pub name: String,
     pub price: Option<u16>,

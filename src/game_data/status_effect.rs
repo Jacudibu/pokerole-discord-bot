@@ -1,5 +1,6 @@
 use crate::game_data::parser::custom_data::custom_status_effect::CustomStatusEffect;
 
+#[derive(Clone)]
 pub struct StatusEffect {
     pub name: String,
     pub description: String,
