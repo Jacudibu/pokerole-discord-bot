@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use serenity::all::{
     ComponentInteraction, ComponentInteractionDataKind, CreateActionRow, CreateAllowedMentions,
     CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, EditMessage,
@@ -297,7 +295,7 @@ async fn send_error_to_log_channel(ctx: &Context, message: impl Into<String>) {
 async fn update_character_post<'a>(
     ctx: &Context,
     database: &Pool<Sqlite>,
-    game_data: &Arc<GameData>,
+    game_data: &GameData,
     id: i64,
 ) {
     if let Some(result) =

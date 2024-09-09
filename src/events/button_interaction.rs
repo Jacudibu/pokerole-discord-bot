@@ -174,7 +174,8 @@ pub async fn handle_button_interaction(
             character_stat_edit::handle_character_editor_command(
                 context,
                 interaction,
-                framework.user_data,
+                &framework.user_data.database,
+                get_game_data(&framework, interaction).await,
                 args,
             )
             .await?;

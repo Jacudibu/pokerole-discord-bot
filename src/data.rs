@@ -8,7 +8,6 @@ use crate::game_data::{GameData, MultiSourceGameData};
 
 pub struct Data {
     pub database: Pool<Sqlite>,
-    pub game: Arc<GameData>,
     pub game_multi_source: Arc<MultiSourceGameData>,
     pub cache: Arc<Cache>,
     pub is_backup_thread_running: AtomicBool,
@@ -20,7 +19,6 @@ impl Data {
     pub async fn new(database: Pool<Sqlite>, game: Arc<GameData>) -> Self {
         let result = Data {
             database,
-            game,
             game_multi_source: todo!(),
             cache: Arc::new(Cache::new()),
             is_backup_thread_running: AtomicBool::new(false),

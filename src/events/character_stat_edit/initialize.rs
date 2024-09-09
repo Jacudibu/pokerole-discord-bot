@@ -1,26 +1,26 @@
 use std::str::FromStr;
 
-use serenity::all::{ComponentInteraction, Context, CreateInteractionResponse};
-
 use crate::character_stats::GenericCharacterStats;
-use crate::data::Data;
 use crate::enums::MysteryDungeonRank;
 use crate::events::character_stat_edit::{
     create_stat_edit_overview_message, reset_stat_edit_values, StatType,
 };
 use crate::events::send_error;
-use crate::game_data::PokemonApiId;
+use crate::game_data::{GameData, PokemonApiId};
 use crate::{helpers, Error};
+use serenity::all::{ComponentInteraction, Context, CreateInteractionResponse};
+use sqlx::{Pool, Sqlite};
 
 pub async fn initialize(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     mut args: Vec<&str>,
 ) -> Result<(), Error> {
     match args.remove(0) {
-        "combat" => initialize_combat(ctx, interaction, data, args).await,
-        "social" => initialize_social(ctx, interaction, data, args).await,
+        "combat" => initialize_combat(ctx, interaction, database, game_data, args).await,
+        "social" => initialize_social(ctx, interaction, database, game_data, args).await,
         &_ => send_error(&interaction, ctx, "Are you trying to do anything cheesy?").await,
     }
 }
@@ -28,7 +28,8 @@ pub async fn initialize(
 async fn initialize_combat(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     args: Vec<&str>,
 ) -> Result<(), Error> {
     let user_id = interaction.user.id.get() as i64;
@@ -44,7 +45,7 @@ async fn initialize_combat(
             character_id,
             user_id
         )
-        .fetch_one(&data.database)
+        .fetch_one(database)
         .await;
 
         return match record {
@@ -52,8 +53,7 @@ async fn initialize_combat(
                 let level = helpers::calculate_level_from_experience(record.experience);
                 let experience = record.experience % 100;
                 let rank = MysteryDungeonRank::from_level(level as u8);
-                let pokemon = data
-                    .game
+                let pokemon = game_data
                     .pokemon_by_api_id
                     .get(&PokemonApiId(
                         record
@@ -66,7 +66,7 @@ async fn initialize_combat(
                 let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
                     level,
                     pokemon,
-                    &data.game,
+                    game_data,
                     record.species_override_for_stats,
                 );
                 let combat_stats = GenericCharacterStats::from_combat(
@@ -90,14 +90,19 @@ async fn initialize_combat(
                     .await;
                 }
 
-                reset_stat_edit_values(data, character_id).await;
+                reset_stat_edit_values(database, character_id).await;
                 let _ = interaction
                     .create_response(
                         ctx,
                         CreateInteractionResponse::Message(
-                            create_stat_edit_overview_message(data, character_id, StatType::Combat)
-                                .await
-                                .into(),
+                            create_stat_edit_overview_message(
+                                database,
+                                game_data,
+                                character_id,
+                                StatType::Combat,
+                            )
+                            .await
+                            .into(),
                         ),
                     )
                     .await;
@@ -120,7 +125,8 @@ async fn initialize_combat(
 async fn initialize_social(
     ctx: &Context,
     interaction: &ComponentInteraction,
-    data: &Data,
+    database: &Pool<Sqlite>,
+    game_data: &GameData,
     args: Vec<&str>,
 ) -> Result<(), Error> {
     let user_id = interaction.user.id.get() as i64;
@@ -136,7 +142,7 @@ async fn initialize_social(
             character_id,
             user_id
         )
-        .fetch_one(&data.database)
+        .fetch_one(database)
         .await;
 
         return match record {
@@ -144,8 +150,7 @@ async fn initialize_social(
                 let level = helpers::calculate_level_from_experience(record.experience);
                 let experience = record.experience % 100;
                 let rank = MysteryDungeonRank::from_level(level as u8);
-                let pokemon = data
-                    .game
+                let pokemon = game_data
                     .pokemon_by_api_id
                     .get(&PokemonApiId(
                         record
@@ -158,7 +163,7 @@ async fn initialize_social(
                 let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
                     level,
                     pokemon,
-                    &data.game,
+                    game_data,
                     record.species_override_for_stats,
                 );
                 let social_stats = GenericCharacterStats::from_social(
@@ -181,14 +186,19 @@ async fn initialize_social(
                     .await;
                 }
 
-                reset_stat_edit_values(data, character_id).await;
+                reset_stat_edit_values(database, character_id).await;
                 let _ = interaction
                     .create_response(
                         ctx,
                         CreateInteractionResponse::Message(
-                            create_stat_edit_overview_message(data, character_id, StatType::Social)
-                                .await
-                                .into(),
+                            create_stat_edit_overview_message(
+                                database,
+                                game_data,
+                                character_id,
+                                StatType::Social,
+                            )
+                            .await
+                            .into(),
                         ),
                     )
                     .await;
