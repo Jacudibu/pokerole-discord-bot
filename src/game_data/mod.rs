@@ -1,6 +1,7 @@
 use crate::data::Data;
 pub use crate::game_data::pokemon_api::PokemonApiId;
 use crate::Error;
+use serenity::all::{ComponentInteraction, GuildId, UserId};
 use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -53,14 +54,19 @@ pub struct MultiSourceGameData {
 }
 
 impl MultiSourceGameData {
-    pub async fn get_by_context(&self, ctx: &poise::Context<'_, Data, Error>) -> &GameData {
-        let custom_data_id = if let Some(guild_id) = ctx.guild_id() {
+    async fn get(
+        &self,
+        guild_id: Option<GuildId>,
+        user_id: UserId,
+        database: &Pool<Sqlite>,
+    ) -> &GameData {
+        let custom_data_id = if let Some(guild_id) = guild_id {
             guild_id.get() as i64
         } else {
-            let user_id = ctx.author().id.get() as i64;
+            let user_id = user_id.get() as i64;
             if let Ok(record) =
                 sqlx::query!("SELECT last_data_source_id FROM user WHERE id = ?", user_id)
-                    .fetch_one(&ctx.data().database)
+                    .fetch_one(database)
                     .await
             {
                 record.last_data_source_id
@@ -74,5 +80,19 @@ impl MultiSourceGameData {
         } else {
             &self.base_data
         }
+    }
+
+    pub async fn get_by_context(&self, ctx: &poise::Context<'_, Data, Error>) -> &GameData {
+        self.get(ctx.guild_id(), ctx.author().id, &ctx.data().database)
+            .await
+    }
+
+    pub async fn get_by_interaction(
+        &self,
+        interaction: &&ComponentInteraction,
+        database: &Pool<Sqlite>,
+    ) -> &GameData {
+        self.get(interaction.guild_id, interaction.user.id, database)
+            .await
     }
 }

@@ -137,7 +137,7 @@ pub fn append_tera_charges(
 
 pub async fn build_character_string(
     database: &Pool<Sqlite>,
-    game_data: &Arc<GameData>,
+    game_data: &GameData,
     character_id: i64,
 ) -> Option<BuildUpdatedStatMessageStringResult> {
     let entry = sqlx::query!(

@@ -12,7 +12,19 @@ use crate::errors::CommandInvocationError;
 use crate::events::{
     character_stat_edit, parse_interaction_command, quests, send_ephemeral_reply, FrameworkContext,
 };
+use crate::game_data::GameData;
 use crate::{commands, emoji, helpers, Error};
+
+async fn get_game_data<'a>(
+    framework: &'a FrameworkContext<'_>,
+    interaction: &&ComponentInteraction,
+) -> &'a GameData {
+    framework
+        .user_data
+        .game_multi_source
+        .get_by_interaction(interaction, &framework.user_data.database)
+        .await
+}
 
 pub async fn handle_button_interaction(
     context: &Context,
@@ -27,12 +39,11 @@ pub async fn handle_button_interaction(
     match command {
         "metronome" => {
             disable_button_on_original_message(context, interaction).await?;
+            let game_data = get_game_data(&framework, interaction).await;
+
             interaction
                 .message
-                .reply(
-                    context,
-                    commands::metronome::get_metronome_text(&framework.user_data.game),
-                )
+                .reply(context, commands::metronome::get_metronome_text(game_data))
                 .await?;
         }
         "ignore" => {
@@ -49,7 +60,8 @@ pub async fn handle_button_interaction(
         }
         "learns-all" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            let game_data = get_game_data(&framework, interaction).await;
+            let pokemon = game_data.pokemon.get(args[0]).unwrap();
             let emoji =
                 emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
                     .await;
@@ -61,7 +73,8 @@ pub async fn handle_button_interaction(
         }
         "efficiency" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            let game_data = get_game_data(&framework, interaction).await;
+            let pokemon = game_data.pokemon.get(args[0]).unwrap();
             let emoji =
                 emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
                     .await;
@@ -79,14 +92,16 @@ pub async fn handle_button_interaction(
         }
         "pokedex" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            let game_data = get_game_data(&framework, interaction).await;
+            let pokemon = game_data.pokemon.get(args[0]).unwrap();
             for response_part in helpers::split_long_messages(pokemon.build_pokedex_string()) {
                 interaction.message.reply(context, response_part).await?;
             }
         }
         "moves" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            let game_data = get_game_data(&framework, interaction).await;
+            let pokemon = game_data.pokemon.get(args[0]).unwrap();
             let emoji =
                 emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
                     .await;
@@ -100,7 +115,8 @@ pub async fn handle_button_interaction(
         }
         "abilities" => {
             disable_button_on_original_message(context, interaction).await?;
-            let pokemon = framework.user_data.game.pokemon.get(args[0]).unwrap();
+            let game_data = get_game_data(&framework, interaction).await;
+            let pokemon = game_data.pokemon.get(args[0]).unwrap();
             let emoji =
                 emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
                     .await;
@@ -109,7 +125,7 @@ pub async fn handle_button_interaction(
                 .reply(
                     context,
                     pokemon
-                        .build_ability_string(emoji, &framework.user_data.game.abilities)
+                        .build_ability_string(emoji, &game_data.abilities)
                         .into(),
                 )
                 .await?;

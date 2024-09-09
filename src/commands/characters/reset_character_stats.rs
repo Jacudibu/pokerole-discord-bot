@@ -50,7 +50,8 @@ pub async fn reset_db_stats(
     let species_id = PokemonApiId(record.species_api_id as u16);
     let used_poke_species = ctx
         .data()
-        .game
+        .game_multi_source
+        .base_data
         .pokemon_by_api_id
         .get(&species_id)
         .expect("DB IDs should always be mappable.");
@@ -60,7 +61,7 @@ pub async fn reset_db_stats(
     let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
         level,
         used_poke_species,
-        &ctx.data().game,
+        &ctx.data().game_multi_source.base_data,
         record.species_override_for_stats,
     );
 

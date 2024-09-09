@@ -11,7 +11,9 @@ pub async fn weather(
     #[autocomplete = "autocomplete_weather"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(weather) = ctx.data().game.weather.get(&name.to_lowercase()) {
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+
+    if let Some(weather) = game_data.weather.get(&name.to_lowercase()) {
         ctx.say(weather.build_string()).await?;
     } else {
         ctx.send(CreateReply::default()

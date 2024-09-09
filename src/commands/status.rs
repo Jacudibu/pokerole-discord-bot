@@ -11,7 +11,8 @@ pub async fn status(
     #[autocomplete = "autocomplete_status_effect"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(status_effect) = ctx.data().game.status_effects.get(&name.to_lowercase()) {
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    if let Some(status_effect) = game_data.status_effects.get(&name.to_lowercase()) {
         ctx.say(status_effect.build_string()).await?;
     } else {
         ctx.send(CreateReply::default()

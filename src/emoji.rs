@@ -42,7 +42,8 @@ pub async fn get_character_emoji(data: &Data, character_id: i64) -> Option<Strin
         let gender = Gender::from_phenotype(record.phenotype);
         let api_id = PokemonApiId(record.species_api_id as u16);
         let pokemon = data
-            .game
+            .game_multi_source
+            .base_data
             .pokemon_by_api_id
             .get(&api_id)
             .expect("DB species ID should always be set!");

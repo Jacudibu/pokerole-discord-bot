@@ -5,7 +5,9 @@ use rand::seq::SliceRandom;
 /// Use the most randomest of moves!
 #[poise::command(slash_command)]
 pub async fn metronome(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say(get_metronome_text(&ctx.data().game)).await?;
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+
+    ctx.say(get_metronome_text(&game_data)).await?;
     Ok(())
 }
 
@@ -14,9 +16,9 @@ pub fn get_metronome_text(data: &GameData) -> String {
         .move_names
         .choose(&mut rand::thread_rng())
         .expect("There should be a name.");
-    return if let Some(poke_move) = data.moves.get(&move_name.to_lowercase()) {
+    if let Some(poke_move) = data.moves.get(&move_name.to_lowercase()) {
         poke_move.build_string()
     } else {
         format!("Error: randomness rolled {}, but there was no move with that name defined? This should never happen. D:", move_name)
-    };
+    }
 }

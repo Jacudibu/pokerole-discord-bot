@@ -11,7 +11,9 @@ pub async fn nature(
     #[autocomplete = "autocomplete_nature"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(nature) = ctx.data().game.natures.get(&name.to_lowercase()) {
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+
+    if let Some(nature) = game_data.natures.get(&name.to_lowercase()) {
         ctx.say(nature.build_string()).await?;
     } else {
         ctx.send(

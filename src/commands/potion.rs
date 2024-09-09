@@ -11,7 +11,8 @@ pub async fn potion(
     #[autocomplete = "autocomplete_potion"]
     name: String,
 ) -> Result<(), Error> {
-    if let Some(potion) = ctx.data().game.potions.get(&name.to_lowercase()) {
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
+    if let Some(potion) = game_data.potions.get(&name.to_lowercase()) {
         ctx.say(potion.build_string()).await?;
     } else {
         ctx.send(

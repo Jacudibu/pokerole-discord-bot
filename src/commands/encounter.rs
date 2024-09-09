@@ -27,9 +27,9 @@ pub async fn encounter(
     amount: Option<u8>,
 ) -> Result<(), Error> {
     let pokemon = pokemon_from_autocomplete_string(&ctx, &pokemon)?;
+    let game_data = ctx.data().game_multi_source.get_by_context(&ctx).await;
     for encounter in build_encounter(pokemon, level, amount) {
-        for part in helpers::split_long_messages(encounter.build_string(pokemon, &ctx.data().game))
-        {
+        for part in helpers::split_long_messages(encounter.build_string(pokemon, &game_data)) {
             ctx.say(part).await?;
         }
     }

@@ -347,7 +347,7 @@ const STAGE2_EVOLUTION_LEVEL_THRESHOLD: i64 = 6;
 pub fn get_usual_evolution_stage_for_level<'a>(
     level: i64,
     pokemon: &'a Pokemon,
-    game_data: &'a Arc<GameData>,
+    game_data: &'a GameData,
     stat_override: Option<i64>,
 ) -> &'a Pokemon {
     if let Some(stat_override) = stat_override {
