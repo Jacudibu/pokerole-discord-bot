@@ -16,7 +16,7 @@ pub async fn scale(
     #[max = 133_u8]
     percent: u8,
 ) -> Result<(), Error> {
-    let pokemon = pokemon_from_autocomplete_string(&ctx, &name)?;
+    let pokemon = pokemon_from_autocomplete_string(&ctx, &name).await?;
     let mut builder = MessageBuilder::new();
     builder.push_bold_line(std::format!("{} scaled to {}%", &pokemon.name, percent));
     builder.push_codeblock(

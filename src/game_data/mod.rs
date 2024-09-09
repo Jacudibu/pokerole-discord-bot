@@ -68,7 +68,11 @@ impl MultiSourceGameData {
                     .fetch_one(database)
                     .await
             {
-                record.data_source_id
+                if let Some(data_source_id) = record.data_source_id {
+                    data_source_id
+                } else {
+                    guild_id
+                }
             } else {
                 guild_id
             }

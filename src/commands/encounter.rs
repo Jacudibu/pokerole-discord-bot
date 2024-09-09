@@ -26,7 +26,7 @@ pub async fn encounter(
     #[description = "How many? Defaults to 1."]
     amount: Option<u8>,
 ) -> Result<(), Error> {
-    let pokemon = pokemon_from_autocomplete_string(&ctx, &pokemon)?;
+    let pokemon = pokemon_from_autocomplete_string(&ctx, &pokemon).await?;
     let game_data = ctx.data().game.get_by_context(&ctx).await;
     for encounter in build_encounter(pokemon, level, amount) {
         for part in helpers::split_long_messages(encounter.build_string(pokemon, &game_data)) {

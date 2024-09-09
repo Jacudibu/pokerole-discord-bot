@@ -247,7 +247,7 @@ pub async fn create_emojis(
     #[description = "Which phenotype?"] gender: Gender,
     #[description = "Does it glow in the dark?"] is_shiny: bool,
 ) -> Result<(), Error> {
-    let pokemon = pokemon_from_autocomplete_string(&ctx, &name)?;
+    let pokemon = pokemon_from_autocomplete_string(&ctx, &name).await?;
     let created_emojis = create_emojis_for_pokemon(&ctx, pokemon, &gender, is_shiny).await;
     if created_emojis == 0 {
         let _ = send_error(&ctx, "Emojis for this pokemon already seem to exist!").await;
