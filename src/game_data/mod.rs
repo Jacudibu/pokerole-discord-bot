@@ -1,4 +1,6 @@
+use crate::data::Data;
 pub use crate::game_data::pokemon_api::PokemonApiId;
+use crate::Error;
 use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -51,8 +53,23 @@ pub struct MultiSourceGameData {
 }
 
 impl MultiSourceGameData {
-    pub fn get(&self, id: i64) -> &GameData {
-        if let Some(data) = self.custom_data.get(&id) {
+    pub async fn get_by_context(&self, ctx: &poise::Context<'_, Data, Error>) -> &GameData {
+        let custom_data_id = if let Some(guild_id) = ctx.guild_id() {
+            guild_id.get() as i64
+        } else {
+            let user_id = ctx.author().id.get() as i64;
+            if let Ok(record) =
+                sqlx::query!("SELECT last_data_source_id FROM user WHERE id = ?", user_id)
+                    .fetch_one(&ctx.data().database)
+                    .await
+            {
+                record.last_data_source_id
+            } else {
+                0
+            }
+        };
+
+        if let Some(data) = self.custom_data.get(&custom_data_id) {
             data
         } else {
             &self.base_data
