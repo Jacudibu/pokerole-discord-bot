@@ -73,3 +73,4 @@ variables to be set:
 - **DISCORD_TOKEN** – the Discord Token for your bot.
 - **DATABASE_URL** – URL to the SQLite database file.
 - **DB_BACKUP_CHANNEL_ID** – Optional. Discord Channel ID into which daily backups should be posted.
+- **STATUS_CHANNEL_ID** - Optional. Discord Channel ID for bot status updates.

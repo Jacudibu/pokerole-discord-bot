@@ -1,4 +1,5 @@
 use log::error;
+use std::fmt::Display;
 
 pub trait IssueHandler {
     fn handle_issue(&mut self, issue: String);
@@ -6,7 +7,18 @@ pub trait IssueHandler {
 
 #[derive(Default)]
 pub struct IssueStorage {
-    pub issues: Vec<String>,
+    issues: Vec<String>,
+}
+
+impl IssueStorage {
+    /// Use this instead of the Into<Option> blanket implementation
+    pub fn into_option(self) -> Option<Self> {
+        if self.issues.is_empty() {
+            None
+        } else {
+            Some(self)
+        }
+    }
 }
 
 impl Clone for IssueStorage {
@@ -20,6 +32,17 @@ impl IssueHandler for IssueStorage {
     #[inline]
     fn handle_issue(&mut self, issue: String) {
         self.issues.push(issue);
+    }
+}
+
+impl Display for IssueStorage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let result = self
+            .issues
+            .iter()
+            .fold(String::new(), |acc, issue| acc + "- " + issue + "\n");
+
+        write!(f, "{}", result)
     }
 }
 

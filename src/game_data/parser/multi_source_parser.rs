@@ -57,7 +57,7 @@ pub async fn parse_data() -> MultiSourceGameData {
         status_effects_names: status_names,
         weather: weather_hash_map,
         weather_names,
-        issues: custom_data_parsing_issues,
+        issues: custom_data_parsing_issues.into_option(),
     };
 
     let custom_data = custom_dataset_parser::parse(custom_data_path, &base_data, &pokemon_api_data);

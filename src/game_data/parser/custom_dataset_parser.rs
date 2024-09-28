@@ -129,7 +129,7 @@ pub fn parse_custom(
         |x| x.name.clone(),
     );
 
-    data.issues = issues;
+    data.issues = issues.into_option();
     data
 }
 
