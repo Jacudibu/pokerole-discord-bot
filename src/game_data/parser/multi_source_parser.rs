@@ -6,13 +6,13 @@ use crate::game_data::parser::{custom_data, custom_dataset_parser};
 use crate::game_data::pokemon::{ApiIssueType, DataSource, LearnablePokemonMoves, Pokemon};
 use crate::game_data::pokemon_api::pokemon_api_parser;
 use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
-use crate::game_data::pokerole_data::parser::PokeroleParseResult;
+use crate::game_data::pokerole_data::parser::PokeroleDataBundle;
 use crate::game_data::potion::Potion;
 use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::{pokerole_data, GameData, MultiSourceGameData, PokemonApiId};
-use log::{error, info, warn};
+use log::{error, info, trace, warn};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -24,7 +24,8 @@ pub async fn parse_data() -> MultiSourceGameData {
     let type_efficiency = pokemon_api_parser::parse_type_efficacy(pokerole_api_path.clone());
     let pokemon_api_data = pokemon_api_parser::parse_pokemon_api(pokerole_api_path);
     let pokerole_data = pokerole_data::parser::parse(&pokerole_data_path);
-    let custom_base_data = custom_data::parser::parse(&format!("{custom_data_path}base_data/"));
+    let (custom_base_data, _parse_issues) =
+        custom_data::parser::parse(&format!("{custom_data_path}base_data/"));
 
     let (move_names, move_hash_map) = parse_moves(&pokerole_data, &custom_base_data);
     let (nature_names, nature_hash_map) = parse_natures(&pokerole_data);
@@ -68,7 +69,7 @@ pub async fn parse_data() -> MultiSourceGameData {
 }
 
 fn parse_items(
-    pokerole_data: PokeroleParseResult,
+    pokerole_data: PokeroleDataBundle,
     custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, Item>) {
     let mut item_names = Vec::default();
@@ -80,7 +81,7 @@ fn parse_items(
 
     for x in &custom_data.items {
         if item_names.contains(&x.name) {
-            info!("Overriding {}", x.name);
+            trace!("Overriding {}", x.name);
         } else {
             item_names.push(x.name.clone());
         }
@@ -96,7 +97,7 @@ fn parse_potions(custom_data: &CustomDataBundle) -> (Vec<String>, HashMap<String
     let mut potion_hash_map = HashMap::default();
     for x in &custom_data.potions {
         if potion_names.contains(&x.name) {
-            info!("Overriding {}", x.name);
+            trace!("Overriding {}", x.name);
         } else {
             potion_names.push(x.name.clone());
         }
@@ -122,7 +123,7 @@ fn parse_status_effects(
 
 fn parse_pokemon(
     pokemon_api_data: &HashMap<String, PokemonApiData>,
-    pokerole_data: &PokeroleParseResult,
+    pokerole_data: &PokeroleDataBundle,
     custom_data: &CustomDataBundle,
 ) -> (
     Vec<String>,
@@ -157,7 +158,7 @@ fn parse_pokemon(
     for x in &custom_data.pokemon {
         if let Some(pokemon) = Pokemon::from_custom_data(x, pokemon_api_data) {
             if pokemon_names.contains(&x.name) {
-                info!("Overriding {}", x.name);
+                trace!("Overriding {}", x.name);
             } else {
                 pokemon_names.push(x.name.clone());
             }
@@ -215,7 +216,7 @@ fn parse_pokemon(
 }
 
 fn parse_moves(
-    pokerole_data: &PokeroleParseResult,
+    pokerole_data: &PokeroleDataBundle,
     custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, Move>) {
     let mut move_names = Vec::default();
@@ -227,7 +228,7 @@ fn parse_moves(
 
     for x in &custom_data.moves {
         if move_names.contains(&x.name) {
-            info!("Overriding {}", x.name);
+            trace!("Overriding {}", x.name);
         } else {
             move_names.push(x.name.clone());
         }
@@ -250,7 +251,7 @@ fn parse_weather(custom_data: &CustomDataBundle) -> (Vec<String>, HashMap<String
 }
 
 fn parse_abilities(
-    pokerole_data: &PokeroleParseResult,
+    pokerole_data: &PokeroleDataBundle,
     custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, Ability>) {
     let mut ability_names = Vec::default();
@@ -262,7 +263,7 @@ fn parse_abilities(
 
     for x in &custom_data.abilities {
         if ability_names.contains(&x.name) {
-            info!("Overriding {}", x.name);
+            trace!("Overriding {}", x.name);
         } else {
             ability_names.push(x.name.clone());
         }
@@ -273,7 +274,7 @@ fn parse_abilities(
     (ability_names, ability_hash_map)
 }
 
-fn parse_natures(pokerole_data: &PokeroleParseResult) -> (Vec<String>, HashMap<String, Nature>) {
+fn parse_natures(pokerole_data: &PokeroleDataBundle) -> (Vec<String>, HashMap<String, Nature>) {
     let mut nature_names = Vec::default();
     let mut nature_hash_map = HashMap::default();
     for x in &pokerole_data.natures {
