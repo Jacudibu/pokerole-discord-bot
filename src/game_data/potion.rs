@@ -21,11 +21,11 @@ impl Potion {
 }
 
 impl Potion {
-    pub(in crate::game_data) fn from_custom_data(raw: &CustomPotion) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: CustomPotion) -> Self {
         Potion {
-            name: raw.name.clone(),
-            description: raw.description.clone(),
-            effect: raw.effect.clone(),
+            name: raw.name,
+            description: raw.description,
+            effect: raw.effect,
             recipes: Potion::parse_recipes(&raw.recipes),
         }
     }

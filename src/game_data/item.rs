@@ -44,12 +44,12 @@ impl Item {
         }
     }
 
-    pub(in crate::game_data) fn from_custom_data(raw: &CustomItem) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: CustomItem) -> Self {
         Item {
-            name: raw.name.clone(),
+            name: raw.name,
             price: Item::parse_price(raw.price, None),
-            description: raw.description.clone(),
-            category: raw.category.clone(),
+            description: raw.description,
+            category: raw.category,
             single_use: raw.single_use,
             health_restored: raw.health_restored,
         }
