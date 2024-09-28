@@ -198,6 +198,7 @@ pub enum MoveType {
     Dark,
     Fairy,
     Any,
+    #[serde(alias = "None")]
     Typeless,
 }
 
@@ -262,8 +263,9 @@ impl MoveType {
 pub enum MoveCategory {
     Physical,
     Special,
-    #[serde(rename = "Physical/special")]
-    /// Only used for struggle and tera blast
+    #[serde(alias = "Special/Physical")]
+    #[serde(alias = "Physical/Special")]
+    #[serde(alias = "Physical/special")] // necessary for Pokerole struggle.
     PhysicalOrSpecial,
     Support,
 }
