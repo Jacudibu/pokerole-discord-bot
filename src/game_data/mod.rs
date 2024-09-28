@@ -48,7 +48,7 @@ pub struct GameData {
     pub weather_names: Vec<String>,
 
     // This works on the assumption that issues will be resolved ASAP by the respective data maintainers, so it should never take up much space
-    pub issues: IssueStorage,
+    pub issues: Option<IssueStorage>,
 }
 
 pub struct MultiSourceGameData {
