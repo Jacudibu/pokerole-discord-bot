@@ -1,7 +1,7 @@
 use crate::game_data::ability::Ability;
 use crate::game_data::item::Item;
 use crate::game_data::nature::Nature;
-use crate::game_data::parser::custom_data::parser::CustomDataParseResult;
+use crate::game_data::parser::custom_data::parser::CustomDataBundle;
 use crate::game_data::parser::{custom_data, custom_dataset_parser};
 use crate::game_data::pokemon::{ApiIssueType, DataSource, LearnablePokemonMoves, Pokemon};
 use crate::game_data::pokemon_api::pokemon_api_parser;
@@ -69,7 +69,7 @@ pub async fn parse_data() -> MultiSourceGameData {
 
 fn parse_items(
     pokerole_data: PokeroleParseResult,
-    custom_data: &CustomDataParseResult,
+    custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, Item>) {
     let mut item_names = Vec::default();
     let mut item_hash_map = HashMap::default();
@@ -91,7 +91,7 @@ fn parse_items(
     (item_names, item_hash_map)
 }
 
-fn parse_potions(custom_data: &CustomDataParseResult) -> (Vec<String>, HashMap<String, Potion>) {
+fn parse_potions(custom_data: &CustomDataBundle) -> (Vec<String>, HashMap<String, Potion>) {
     let mut potion_names = Vec::default();
     let mut potion_hash_map = HashMap::default();
     for x in &custom_data.potions {
@@ -108,7 +108,7 @@ fn parse_potions(custom_data: &CustomDataParseResult) -> (Vec<String>, HashMap<S
 }
 
 fn parse_status_effects(
-    custom_data: &CustomDataParseResult,
+    custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, StatusEffect>) {
     let mut status_names = Vec::default();
     let mut status_hash_map = HashMap::default();
@@ -123,7 +123,7 @@ fn parse_status_effects(
 fn parse_pokemon(
     pokemon_api_data: &HashMap<String, PokemonApiData>,
     pokerole_data: &PokeroleParseResult,
-    custom_data: &CustomDataParseResult,
+    custom_data: &CustomDataBundle,
 ) -> (
     Vec<String>,
     HashMap<String, Pokemon>,
@@ -216,7 +216,7 @@ fn parse_pokemon(
 
 fn parse_moves(
     pokerole_data: &PokeroleParseResult,
-    custom_data: &CustomDataParseResult,
+    custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, Move>) {
     let mut move_names = Vec::default();
     let mut move_hash_map = HashMap::default();
@@ -238,7 +238,7 @@ fn parse_moves(
     (move_names, move_hash_map)
 }
 
-fn parse_weather(custom_data: &CustomDataParseResult) -> (Vec<String>, HashMap<String, Weather>) {
+fn parse_weather(custom_data: &CustomDataBundle) -> (Vec<String>, HashMap<String, Weather>) {
     let mut weather_names = Vec::default();
     let mut weather_hash_map = HashMap::default();
     for x in &custom_data.weather {
@@ -251,7 +251,7 @@ fn parse_weather(custom_data: &CustomDataParseResult) -> (Vec<String>, HashMap<S
 
 fn parse_abilities(
     pokerole_data: &PokeroleParseResult,
-    custom_data: &CustomDataParseResult,
+    custom_data: &CustomDataBundle,
 ) -> (Vec<String>, HashMap<String, Ability>) {
     let mut ability_names = Vec::default();
     let mut ability_hash_map = HashMap::default();

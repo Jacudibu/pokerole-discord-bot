@@ -7,7 +7,7 @@ use crate::game_data::parser::custom_data::custom_status_effect::CustomStatusEff
 use crate::game_data::parser::custom_data::custom_weather::CustomWeather;
 use crate::game_data::parser::helpers;
 
-pub struct CustomDataParseResult {
+pub struct CustomDataBundle {
     pub abilities: Vec<CustomAbility>,
     pub pokemon: Vec<CustomPokemon>,
     pub moves: Vec<CustomMove>,
@@ -17,8 +17,8 @@ pub struct CustomDataParseResult {
     pub weather: Vec<CustomWeather>,
 }
 
-pub fn parse(custom_data_path: &str) -> CustomDataParseResult {
-    CustomDataParseResult {
+pub fn parse(custom_data_path: &str) -> CustomDataBundle {
+    CustomDataBundle {
         abilities: helpers::parse_directory(custom_data_path.to_owned() + "Abilities"),
         pokemon: helpers::parse_directory(custom_data_path.to_owned() + "Pokedex"),
         moves: helpers::parse_directory(custom_data_path.to_owned() + "Moves"),

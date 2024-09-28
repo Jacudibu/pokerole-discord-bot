@@ -1,6 +1,6 @@
 use crate::game_data::ability::Ability;
 use crate::game_data::item::Item;
-use crate::game_data::parser::custom_data::parser::CustomDataParseResult;
+use crate::game_data::parser::custom_data::parser::CustomDataBundle;
 use crate::game_data::parser::{custom_data, helpers};
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
@@ -53,7 +53,7 @@ pub fn parse_custom(
     base_data: &GameData,
     id: i64,
     name: String,
-    custom: CustomDataParseResult,
+    custom: CustomDataBundle,
     pokemon_api_data: &HashMap<String, PokemonApiData>,
 ) -> GameData {
     let mut data = base_data.clone();
