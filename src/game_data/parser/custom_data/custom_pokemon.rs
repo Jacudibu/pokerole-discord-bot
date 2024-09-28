@@ -20,9 +20,9 @@ pub struct CustomPokemon {
 
 #[derive(Debug, Deserialize)]
 pub struct CustomPokemonMoves {
-    pub bronze: Vec<String>,
-    pub silver: Vec<String>,
-    pub gold: Vec<String>,
-    pub platinum: Vec<String>,
-    pub diamond: Vec<String>,
+    pub bronze: Option<Vec<String>>,
+    pub silver: Option<Vec<String>>,
+    pub gold: Option<Vec<String>>,
+    pub platinum: Option<Vec<String>>,
+    pub diamond: Option<Vec<String>>,
 }

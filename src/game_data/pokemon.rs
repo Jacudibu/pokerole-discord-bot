@@ -550,34 +550,34 @@ impl Pokemon {
     fn moves_from_custom(moves: &CustomPokemonMoves) -> Vec<PokemonMoveLearnedByRank> {
         let mut result = Vec::new();
 
-        for x in &moves.bronze {
+        for x in moves.bronze.clone().unwrap_or_default() {
             result.push(PokemonMoveLearnedByRank {
                 rank: MysteryDungeonRank::Bronze,
-                name: x.clone(),
+                name: x,
             })
         }
-        for x in &moves.silver {
+        for x in moves.silver.clone().unwrap_or_default() {
             result.push(PokemonMoveLearnedByRank {
                 rank: MysteryDungeonRank::Silver,
                 name: x.clone(),
             })
         }
-        for x in &moves.gold {
+        for x in moves.gold.clone().unwrap_or_default() {
             result.push(PokemonMoveLearnedByRank {
                 rank: MysteryDungeonRank::Gold,
-                name: x.clone(),
+                name: x,
             })
         }
-        for x in &moves.platinum {
+        for x in moves.platinum.clone().unwrap_or_default() {
             result.push(PokemonMoveLearnedByRank {
                 rank: MysteryDungeonRank::Platinum,
-                name: x.clone(),
+                name: x,
             })
         }
-        for x in &moves.diamond {
+        for x in moves.diamond.clone().unwrap_or_default() {
             result.push(PokemonMoveLearnedByRank {
                 rank: MysteryDungeonRank::Diamond,
-                name: x.clone(),
+                name: x,
             })
         }
 
