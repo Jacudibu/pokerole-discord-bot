@@ -36,14 +36,14 @@ pub fn parse(
     // TODO: Parse in order of fallback_id, allowing datasets to "depend" upon each other
     for x in custom_data_sets {
         info!("Parsing custom data set: {}", x.path);
-        let (parsed_data, mut issues) = custom_data::parser::parse(&format!("{path}/{}/", x.path));
+        let (parsed_data, issues) = custom_data::parser::parse(&format!("{path}/{}/", x.path));
         let parsed_data_set = parse_custom(
             base_data,
             x.server_id,
             x.name,
             parsed_data,
             pokemon_api_data,
-            &mut issues,
+            issues,
         );
         result.insert(x.server_id, parsed_data_set);
     }
@@ -57,7 +57,7 @@ pub fn parse_custom(
     name: String,
     custom: CustomDataBundle,
     pokemon_api_data: &HashMap<String, PokemonApiData>,
-    issues: &mut IssueStorage,
+    mut issues: IssueStorage,
 ) -> GameData {
     let mut data = base_data.clone();
 
@@ -129,6 +129,7 @@ pub fn parse_custom(
         |x| x.name.clone(),
     );
 
+    data.issues = issues;
     data
 }
 

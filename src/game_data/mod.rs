@@ -1,4 +1,5 @@
 use crate::data::Data;
+use crate::game_data::parser::issue_handler::IssueStorage;
 pub use crate::game_data::pokemon_api::PokemonApiId;
 use crate::Error;
 use serenity::all::{ComponentInteraction, GuildId, UserId};
@@ -45,6 +46,9 @@ pub struct GameData {
     pub status_effects_names: Vec<String>,
     pub weather: HashMap<String, weather::Weather>,
     pub weather_names: Vec<String>,
+
+    // This works on the assumption that issues will be resolved ASAP by the respective data maintainers, so it should never take up much space
+    pub issues: IssueStorage,
 }
 
 pub struct MultiSourceGameData {
