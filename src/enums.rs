@@ -198,8 +198,8 @@ pub enum MoveType {
     Dark,
     Fairy,
     Any,
-    #[serde(alias = "None")]
-    Typeless,
+    #[serde(alias = "Typeless")] // pokerole data
+    None,
 }
 
 impl fmt::Display for MoveType {
@@ -224,7 +224,7 @@ impl fmt::Display for MoveType {
             MoveType::Dark => "<:type_dark:1118594879195447387> Dark",
             MoveType::Fairy => "<:type_fairy:1118594881368100894> Fairy",
             MoveType::Any => "Any",
-            MoveType::Typeless => "Typeless",
+            MoveType::None => "Typeless",
         })
     }
 }
