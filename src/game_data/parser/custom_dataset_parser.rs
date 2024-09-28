@@ -1,7 +1,8 @@
 use crate::game_data::ability::Ability;
 use crate::game_data::item::Item;
 use crate::game_data::parser::custom_data::parser::CustomDataBundle;
-use crate::game_data::parser::{custom_data, helpers};
+use crate::game_data::parser::issue_handler::{IssueHandler, IssueStorage};
+use crate::game_data::parser::{custom_data, file_reader};
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::pokemon_api::pokemon_api_parser::PokemonApiData;
 use crate::game_data::potion::Potion;
@@ -9,7 +10,7 @@ use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::GameData;
-use log::{error, info};
+use log::info;
 use serde::Deserialize;
 use std::collections::HashMap;
 
@@ -28,20 +29,21 @@ pub fn parse(
 ) -> HashMap<i64, GameData> {
     let path = format!("{base_path}custom_server_data");
     let custom_data_sets =
-        helpers::parse_file::<Vec<CustomDataSet>>(&format!("{path}/data_mapping.json"))
+        file_reader::parse_file::<Vec<CustomDataSet>>(&format!("{path}/data_mapping.json"))
             .expect("This file should always exist!");
 
     let mut result = HashMap::default();
     // TODO: Parse in order of fallback_id, allowing datasets to "depend" upon each other
     for x in custom_data_sets {
         info!("Parsing custom data set: {}", x.path);
-        let parsed_data = custom_data::parser::parse(&format!("{path}/{}/", x.path));
+        let (parsed_data, mut issues) = custom_data::parser::parse(&format!("{path}/{}/", x.path));
         let parsed_data_set = parse_custom(
             base_data,
             x.server_id,
             x.name,
             parsed_data,
             pokemon_api_data,
+            &mut issues,
         );
         result.insert(x.server_id, parsed_data_set);
     }
@@ -55,6 +57,7 @@ pub fn parse_custom(
     name: String,
     custom: CustomDataBundle,
     pokemon_api_data: &HashMap<String, PokemonApiData>,
+    issues: &mut IssueStorage,
 ) -> GameData {
     let mut data = base_data.clone();
 
@@ -71,12 +74,10 @@ pub fn parse_custom(
                 data.pokemon_names.push(x.name)
             };
         } else {
-            error!(
-                "Was unable to parse custom pokemon {} in dataset {}",
-                x.name, data.name
-            );
-
-            // TODO: Log that into the bot info channel for the respective server
+            issues.handle_issue(format!(
+                "Was unable to parse override for {}. Fully custom pokemon aren't supported yet.",
+                x.name
+            ));
         }
     }
 

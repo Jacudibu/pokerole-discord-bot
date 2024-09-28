@@ -1,4 +1,5 @@
-use log::{error, info, warn};
+use crate::game_data::parser::issue_handler::IssueHandler;
+use log::info;
 use serde::de::DeserializeOwned;
 use std::fs::File;
 use std::io::Read;
@@ -24,7 +25,10 @@ pub fn parse_file<T: DeserializeOwned>(file_path: &str) -> Result<T, Box<dyn std
     Ok(result)
 }
 
-pub fn parse_directory<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Vec<T> {
+pub fn parse_directory<P: AsRef<Path>, T: DeserializeOwned, I: IssueHandler>(
+    path: P,
+    parsing_issues: &mut I,
+) -> Vec<T> {
     let mut result = Vec::new();
 
     let Ok(entries) = std::fs::read_dir(path) else {
@@ -45,7 +49,8 @@ pub fn parse_directory<P: AsRef<Path>, T: DeserializeOwned>(path: P) -> Vec<T> {
         if file_path.is_file() && file_path.extension().map_or(false, |ext| ext == "json") {
             match parse_file::<T>(file_path.to_str().expect("")) {
                 Ok(parsed) => result.push(parsed),
-                Err(err) => error!("Failed to parse file {:?}: {}", file_path, err),
+                Err(err) => parsing_issues
+                    .handle_issue(format!("Failed to parse file {:?}: {}", file_path, err)),
             }
         }
     }
