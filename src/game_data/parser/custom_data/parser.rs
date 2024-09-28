@@ -7,6 +7,7 @@ use crate::game_data::parser::custom_data::custom_status_effect::CustomStatusEff
 use crate::game_data::parser::custom_data::custom_weather::CustomWeather;
 use crate::game_data::parser::file_reader;
 use crate::game_data::parser::issue_handler::IssueStorage;
+use std::path::Path;
 
 pub struct CustomDataBundle {
     pub abilities: Vec<CustomAbility>,
@@ -18,32 +19,21 @@ pub struct CustomDataBundle {
     pub weather: Vec<CustomWeather>,
 }
 
-pub fn parse(custom_data_path: &str) -> (CustomDataBundle, IssueStorage) {
+pub fn parse(custom_data_path: &Path) -> (CustomDataBundle, IssueStorage) {
     let mut issues = IssueStorage::default();
     (
         CustomDataBundle {
-            abilities: file_reader::parse_directory(
-                custom_data_path.to_owned() + "Abilities",
-                &mut issues,
-            ),
-            pokemon: file_reader::parse_directory(
-                custom_data_path.to_owned() + "Pokedex",
-                &mut issues,
-            ),
-            moves: file_reader::parse_directory(custom_data_path.to_owned() + "Moves", &mut issues),
-            items: file_reader::parse_directory(custom_data_path.to_owned() + "Items", &mut issues),
+            abilities: file_reader::parse_directory(custom_data_path, "Abilities", &mut issues),
+            pokemon: file_reader::parse_directory(custom_data_path, "Pokedex", &mut issues),
+            moves: file_reader::parse_directory(custom_data_path, "Moves", &mut issues),
+            items: file_reader::parse_directory(custom_data_path, "Items", &mut issues),
             status_effects: file_reader::parse_directory(
-                custom_data_path.to_owned() + "StatusEffects",
+                custom_data_path,
+                "StatusEffects",
                 &mut issues,
             ),
-            potions: file_reader::parse_directory(
-                custom_data_path.to_owned() + "Potions",
-                &mut issues,
-            ),
-            weather: file_reader::parse_directory(
-                custom_data_path.to_owned() + "Weather",
-                &mut issues,
-            ),
+            potions: file_reader::parse_directory(custom_data_path, "Potions", &mut issues),
+            weather: file_reader::parse_directory(custom_data_path, "Weather", &mut issues),
         },
         issues,
     )

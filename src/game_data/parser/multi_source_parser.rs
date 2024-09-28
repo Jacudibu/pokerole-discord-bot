@@ -14,18 +14,23 @@ use crate::game_data::weather::Weather;
 use crate::game_data::{pokerole_data, GameData, MultiSourceGameData, PokemonApiId};
 use log::{error, info, trace, warn};
 use std::collections::HashMap;
+use std::path::Path;
 use std::sync::Arc;
 
 pub async fn parse_data() -> MultiSourceGameData {
     let pokerole_api_path = std::env::var("POKEMON_API").expect("missing POKEMON_API");
+
     let pokerole_data_path = std::env::var("POKEROLE_DATA").expect("missing POKEROLE_DATA");
+    let pokerole_data_path = Path::new(&pokerole_data_path);
+
     let custom_data_path = std::env::var("CUSTOM_DATA").expect("missing CUSTOM_DATA");
+    let custom_data_path = Path::new(&custom_data_path);
 
     let type_efficiency = pokemon_api_parser::parse_type_efficacy(pokerole_api_path.clone());
     let pokemon_api_data = pokemon_api_parser::parse_pokemon_api(pokerole_api_path);
-    let pokerole_data = pokerole_data::parser::parse(&pokerole_data_path);
+    let pokerole_data = pokerole_data::parser::parse(Path::new(&pokerole_data_path));
     let (custom_base_data, custom_data_parsing_issues) =
-        custom_data::parser::parse(&format!("{custom_data_path}base_data/"));
+        custom_data::parser::parse(custom_data_path.join("base_data").as_path());
 
     let (move_names, move_hash_map) = parse_moves(&pokerole_data, &custom_base_data);
     let (nature_names, nature_hash_map) = parse_natures(&pokerole_data);
