@@ -13,6 +13,7 @@ use crate::game_data::GameData;
 use log::info;
 use serde::Deserialize;
 use std::collections::HashMap;
+use std::path::Path;
 
 #[derive(Deserialize)]
 struct CustomDataSet {
@@ -23,20 +24,20 @@ struct CustomDataSet {
 }
 
 pub fn parse(
-    base_path: String,
+    base_path: &Path,
     base_data: &GameData,
     pokemon_api_data: &HashMap<String, PokemonApiData>,
 ) -> HashMap<i64, GameData> {
-    let path = format!("{base_path}custom_server_data");
+    let path = base_path.join("custom_server_data");
     let custom_data_sets =
-        file_reader::parse_file::<Vec<CustomDataSet>>(&format!("{path}/data_mapping.json"))
+        file_reader::parse_file::<Vec<CustomDataSet>>(path.join("data_mapping.json"))
             .expect("This file should always exist!");
 
     let mut result = HashMap::default();
     // TODO: Parse in order of fallback_id, allowing datasets to "depend" upon each other
     for x in custom_data_sets {
         info!("Parsing custom data set: {}", x.path);
-        let (parsed_data, issues) = custom_data::parser::parse(&format!("{path}/{}/", x.path));
+        let (parsed_data, issues) = custom_data::parser::parse(path.join(x.path).as_path());
         let parsed_data_set = parse_custom(
             base_data,
             x.server_id,
