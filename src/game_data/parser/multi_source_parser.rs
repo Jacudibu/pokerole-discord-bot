@@ -24,7 +24,7 @@ pub async fn parse_data() -> MultiSourceGameData {
     let type_efficiency = pokemon_api_parser::parse_type_efficacy(pokerole_api_path.clone());
     let pokemon_api_data = pokemon_api_parser::parse_pokemon_api(pokerole_api_path);
     let pokerole_data = pokerole_data::parser::parse(&pokerole_data_path);
-    let (custom_base_data, _parse_issues) =
+    let (custom_base_data, custom_data_parsing_issues) =
         custom_data::parser::parse(&format!("{custom_data_path}base_data/"));
 
     let (move_names, move_hash_map) = parse_moves(&pokerole_data, &custom_base_data);
@@ -57,6 +57,7 @@ pub async fn parse_data() -> MultiSourceGameData {
         status_effects_names: status_names,
         weather: weather_hash_map,
         weather_names,
+        issues: custom_data_parsing_issues,
     };
 
     let custom_data = custom_dataset_parser::parse(custom_data_path, &base_data, &pokemon_api_data);

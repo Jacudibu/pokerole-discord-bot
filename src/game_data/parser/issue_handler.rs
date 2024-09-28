@@ -6,7 +6,14 @@ pub trait IssueHandler {
 
 #[derive(Default)]
 pub struct IssueStorage {
-    issues: Vec<String>,
+    pub issues: Vec<String>,
+}
+
+impl Clone for IssueStorage {
+    // Fake clone implementation to keep issues local.
+    fn clone(&self) -> Self {
+        Self::default()
+    }
 }
 
 impl IssueHandler for IssueStorage {
