@@ -141,13 +141,13 @@ fn add_custom_data<TInput, TOutput, FnCreate, FnName>(
     create_fn: FnCreate,
     name_fn: FnName,
 ) where
-    FnCreate: Fn(&TInput) -> TOutput,
+    FnCreate: Fn(TInput) -> TOutput,
     FnName: Fn(&TInput) -> String,
 {
     for x in data_to_add {
         let name = name_fn(&x);
         if collection
-            .insert(name.to_lowercase(), create_fn(&x))
+            .insert(name.to_lowercase(), create_fn(x))
             .is_none()
         {
             item_names.push(name)

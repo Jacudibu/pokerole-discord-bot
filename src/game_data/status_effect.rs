@@ -10,13 +10,13 @@ pub struct StatusEffect {
 }
 
 impl StatusEffect {
-    pub(in crate::game_data) fn from_custom_data(raw: &CustomStatusEffect) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: CustomStatusEffect) -> Self {
         StatusEffect {
-            name: raw.name.clone(),
-            description: raw.description.clone(),
-            resist: raw.resist.clone(),
-            effect: raw.effect.clone(),
-            duration: raw.duration.clone(),
+            name: raw.name,
+            description: raw.description,
+            resist: raw.resist,
+            effect: raw.effect,
+            duration: raw.duration,
         }
     }
 

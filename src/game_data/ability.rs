@@ -19,11 +19,11 @@ impl Ability {
         }
     }
 
-    pub(in crate::game_data) fn from_custom_data(raw: &CustomAbility) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: CustomAbility) -> Self {
         Ability {
-            name: raw.name.clone(),
-            description: raw.description.clone(),
-            effect: raw.effect.clone(),
+            name: raw.name,
+            description: raw.description,
+            effect: raw.effect,
         }
     }
 

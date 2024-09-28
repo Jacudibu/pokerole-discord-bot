@@ -58,18 +58,18 @@ impl Move {
         }
     }
 
-    pub(in crate::game_data) fn from_custom_data(raw: &CustomMove) -> Self {
+    pub(in crate::game_data) fn from_custom_data(raw: CustomMove) -> Self {
         Move {
-            name: raw.name.clone(),
+            name: raw.name,
             typing: raw.r#type,
             power: raw.power.unwrap_or(0),
-            damage1: Move::parse_damage1(raw.damage.clone().unwrap_or_default()),
+            damage1: Move::parse_damage1(raw.damage.unwrap_or_default()),
             happiness_damage: None,
-            accuracy1: Move::parse_accuracy(raw.accuracy.clone()),
+            accuracy1: Move::parse_accuracy(raw.accuracy),
             accuracy2: Some(CombatOrSocialStat::Rank),
-            target: raw.target.clone(),
+            target: raw.target,
             effect: replace_effect_string(&raw.effect),
-            description: Move::parse_description(raw.description.clone()),
+            description: Move::parse_description(raw.description),
             category: raw.category,
         }
     }
