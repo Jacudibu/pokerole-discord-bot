@@ -1,5 +1,4 @@
 use std::fmt;
-use std::fmt::Display;
 use std::num::ParseIntError;
 
 pub type ValidationError = CommandInvocationError;

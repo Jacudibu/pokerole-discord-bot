@@ -3,6 +3,7 @@ use std::str::FromStr;
 use log::error;
 
 use crate::enums::{CombatOrSocialStat, HappinessDamageModifier, MoveCategory, MoveType, Stat};
+use crate::errors::DataParsingError;
 use crate::game_data::parser::custom_data::custom_move::CustomMove;
 use crate::game_data::pokerole_data::raw_move::RawPokeroleMove;
 
@@ -42,12 +43,14 @@ fn replace_effect_string(raw: &str) -> Option<String> {
 }
 
 impl Move {
-    pub(in crate::game_data) fn from_pokerole(raw: &RawPokeroleMove) -> Result<Self, String> {
+    pub(in crate::game_data) fn from_pokerole(
+        raw: &RawPokeroleMove,
+    ) -> Result<Self, DataParsingError> {
         Ok(Move {
             name: raw.name.clone(),
             typing: raw.r#type,
             power: raw.power,
-            damage1: Move::parse_damage1(raw.damage1.clone()),
+            damage1: Move::parse_damage1(raw.damage1.clone())?,
             happiness_damage: Move::parse_happiness_damage(raw.damage2.clone()),
             accuracy1: Move::parse_accuracy(raw.accuracy1.clone())?,
             accuracy2: Move::parse_accuracy(raw.accuracy2.clone())?,
@@ -58,12 +61,14 @@ impl Move {
         })
     }
 
-    pub(in crate::game_data) fn from_custom_data(raw: CustomMove) -> Result<Self, String> {
+    pub(in crate::game_data) fn from_custom_data(
+        raw: CustomMove,
+    ) -> Result<Self, DataParsingError> {
         Ok(Move {
             name: raw.name,
             typing: raw.r#type,
             power: raw.power.unwrap_or(0),
-            damage1: Move::parse_damage1(raw.damage.unwrap_or_default()),
+            damage1: Move::parse_damage1(raw.damage.unwrap_or_default())?,
             happiness_damage: None,
             accuracy1: Move::parse_accuracy(raw.accuracy)?,
             accuracy2: Some(CombatOrSocialStat::Rank),
@@ -82,25 +87,22 @@ impl Move {
         Some(raw)
     }
 
-    fn parse_damage1(raw: String) -> Option<Stat> {
+    fn parse_damage1(raw: String) -> Result<Option<Stat>, DataParsingError> {
         if raw.is_empty() {
-            return None;
+            return Ok(None);
         }
 
         // TODO: just parse this with serde
         match Stat::from_str(&raw) {
-            Ok(result) => Some(result),
-            Err(_) => match raw.as_str() {
-                "Strength/special" | "Strength/Special" | "Special/Strength" => {
-                    Some(Stat::StrengthOrSpecial)
-                }
-                "Strength + Rank" => Some(Stat::StrengthPlusRank),
-                "Strength - Rank" => Some(Stat::StrengthMinusRank),
-                "Same as the copied move" => Some(Stat::Copy),
-                _ => {
-                    error!("Cannot parse damage modifier: {}", &raw);
-                    None
-                }
+            Ok(result) => Ok(Some(result)),
+            Err(e) => match raw.to_lowercase().replace(' ', "").as_str() {
+                "strength/special" | "special/strength" => Ok(Some(Stat::StrengthOrSpecial)),
+                "strength+rank" => Ok(Some(Stat::StrengthPlusRank)),
+                "strength-rank" => Ok(Some(Stat::StrengthMinusRank)),
+                "sameasthecopiedmove" => Ok(Some(Stat::Copy)),
+                _ => Err(DataParsingError::from(format!(
+                    "Cannot parse damage modifier {raw} : {e}"
+                ))),
             },
         }
     }
@@ -120,14 +122,14 @@ impl Move {
         }
     }
 
-    fn parse_accuracy(raw: String) -> Result<Option<CombatOrSocialStat>, String> {
+    fn parse_accuracy(raw: String) -> Result<Option<CombatOrSocialStat>, DataParsingError> {
         if raw.is_empty() {
             return Ok(None);
         }
 
         match CombatOrSocialStat::from_str(&raw) {
             Ok(result) => Ok(Some(result)),
-            Err(_) => match raw.as_str() {
+            Err(e) => match raw.as_str() {
                 "Missing beauty" => Ok(Some(CombatOrSocialStat::MissingBeauty)),
                 "BRAWL/CHANNEL" => Ok(Some(CombatOrSocialStat::BrawlOrChannel)),
                 "Tough/cute" => Ok(Some(CombatOrSocialStat::ToughOrCute)),
@@ -135,7 +137,9 @@ impl Move {
                 "BRAWL" => Ok(Some(CombatOrSocialStat::Brawl)),
                 "PERFORM" => Ok(Some(CombatOrSocialStat::Perform)),
                 "ALLURE" => Ok(Some(CombatOrSocialStat::Allure)),
-                _ => Err(format!("Cannot parse accuracy modifier: {}", &raw)),
+                _ => Err(DataParsingError::from(format!(
+                    "Cannot parse accuracy modifier {raw} : {e}",
+                ))),
             },
         }
     }

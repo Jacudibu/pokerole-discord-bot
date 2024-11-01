@@ -1,3 +1,4 @@
+use crate::errors::DataParsingError;
 use crate::game_data::ability::Ability;
 use crate::game_data::item::Item;
 use crate::game_data::parser::custom_data::parser::CustomDataBundle;
@@ -10,7 +11,7 @@ use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::GameData;
-use log::{error, info};
+use log::info;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -166,7 +167,7 @@ fn add_custom_data_and_track_issues<TInput, TOutput, FnCreate, FnName>(
     name_fn: FnName,
     issues: &mut IssueStorage,
 ) where
-    FnCreate: Fn(TInput) -> Result<TOutput, String>,
+    FnCreate: Fn(TInput) -> Result<TOutput, DataParsingError>,
     FnName: Fn(&TInput) -> String,
 {
     for x in data_to_add {

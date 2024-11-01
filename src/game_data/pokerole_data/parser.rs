@@ -1,5 +1,5 @@
 use crate::game_data::parser::file_reader;
-use crate::game_data::parser::issue_handler::{IssueLogger, IssueStorage};
+use crate::game_data::parser::issue_handler::IssueLogger;
 use std::path::Path;
 
 use crate::game_data::pokerole_data::raw_ability::RawPokeroleAbility;

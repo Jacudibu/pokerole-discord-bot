@@ -1,3 +1,4 @@
+use crate::errors::DataParsingError;
 use crate::game_data::parser::custom_data::custom_item::CustomItem;
 use crate::game_data::pokerole_data::raw_item::RawPokeroleItem;
 use std::ops::Not;
@@ -44,7 +45,9 @@ impl Item {
         }
     }
 
-    pub(in crate::game_data) fn from_custom_data(raw: CustomItem) -> Result<Self, String> {
+    pub(in crate::game_data) fn from_custom_data(
+        raw: CustomItem,
+    ) -> Result<Self, DataParsingError> {
         Ok(Item {
             name: raw.name,
             price: Item::parse_price(raw.price, None)?,

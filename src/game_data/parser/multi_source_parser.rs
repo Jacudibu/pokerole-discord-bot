@@ -19,7 +19,7 @@ use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::{pokerole_data, GameData, MultiSourceGameData, PokemonApiId};
-use log::{error, trace, warn};
+use log::{error, warn};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;

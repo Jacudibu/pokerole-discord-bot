@@ -1,3 +1,4 @@
+use crate::emoji;
 use crate::enums::{MysteryDungeonRank, PokemonGeneration, PokemonType, RegionalVariant, Stat};
 use crate::errors::DataParsingError;
 use crate::game_data::ability::Ability;
@@ -8,7 +9,6 @@ use crate::game_data::pokemon_api::PokemonApiId;
 use crate::game_data::pokerole_data::raw_pokemon::{
     RawPokemonMoveLearnedByLevelUp, RawPokerolePokemon,
 };
-use crate::{emoji, Error};
 use log::warn;
 use serde::Deserialize;
 use std::collections::HashMap;
