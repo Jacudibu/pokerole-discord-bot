@@ -24,6 +24,15 @@ impl CommandInvocationError {
     }
 }
 
+impl From<String> for CommandInvocationError {
+    fn from(value: String) -> Self {
+        Self {
+            message: value,
+            log: false,
+        }
+    }
+}
+
 impl fmt::Display for CommandInvocationError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.message)

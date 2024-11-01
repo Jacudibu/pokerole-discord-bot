@@ -8,7 +8,7 @@ use crate::game_data::parser::custom_data::custom_pokemon::CustomPokemon;
 use crate::game_data::parser::custom_data::custom_potion::CustomPotion;
 use crate::game_data::parser::custom_data::custom_status_effect::CustomStatusEffect;
 use crate::game_data::parser::custom_data::custom_weather::CustomWeather;
-use crate::game_data::parser::custom_data::parser::CustomDataBundle;
+use crate::game_data::parser::issue_handler::{IssueHandler, IssueStorage};
 use crate::game_data::parser::{custom_data, custom_dataset_parser};
 use crate::game_data::pokemon::{ApiIssueType, DataSource, LearnablePokemonMoves, Pokemon};
 use crate::game_data::pokemon_api::pokemon_api_parser;
@@ -19,7 +19,7 @@ use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::{pokerole_data, GameData, MultiSourceGameData, PokemonApiId};
-use log::{error, info, trace, warn};
+use log::{error, trace, warn};
 use std::collections::HashMap;
 use std::path::Path;
 use std::sync::Arc;
@@ -36,10 +36,12 @@ pub async fn parse_data() -> MultiSourceGameData {
     let type_efficiency = pokemon_api_parser::parse_type_efficacy(pokerole_api_path.clone());
     let pokemon_api_data = pokemon_api_parser::parse_pokemon_api(pokerole_api_path);
     let pokerole_data = pokerole_data::parser::parse(Path::new(&pokerole_data_path));
-    let (custom_base_data, custom_data_parsing_issues) =
+    let (custom_base_data, mut issues) =
         custom_data::parser::parse(custom_data_path.join("base_data").as_path());
 
-    let (move_names, move_hash_map) = parse_moves(&pokerole_data, custom_base_data.moves);
+    let (move_names, move_hash_map) =
+        parse_moves(&pokerole_data, custom_base_data.moves, &mut issues);
+
     let (nature_names, nature_hash_map) = parse_natures(&pokerole_data);
     let (ability_names, ability_hash_map) =
         parse_abilities(&pokerole_data, custom_base_data.abilities);
@@ -70,7 +72,7 @@ pub async fn parse_data() -> MultiSourceGameData {
         status_effects_names: status_names,
         weather: weather_hash_map,
         weather_names,
-        issues: custom_data_parsing_issues.into_option(),
+        issues: issues.into_option(),
     };
 
     let custom_data = custom_dataset_parser::parse(custom_data_path, &base_data, &pokemon_api_data);
@@ -232,12 +234,18 @@ fn parse_pokemon(
 fn parse_moves(
     pokerole_data: &PokeroleDataBundle,
     custom_moves: Vec<CustomMove>,
+    issues: &mut IssueStorage,
 ) -> (Vec<String>, HashMap<String, Move>) {
     let mut move_names = Vec::default();
     let mut move_hash_map = HashMap::default();
     for x in &pokerole_data.moves {
         move_names.push(x.name.clone());
-        move_hash_map.insert(x.name.to_lowercase(), Move::from_pokerole(x));
+        match Move::from_pokerole(x) {
+            Ok(poke_move) => {
+                move_hash_map.insert(x.name.to_lowercase(), poke_move);
+            }
+            Err(e) => issues.handle_issue(format!("Unable to parse move {}: {e}", x.name)),
+        }
     }
 
     for x in custom_moves {
@@ -247,7 +255,13 @@ fn parse_moves(
             move_names.push(x.name.clone());
         }
 
-        move_hash_map.insert(x.name.to_lowercase(), Move::from_custom_data(x));
+        let name = x.name.clone();
+        match Move::from_custom_data(x) {
+            Ok(poke_move) => {
+                move_hash_map.insert(name.to_lowercase(), poke_move);
+            }
+            Err(e) => issues.handle_issue(format!("Unable to parse move {name}: {e}")),
+        }
     }
 
     (move_names, move_hash_map)

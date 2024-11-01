@@ -10,7 +10,7 @@ use crate::game_data::r#move::Move;
 use crate::game_data::status_effect::StatusEffect;
 use crate::game_data::weather::Weather;
 use crate::game_data::GameData;
-use log::info;
+use log::{error, info};
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::path::Path;
@@ -98,12 +98,13 @@ pub fn parse_custom(
         |x| x.name.clone(),
     );
 
-    add_custom_data(
+    add_custom_data_and_track_issues(
         custom.moves,
         &mut data.moves,
         &mut data.move_names,
         Move::from_custom_data,
         |x| x.name.clone(),
+        &mut issues,
     );
 
     add_custom_data(
@@ -152,5 +153,30 @@ fn add_custom_data<TInput, TOutput, FnCreate, FnName>(
         {
             item_names.push(name)
         };
+    }
+}
+
+fn add_custom_data_and_track_issues<TInput, TOutput, FnCreate, FnName>(
+    data_to_add: Vec<TInput>,
+    collection: &mut HashMap<String, TOutput>,
+    item_names: &mut Vec<String>,
+    create_fn: FnCreate,
+    name_fn: FnName,
+    issues: &mut IssueStorage,
+) where
+    FnCreate: Fn(TInput) -> Result<TOutput, String>,
+    FnName: Fn(&TInput) -> String,
+{
+    for x in data_to_add {
+        let name = name_fn(&x);
+        match create_fn(x) {
+            Ok(output) => {
+                collection.insert(name.to_lowercase(), output);
+                item_names.push(name)
+            }
+            Err(e) => {
+                issues.handle_issue(format!("Was unable to parse override for {name}: {e}",));
+            }
+        }
     }
 }
