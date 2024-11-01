@@ -1,5 +1,5 @@
-use crate::emoji;
 use crate::enums::{MysteryDungeonRank, PokemonGeneration, PokemonType, RegionalVariant, Stat};
+use crate::errors::DataParsingError;
 use crate::game_data::ability::Ability;
 use crate::game_data::enums::poke_role_rank::PokeRoleRank;
 use crate::game_data::parser::custom_data::custom_pokemon::{CustomPokemon, CustomPokemonMoves};
@@ -8,6 +8,7 @@ use crate::game_data::pokemon_api::PokemonApiId;
 use crate::game_data::pokerole_data::raw_pokemon::{
     RawPokemonMoveLearnedByLevelUp, RawPokerolePokemon,
 };
+use crate::{emoji, Error};
 use log::warn;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -587,7 +588,7 @@ impl Pokemon {
     pub(in crate::game_data) fn from_custom_data(
         raw: &CustomPokemon,
         api: &HashMap<String, PokemonApiData>,
-    ) -> Option<Self> {
+    ) -> Result<Self, DataParsingError> {
         let regional_variant = raw.variant;
 
         let api_issue;
@@ -600,7 +601,9 @@ impl Pokemon {
         }
 
         if api_option.is_none() {
-            return None;
+            return Err(DataParsingError::from(
+                "Unable to find a PokeAPI variant".to_string(),
+            ));
         }
         let api_data = api_option.unwrap();
 
@@ -632,7 +635,7 @@ impl Pokemon {
                 .collect(),
         );
 
-        Some(Pokemon {
+        Ok(Pokemon {
             number: raw.number,
             poke_api_id: PokemonApiId(api_data.pokemon_id.0),
             data_source: DataSource::Custom,
@@ -644,11 +647,11 @@ impl Pokemon {
             type1: api_data.type1,
             type2: api_data.type2,
             base_hp: raw.base_hp,
-            strength: PokemonStat::from_str(&raw.strength),
-            dexterity: PokemonStat::from_str(&raw.dexterity),
-            vitality: PokemonStat::from_str(&raw.vitality),
-            special: PokemonStat::from_str(&raw.special),
-            insight: PokemonStat::from_str(&raw.insight),
+            strength: PokemonStat::from_str(&raw.strength)?,
+            dexterity: PokemonStat::from_str(&raw.dexterity)?,
+            vitality: PokemonStat::from_str(&raw.vitality)?,
+            special: PokemonStat::from_str(&raw.special)?,
+            insight: PokemonStat::from_str(&raw.insight)?,
             ability1: api_data.abilities.ability1.clone(),
             ability2: api_data.abilities.ability2.clone(),
             hidden_ability: api_data.abilities.hidden.clone(),
@@ -739,12 +742,12 @@ impl PokemonStat {
         PokemonStat { min, max }
     }
 
-    fn from_str(raw: &str) -> Self {
+    fn from_str(raw: &str) -> Result<Self, DataParsingError> {
         let splits: Vec<&str> = raw.split('/').collect();
-        let min = u8::from_str(splits[0]).expect("Data is always right, riight?");
-        let max = u8::from_str(splits[1]).expect("Data is always right, riiiight?");
+        let min = u8::from_str(splits[0])?;
+        let max = u8::from_str(splits[1])?;
 
-        PokemonStat::new(min, max)
+        Ok(PokemonStat::new(min, max))
     }
 
     pub fn append_stat_string(&self, result: &mut String, stat_name: &str) {

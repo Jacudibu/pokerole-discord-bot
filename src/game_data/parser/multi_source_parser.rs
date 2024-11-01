@@ -46,10 +46,15 @@ pub async fn parse_data() -> MultiSourceGameData {
     let (ability_names, ability_hash_map) =
         parse_abilities(&pokerole_data, custom_base_data.abilities);
     let (weather_names, weather_hash_map) = parse_weather(custom_base_data.weather);
-    let (pokemon_names, pokemon_hash_map, pokemon_by_api_id_hash_map) =
-        parse_pokemon(&pokemon_api_data, &pokerole_data, custom_base_data.pokemon);
+    let (pokemon_names, pokemon_hash_map, pokemon_by_api_id_hash_map) = parse_pokemon(
+        &pokemon_api_data,
+        &pokerole_data,
+        custom_base_data.pokemon,
+        &mut issues,
+    );
     let (status_names, status_hash_map) = parse_status_effects(custom_base_data.status_effects);
-    let (item_names, item_hash_map) = parse_items(pokerole_data, custom_base_data.items);
+    let (item_names, item_hash_map) =
+        parse_items(pokerole_data, custom_base_data.items, &mut issues);
     let (potion_names, potion_hash_map) = parse_potions(custom_base_data.potions);
 
     let base_data = GameData {
@@ -87,6 +92,7 @@ pub async fn parse_data() -> MultiSourceGameData {
 fn parse_items(
     pokerole_data: PokeroleDataBundle,
     custom_items: Vec<CustomItem>,
+    issues: &mut IssueStorage,
 ) -> (Vec<String>, HashMap<String, Item>) {
     let mut item_names = Vec::default();
     let mut item_hash_map = HashMap::default();
@@ -96,13 +102,17 @@ fn parse_items(
     }
 
     for x in custom_items {
-        if item_names.contains(&x.name) {
-            trace!("Overriding {}", x.name);
-        } else {
+        if !item_names.contains(&x.name) {
             item_names.push(x.name.clone());
         }
 
-        item_hash_map.insert(x.name.to_lowercase(), Item::from_custom_data(x));
+        let name = x.name.clone();
+        match Item::from_custom_data(x) {
+            Ok(item) => {
+                item_hash_map.insert(name.to_lowercase(), item);
+            }
+            Err(e) => issues.handle_issue(format!("Unable to parse item {name}: {e}")),
+        }
     }
 
     (item_names, item_hash_map)
@@ -112,9 +122,7 @@ fn parse_potions(custom_potions: Vec<CustomPotion>) -> (Vec<String>, HashMap<Str
     let mut potion_names = Vec::default();
     let mut potion_hash_map = HashMap::default();
     for x in custom_potions {
-        if potion_names.contains(&x.name) {
-            trace!("Overriding {}", x.name);
-        } else {
+        if !potion_names.contains(&x.name) {
             potion_names.push(x.name.clone());
         }
 
@@ -141,6 +149,7 @@ fn parse_pokemon(
     pokemon_api_data: &HashMap<String, PokemonApiData>,
     pokerole_data: &PokeroleDataBundle,
     custom_pokemon: Vec<CustomPokemon>,
+    issues: &mut IssueStorage,
 ) -> (
     Vec<String>,
     HashMap<String, Pokemon>,
@@ -172,17 +181,16 @@ fn parse_pokemon(
     }
 
     for x in custom_pokemon {
-        if let Some(pokemon) = Pokemon::from_custom_data(&x, pokemon_api_data) {
-            if pokemon_names.contains(&x.name) {
-                trace!("Overriding {}", x.name);
-            } else {
-                pokemon_names.push(x.name);
-            }
+        match Pokemon::from_custom_data(&x, pokemon_api_data) {
+            Ok(pokemon) => {
+                if !pokemon_names.contains(&x.name) {
+                    pokemon_names.push(x.name);
+                }
 
-            learnable_moves_by_api_id.insert(pokemon.poke_api_id, pokemon.moves.clone());
-            parsed_pokemon.push(pokemon);
-        } else {
-            warn!("Was unable to find a pokeapi implementation for {}", x.name)
+                learnable_moves_by_api_id.insert(pokemon.poke_api_id, pokemon.moves.clone());
+                parsed_pokemon.push(pokemon);
+            }
+            Err(e) => issues.handle_issue(format!("Unable to parse pokemon {}: {e}", x.name)),
         }
     }
 
@@ -249,9 +257,7 @@ fn parse_moves(
     }
 
     for x in custom_moves {
-        if move_names.contains(&x.name) {
-            trace!("Overriding {}", x.name);
-        } else {
+        if !move_names.contains(&x.name) {
             move_names.push(x.name.clone());
         }
 
@@ -290,9 +296,7 @@ fn parse_abilities(
     }
 
     for x in custom_abilities {
-        if ability_names.contains(&x.name) {
-            trace!("Overriding {}", x.name);
-        } else {
+        if !ability_names.contains(&x.name) {
             ability_names.push(x.name.clone());
         }
 

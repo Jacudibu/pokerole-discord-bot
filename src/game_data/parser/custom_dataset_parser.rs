@@ -66,19 +66,20 @@ pub fn parse_custom(
     data.id = id;
 
     for x in custom.pokemon {
-        if let Some(pokemon) = Pokemon::from_custom_data(&x, pokemon_api_data) {
-            if data
-                .pokemon
-                .insert(x.name.to_lowercase(), pokemon)
-                .is_none()
-            {
-                data.pokemon_names.push(x.name)
-            };
-        } else {
-            issues.handle_issue(format!(
-                "Was unable to parse override for {}. Fully custom pokemon aren't supported yet.",
+        match Pokemon::from_custom_data(&x, pokemon_api_data) {
+            Ok(pokemon) => {
+                if data
+                    .pokemon
+                    .insert(x.name.to_lowercase(), pokemon)
+                    .is_none()
+                {
+                    data.pokemon_names.push(x.name)
+                };
+            }
+            Err(e) => issues.handle_issue(format!(
+                "Was unable to parse override for {}. Error: {e}",
                 x.name
-            ));
+            )),
         }
     }
 
@@ -90,12 +91,13 @@ pub fn parse_custom(
         |x| x.name.clone(),
     );
 
-    add_custom_data(
+    add_custom_data_and_track_issues(
         custom.items,
         &mut data.items,
         &mut data.item_names,
         Item::from_custom_data,
         |x| x.name.clone(),
+        &mut issues,
     );
 
     add_custom_data_and_track_issues(

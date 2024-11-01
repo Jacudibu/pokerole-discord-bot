@@ -36,7 +36,7 @@ impl Item {
     pub(in crate::game_data) fn from_pokerole(raw: RawPokeroleItem) -> Self {
         Item {
             name: raw.name,
-            price: Item::parse_price(raw.pmd_price, raw.trainer_price),
+            price: Item::parse_price(raw.pmd_price, raw.trainer_price).unwrap_or_default(),
             description: raw.description,
             category: Item::parse_category(raw.pocket, raw.category),
             single_use: raw.one_use,
@@ -44,38 +44,38 @@ impl Item {
         }
     }
 
-    pub(in crate::game_data) fn from_custom_data(raw: CustomItem) -> Self {
-        Item {
+    pub(in crate::game_data) fn from_custom_data(raw: CustomItem) -> Result<Self, String> {
+        Ok(Item {
             name: raw.name,
-            price: Item::parse_price(raw.price, None),
+            price: Item::parse_price(raw.price, None)?,
             description: raw.description,
             category: raw.category,
             single_use: raw.single_use,
             health_restored: raw.health_restored,
-        }
+        })
     }
 
-    fn parse_price(pmd: Option<u16>, trainer: Option<String>) -> Option<u16> {
+    fn parse_price(pmd: Option<u16>, trainer: Option<String>) -> Result<Option<u16>, String> {
         if let Some(pmd_price) = pmd {
             if pmd_price == 0 {
-                return None;
+                return Ok(None);
             }
 
-            return pmd;
+            return Ok(pmd);
         }
 
         Item::parse_trainer_price(trainer)
     }
 
-    fn parse_trainer_price(raw: Option<String>) -> Option<u16> {
+    fn parse_trainer_price(raw: Option<String>) -> Result<Option<u16>, String> {
         if let Some(some_raw) = raw {
             return match u16::from_str(&some_raw) {
-                Ok(parsed) => Some(parsed),
-                Err(_) => None,
+                Ok(parsed) => Ok(Some(parsed)),
+                Err(e) => Err(format!("Unable to parse trainer price: {e}")),
             };
         }
 
-        None
+        Ok(None)
     }
 
     fn parse_category(raw_pocket: String, raw_category: String) -> String {
