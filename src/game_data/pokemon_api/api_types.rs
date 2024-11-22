@@ -85,6 +85,7 @@ pub struct ApiPokemonMoves {
     pub pokemon_move_method_id: MoveLearnMethodId,
     pub level: u8,
     pub order: Option<u8>,
+    //    pub mastery: Option<u8>,
 }
 
 /// pokemon_move_methods.csv

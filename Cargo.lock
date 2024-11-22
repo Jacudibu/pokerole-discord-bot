@@ -139,9 +139,9 @@ dependencies = [
 
 [[package]]
 name = "arrayvec"
-version = "0.7.4"
+version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96d30a06541fbafbc7f82ed10c06164cfbd2c401138f6addd8404629c4b16711"
+checksum = "7c02d123df017efcdfbd739ef81735b36c5ba83ec3c59c80a9d7ecc718f92e50"
 dependencies = [
  "serde",
 ]
@@ -188,9 +188,9 @@ dependencies = [
 
 [[package]]
 name = "avif-serialize"
-version = "0.8.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "876c75a42f6364451a033496a14c44bffe41f5f4a8236f697391f11024e596d2"
+checksum = "e335041290c43101ca215eed6f43ec437eb5a42125573f600fc3fa42b9bddd62"
 dependencies = [
  "arrayvec",
 ]
@@ -516,9 +516,9 @@ dependencies = [
 
 [[package]]
 name = "csv"
-version = "1.3.0"
+version = "1.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac574ff4d437a7b5ad237ef331c17ccca63c46479e5b5453eb8e10bb99a759fe"
+checksum = "acdc4883a9c96732e4733212c01447ebd805833b7275a73ca3ee080fd77afdaf"
 dependencies = [
  "csv-core",
  "itoa",
@@ -1306,9 +1306,9 @@ dependencies = [
 
 [[package]]
 name = "image"
-version = "0.25.4"
+version = "0.25.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc144d44a31d753b02ce64093d532f55ff8dc4ebf2ffb8a63c0dda691385acae"
+checksum = "cd6f44aed642f18953a158afeb30206f4d50da59fbc66ecb53c66488de73563b"
 dependencies = [
  "bytemuck",
  "byteorder-lite",
@@ -2023,9 +2023,9 @@ dependencies = [
 
 [[package]]
 name = "ravif"
-version = "0.11.5"
+version = "0.11.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc13288f5ab39e6d7c9d501759712e6969fcc9734220846fc9ed26cae2cc4234"
+checksum = "2413fd96bd0ea5cdeeb37eaf446a22e6ed7b981d792828721e74ded1980a45c6"
 dependencies = [
  "avif-serialize",
  "imgref",
@@ -2152,9 +2152,6 @@ name = "rgb"
 version = "0.8.50"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57397d16646700483b67d2dd6511d79318f9d057fdbd21a4066aeac8b41d310a"
-dependencies = [
- "bytemuck",
-]
 
 [[package]]
 name = "ring"
@@ -2354,9 +2351,9 @@ dependencies = [
 
 [[package]]
 name = "serde"
-version = "1.0.214"
+version = "1.0.215"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f55c3193aca71c12ad7890f1785d2b73e1b9f63a0bbc353c08ef26fe03fc56b5"
+checksum = "6513c1ad0b11a9376da888e3e0baa0077f1aed55c17f50e7b2397136129fb88f"
 dependencies = [
  "serde_derive",
 ]
@@ -2372,9 +2369,9 @@ dependencies = [
 
 [[package]]
 name = "serde_derive"
-version = "1.0.214"
+version = "1.0.215"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de523f781f095e28fa605cdce0f8307e451cc0fd14e2eb4cd2e98a355b147766"
+checksum = "ad1e866f866923f252f05c889987993144fb74e722403468a4ebd70c3cd756c0"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2383,9 +2380,9 @@ dependencies = [
 
 [[package]]
 name = "serde_json"
-version = "1.0.132"
+version = "1.0.133"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d726bfaff4b320266d395898905d0eba0345aae23b54aee3a737e260fd46db03"
+checksum = "c7fceb2473b9166b2294ef05efcb65a3db80803f0b03ef86a5fc88a2b85ee377"
 dependencies = [
  "itoa",
  "memchr",
@@ -2446,9 +2443,9 @@ dependencies = [
 
 [[package]]
 name = "serenity"
-version = "0.12.2"
+version = "0.12.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "880a04106592d0a8f5bdacb1d935889bfbccb4a14f7074984d9cd857235d34ac"
+checksum = "3d72ec4323681bf9a3cabe40fd080abc2435859b502a1b5aa9bf693f125bfa76"
 dependencies = [
  "arrayvec",
  "async-trait",
@@ -3043,9 +3040,9 @@ checksum = "1f3ccbac311fea05f86f61904b462b55fb3df8837a366dfc601a0161d0532f20"
 
 [[package]]
 name = "tokio"
-version = "1.41.0"
+version = "1.41.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "145f3413504347a2be84393cc8a7d2fb4d863b375909ea59f2158261aa258bbb"
+checksum = "22cfb5bee7a6a52939ca9224d6ac897bb669134078daa8735560897f69de4d33"
 dependencies = [
  "backtrace",
  "bytes",

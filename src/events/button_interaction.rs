@@ -308,5 +308,8 @@ fn create_button_from_discord_button(button: &Button, used_button_id: &String) -
 
             result
         }
+        ButtonKind::Premium { .. } => {
+            todo!()
+        }
     }
 }

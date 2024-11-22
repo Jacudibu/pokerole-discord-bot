@@ -1,6 +1,7 @@
 use crate::commands::{Context, Error};
 use crate::game_data::PokemonApiId;
 use crate::{emoji, helpers};
+use log::warn;
 
 /// View some fancy server stats.
 #[poise::command(slash_command, guild_only)]
@@ -19,20 +20,22 @@ pub async fn server_stats(ctx: Context<'_>) -> Result<(), Error> {
     result.push_str("### Played Species Overview\n");
     for record in records {
         let species_api_id = PokemonApiId(record.species_api_id as u16);
-        let pokemon = ctx
+        if let Some(pokemon) = ctx
             .data()
             .game
             .base_data
             .pokemon_by_api_id
             .get(&species_api_id)
-            .unwrap();
-
-        result.push_str(&format!(
-            "- {}{}: {}\n",
-            emoji::get_any_pokemon_emoji_with_space(&ctx.data().database, pokemon).await,
-            pokemon.name,
-            record.count
-        ));
+        {
+            result.push_str(&format!(
+                "- {}{}: {}\n",
+                emoji::get_any_pokemon_emoji_with_space(&ctx.data().database, pokemon).await,
+                pokemon.name,
+                record.count
+            ));
+        } else {
+            warn!("Was unable to resolve species api id {}", species_api_id.0);
+        }
     }
 
     result.push_str("\n*(Got any other ideas for what should be displayed here? Lemme know and I might add it!)*");
