@@ -1,6 +1,6 @@
 use crate::events::FrameworkContext;
 use crate::{emoji, Error};
-use serenity::all::{InteractionType, RoleId};
+use serenity::all::{InteractionType, MessageInteraction, MessageInteractionMetadata, RoleId};
 use serenity::client::Context;
 use serenity::model::channel::{Reaction, ReactionType};
 

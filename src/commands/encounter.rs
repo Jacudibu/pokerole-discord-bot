@@ -382,6 +382,8 @@ INS: {:>2} / {:>2}      Cute:   {} / 5
             CombatOrSocialStat::Vitality => self.vitality,
             CombatOrSocialStat::Special => self.special,
             CombatOrSocialStat::Insight => self.insight,
+            CombatOrSocialStat::VitalityOrInsight => self.insight.max(self.vitality),
+            CombatOrSocialStat::HP => self.hp,
             CombatOrSocialStat::Tough => self.tough,
             CombatOrSocialStat::Cool => self.cool,
             CombatOrSocialStat::Beauty => self.beauty,
@@ -401,13 +403,7 @@ INS: {:>2} / {:>2}      Cute:   {} / 5
             CombatOrSocialStat::Perform => self.rank.die_count(),
             CombatOrSocialStat::Will => self.rank.die_count(),
             CombatOrSocialStat::Copied => 0,
-            CombatOrSocialStat::ToughOrCute => {
-                if self.tough > self.cute {
-                    self.tough
-                } else {
-                    self.cute
-                }
-            }
+            CombatOrSocialStat::ToughOrCute => self.tough.max(self.cute),
             CombatOrSocialStat::MissingBeauty => 5 - self.beauty,
             CombatOrSocialStat::BrawlOrChannel => self.rank.die_count(),
             CombatOrSocialStat::Varies => self.rank.die_count(),

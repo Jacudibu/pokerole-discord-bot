@@ -27,7 +27,7 @@ fn get_randomized_elements(amount: u8, targets: String) -> String {
             break;
         }
 
-        let index = rng.gen_range(0..target_split.len());
+        let index = rng.random_range(0..target_split.len());
         result.push(target_split.remove(index).trim().to_string());
     }
 

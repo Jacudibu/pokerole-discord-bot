@@ -86,7 +86,7 @@ ORDER BY quest_signup.timestamp DESC",
                 break;
             }
 
-            let index = rng.gen_range(0..floating_participants.len());
+            let index = rng.random_range(0..floating_participants.len());
             let winner = floating_participants.remove(index);
 
             chosen_character_ids.push(winner.character_id);

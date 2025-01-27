@@ -129,14 +129,15 @@ impl Move {
 
         match CombatOrSocialStat::from_str(&raw) {
             Ok(result) => Ok(Some(result)),
-            Err(e) => match raw.as_str() {
-                "Missing beauty" => Ok(Some(CombatOrSocialStat::MissingBeauty)),
-                "BRAWL/CHANNEL" => Ok(Some(CombatOrSocialStat::BrawlOrChannel)),
-                "Tough/cute" => Ok(Some(CombatOrSocialStat::ToughOrCute)),
-                "Same as the copied move" => Ok(Some(CombatOrSocialStat::Copied)),
-                "BRAWL" => Ok(Some(CombatOrSocialStat::Brawl)),
-                "PERFORM" => Ok(Some(CombatOrSocialStat::Perform)),
-                "ALLURE" => Ok(Some(CombatOrSocialStat::Allure)),
+            Err(e) => match raw.to_lowercase().replace(" ", "").as_str() {
+                "missingbeauty" => Ok(Some(CombatOrSocialStat::MissingBeauty)),
+                "brawl/channel" => Ok(Some(CombatOrSocialStat::BrawlOrChannel)),
+                "tough/cute" => Ok(Some(CombatOrSocialStat::ToughOrCute)),
+                "vitality/insight" => Ok(Some(CombatOrSocialStat::ToughOrCute)),
+                "sameasthecopiedmove" => Ok(Some(CombatOrSocialStat::Copied)),
+                "brawl" => Ok(Some(CombatOrSocialStat::Brawl)),
+                "perform" => Ok(Some(CombatOrSocialStat::Perform)),
+                "allure" => Ok(Some(CombatOrSocialStat::Allure)),
                 _ => Err(DataParsingError::from(format!(
                     "Cannot parse accuracy modifier {raw} : {e}",
                 ))),
