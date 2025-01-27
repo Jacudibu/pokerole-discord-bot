@@ -133,7 +133,7 @@ impl Move {
                 "missingbeauty" => Ok(Some(CombatOrSocialStat::MissingBeauty)),
                 "brawl/channel" => Ok(Some(CombatOrSocialStat::BrawlOrChannel)),
                 "tough/cute" => Ok(Some(CombatOrSocialStat::ToughOrCute)),
-                "vitality/insight" => Ok(Some(CombatOrSocialStat::ToughOrCute)),
+                "vitality/insight" => Ok(Some(CombatOrSocialStat::VitalityOrInsight)),
                 "sameasthecopiedmove" => Ok(Some(CombatOrSocialStat::Copied)),
                 "brawl" => Ok(Some(CombatOrSocialStat::Brawl)),
                 "perform" => Ok(Some(CombatOrSocialStat::Perform)),
