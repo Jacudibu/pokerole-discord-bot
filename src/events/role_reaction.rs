@@ -1,6 +1,7 @@
 use crate::events::FrameworkContext;
 use crate::{emoji, Error};
-use serenity::all::{InteractionType, MessageInteraction, MessageInteractionMetadata, RoleId};
+use log::info;
+use serenity::all::{MessageInteractionMetadata, RoleId};
 use serenity::client::Context;
 use serenity::model::channel::{Reaction, ReactionType};
 
@@ -43,15 +44,24 @@ async fn delete_bot_message(ctx: &Context, reaction: &Reaction) -> Result<(), Er
     if let Some(user_id) = reaction.user_id {
         let message = reaction.message(ctx).await?;
         if message.author.bot && ctx.cache.current_user().id == message.author.id {
-            if let Some(interaction) = message.interaction {
-                if interaction.kind == InteractionType::Command && interaction.user.id == user_id {
-                    ctx.http
-                        .delete_message(
-                            reaction.channel_id,
-                            reaction.message_id,
-                            Some("Delete emoji was sent."),
-                        )
-                        .await?;
+            if let Some(interaction) = message.interaction_metadata {
+                let interaction_user_id = match *interaction {
+                    MessageInteractionMetadata::Command(data) => Some(data.user.id),
+                    _ => None,
+                };
+
+                if let Some(interaction_user_id) = interaction_user_id {
+                    if interaction_user_id == user_id {
+                        ctx.http
+                            .delete_message(
+                                reaction.channel_id,
+                                reaction.message_id,
+                                Some("Delete emoji was sent."),
+                            )
+                            .await?;
+                    }
+                } else {
+                    info!("Encountered invalid message interaction metadata when trying to delete a message!")
                 }
             }
         }
