@@ -111,8 +111,7 @@ async fn build_reply(
         let emoji = emoji::get_any_pokemon_emoji_with_space(&data.database, pokemon);
 
         character_list.push_str(&format!(
-            "### {}{} – {}
-        Level: {} ({} exp)\n",
+            "### {}{} – {}\n        Level: {} ({} exp)\n",
             emoji.await,
             character.name,
             helpers::channel_id_link(channel_id),
