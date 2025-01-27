@@ -20,7 +20,7 @@ fn get_randomized_elements(amount: u8, targets: String) -> String {
         .map(|x| x.to_string())
         .collect::<Vec<String>>();
     let mut result = Vec::default();
-    let mut rng = rand::thread_rng();
+    let mut rng = rand::rng();
 
     for _ in 0..amount {
         if target_split.is_empty() {

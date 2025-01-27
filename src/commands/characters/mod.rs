@@ -457,7 +457,7 @@ pub async fn log_action<'a>(
     {
         Ok(messages) => match messages.first() {
             None => String::new(),
-            Some(m) => format!(" in {}", m.link_ensured(ctx).await),
+            Some(m) => format!(" in {}", m.id.link(m.channel_id, ctx.guild_id())),
         },
         Err(_) => String::new(),
     };

@@ -67,9 +67,9 @@ impl ParsedRollQuery {
         let mut successes: u32 = 0;
         {
             // TODO: this is ugly :>
-            let mut rng = rand::thread_rng();
+            let mut rng = rand::rng();
             for _ in 0..self.amount {
-                let value = rng.gen_range(1..self.sides + 1);
+                let value = rng.random_range(1..self.sides + 1);
                 total += value as u32;
                 if value > 3 {
                     successes += 1;

@@ -1,6 +1,5 @@
 use rand::seq::IteratorRandom;
-use rand::seq::SliceRandom;
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 
 use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::{pokemon_from_autocomplete_string, Context, Error};
@@ -95,7 +94,7 @@ impl EncounterMon {
             moves: Vec::new(),
         };
 
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let all_stats = vec![
             Stat::Strength,
             Stat::Vitality,
@@ -107,7 +106,7 @@ impl EncounterMon {
         let mut remaining_stat_points = helpers::calculate_available_combat_points(level as i64);
         let mut limit_break_count = 0;
         while remaining_stat_points > 0 {
-            if let Some(mut stat) = non_maxed_stat_points.choose(&mut rng) {
+            if let Some(mut stat) = non_maxed_stat_points.iter().choose(&mut rng) {
                 result.increase_stat(stat);
 
                 if result.get_stat(stat) == pokemon.get_stat(stat).max {
@@ -117,7 +116,7 @@ impl EncounterMon {
                 }
                 remaining_stat_points -= 1;
             } else if remaining_stat_points > 2 + limit_break_count {
-                result.increase_stat(all_stats.choose(&mut rng).unwrap());
+                result.increase_stat(all_stats.iter().choose(&mut rng).unwrap());
                 remaining_stat_points -= 2 + limit_break_count;
                 limit_break_count += 1;
             } else {
@@ -134,7 +133,7 @@ impl EncounterMon {
         ];
         let mut remaining_social_points = helpers::calculate_available_social_points(&result.rank);
         while remaining_social_points > 0 {
-            if let Some(mut stat) = non_maxed_social_stats.choose(&mut rng) {
+            if let Some(mut stat) = non_maxed_social_stats.iter().choose(&mut rng) {
                 result.increase_social_stat(stat);
 
                 if result.get_social_stat(stat) == 5 {
@@ -158,7 +157,7 @@ impl EncounterMon {
             .map(|x| x.name.clone());
 
         let move_count = result.insight + 2;
-        result.moves = available_moves.choose_multiple(&mut thread_rng(), move_count as usize);
+        result.moves = available_moves.choose_multiple(&mut rng, move_count as usize);
 
         result
     }
@@ -166,7 +165,7 @@ impl EncounterMon {
     fn get_random_gender(_pokemon: &Pokemon) -> Gender {
         // TODO: Use official gender ratio, lul.
         // Also, genderless mons.
-        if thread_rng().gen_bool(0.5) {
+        if rng().random_bool(0.5) {
             Gender::Male
         } else {
             Gender::Female
@@ -174,7 +173,7 @@ impl EncounterMon {
     }
 
     fn get_random_ability(pokemon: &Pokemon) -> String {
-        let rng = thread_rng().gen_range(0..100);
+        let rng = rng().random_range(0..100);
         if rng > 95 {
             if let Some(result) = &pokemon.hidden_ability {
                 return result.clone();

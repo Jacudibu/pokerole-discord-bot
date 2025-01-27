@@ -80,7 +80,7 @@ ORDER BY quest_signup.timestamp DESC",
     let mut result = String::from("The following participants where randomly chosen:\n");
     let mut chosen_character_ids = Vec::new();
     {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..quest_record.maximum_participant_count - accepted_participants.count as i64 {
             if floating_participants.is_empty() {
                 break;

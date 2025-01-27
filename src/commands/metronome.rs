@@ -1,6 +1,6 @@
 use crate::commands::{Context, Error};
 use crate::game_data::GameData;
-use rand::seq::SliceRandom;
+use rand::prelude::IteratorRandom;
 
 /// Use the most randomest of moves!
 #[poise::command(slash_command)]
@@ -14,7 +14,8 @@ pub async fn metronome(ctx: Context<'_>) -> Result<(), Error> {
 pub fn get_metronome_text(data: &GameData) -> String {
     let move_name = data
         .move_names
-        .choose(&mut rand::thread_rng())
+        .iter()
+        .choose(&mut rand::rng())
         .expect("There should be a name.");
     if let Some(poke_move) = data.moves.get(&move_name.to_lowercase()) {
         poke_move.build_string()
