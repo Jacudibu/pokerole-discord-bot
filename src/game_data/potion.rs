@@ -1,3 +1,4 @@
+use crate::emoji;
 use crate::game_data::parser::custom_data::custom_potion::CustomPotion;
 
 #[derive(Debug, Clone)]
@@ -34,7 +35,7 @@ impl Potion {
         let mut result = String::new();
         for recipe in raw {
             result.push_str("- ");
-            result.push_str(recipe.as_str());
+            result.push_str(recipe.replace(":poke_coin:", emoji::POKE_COIN).as_str());
             result.push('\n');
         }
 
