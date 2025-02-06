@@ -6,7 +6,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 
 /// Data Objects which should be ignored
-const REJECTED_DATA_FILE_NAMES: [&str; 7] = [
+const REJECTED_DATA_FILE_NAMES: [&str; 8] = [
     "Any Move.json",
     "Potion.json",
     "Super Potion.json",
@@ -14,6 +14,7 @@ const REJECTED_DATA_FILE_NAMES: [&str; 7] = [
     "Max Potion.json",
     "Full Heal.json",
     "Full Restore.json",
+    "White Herbs.json",
 ];
 
 pub fn parse_file<T: DeserializeOwned>(
