@@ -15,7 +15,12 @@ pub async fn learns(
     name: String,
 ) -> Result<(), Error> {
     let pokemon = pokemon_from_autocomplete_string(&ctx, &name).await?;
-    let emoji = emoji::get_any_pokemon_emoji_with_space(&ctx.data().database, pokemon).await;
+    let emoji = emoji::get_any_pokemon_emoji_with_space(
+        ctx.serenity_context(),
+        &ctx.data().database,
+        pokemon,
+    )
+    .await;
 
     ctx.send(create_reply(pokemon, emoji)).await?;
 

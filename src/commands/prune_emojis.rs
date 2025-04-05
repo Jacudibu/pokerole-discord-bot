@@ -41,21 +41,6 @@ pub async fn prune_emojis(ctx: Context<'_>) -> Result<(), Error> {
         return Ok(());
     }
 
-    // In case this is an emoji_guild, also reduce the emoji_count column accordingly.
-    if let Some(record) = sqlx::query!("SELECT emoji_count FROM emoji_guild WHERE id = ?", guild_id)
-        .fetch_optional(&ctx.data().database)
-        .await?
-    {
-        let new_count = record.emoji_count - list.len() as i64;
-        sqlx::query!(
-            "UPDATE emoji_guild SET emoji_count = ? WHERE id = ?",
-            new_count,
-            guild_id
-        )
-        .execute(&ctx.data().database)
-        .await?;
-    }
-
     let text = format!("Removed {} emojis.\n```{}```", list.len(), list.join("\n"));
     for text in helpers::split_long_messages(text) {
         send_ephemeral_reply(&ctx, &text).await?;

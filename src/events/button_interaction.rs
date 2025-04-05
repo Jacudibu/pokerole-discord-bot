@@ -62,9 +62,12 @@ pub async fn handle_button_interaction(
             disable_button_on_original_message(context, interaction).await?;
             let game_data = get_game_data(&framework, interaction).await;
             let pokemon = game_data.pokemon.get(args[0]).unwrap();
-            let emoji =
-                emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
-                    .await;
+            let emoji = emoji::get_any_pokemon_emoji_with_space(
+                context,
+                &framework.user_data.database,
+                pokemon,
+            )
+            .await;
             for response_part in
                 helpers::split_long_messages(pokemon.build_all_learnable_moves_list(emoji).into())
             {
@@ -75,9 +78,12 @@ pub async fn handle_button_interaction(
             disable_button_on_original_message(context, interaction).await?;
             let game_data = get_game_data(&framework, interaction).await;
             let pokemon = game_data.pokemon.get(args[0]).unwrap();
-            let emoji =
-                emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
-                    .await;
+            let emoji = emoji::get_any_pokemon_emoji_with_space(
+                context,
+                &framework.user_data.database,
+                pokemon,
+            )
+            .await;
             interaction
                 .message
                 .reply(
@@ -102,9 +108,12 @@ pub async fn handle_button_interaction(
             disable_button_on_original_message(context, interaction).await?;
             let game_data = get_game_data(&framework, interaction).await;
             let pokemon = game_data.pokemon.get(args[0]).unwrap();
-            let emoji =
-                emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
-                    .await;
+            let emoji = emoji::get_any_pokemon_emoji_with_space(
+                context,
+                &framework.user_data.database,
+                pokemon,
+            )
+            .await;
             interaction
                 .create_followup(
                     context,
@@ -117,9 +126,12 @@ pub async fn handle_button_interaction(
             disable_button_on_original_message(context, interaction).await?;
             let game_data = get_game_data(&framework, interaction).await;
             let pokemon = game_data.pokemon.get(args[0]).unwrap();
-            let emoji =
-                emoji::get_any_pokemon_emoji_with_space(&framework.user_data.database, pokemon)
-                    .await;
+            let emoji = emoji::get_any_pokemon_emoji_with_space(
+                context,
+                &framework.user_data.database,
+                pokemon,
+            )
+            .await;
             interaction
                 .message
                 .reply(

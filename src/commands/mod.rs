@@ -48,7 +48,6 @@ mod quests;
 mod say;
 mod server_stats;
 mod setting_time_offset;
-mod setup_emoji_guild;
 mod setup_guild;
 mod store_gm_experience;
 mod use_gm_experience;
@@ -57,7 +56,6 @@ mod wallets;
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     let mut result = vec![
         setup_guild::setup_guild(),
-        setup_emoji_guild::setup_emoji_guild(),
         roll::roll(),
         roll::r(),
         r#move::poke_move(),
@@ -424,7 +422,9 @@ pub async fn ensure_user_owns_wallet_or_is_gm(
 
 async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
     let game_data = ctx.data().game.get_by_context(&ctx).await;
-    if let Some(result) = build_character_string(&ctx.data().database, game_data, id).await {
+    if let Some(result) =
+        build_character_string(&ctx.serenity_context(), &ctx.data().database, game_data, id).await
+    {
         let message = ctx
             .serenity_context()
             .http

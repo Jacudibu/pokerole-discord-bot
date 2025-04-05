@@ -32,6 +32,7 @@ pub async fn player_info(
     match characters {
         Ok(characters) => {
             let reply = build_reply(
+                ctx.serenity_context(),
                 ctx.data(),
                 &user_in_guild,
                 characters,
@@ -82,6 +83,7 @@ async fn query_gm_experience(ctx: &Context<'_>, user_id: i64, guild_id: i64) -> 
 }
 
 async fn build_reply(
+    ctx: &serenity::all::Context,
     data: &Data,
     user_in_guild: &Member,
     characters: Vec<QueryObject>,
@@ -108,7 +110,7 @@ async fn build_reply(
             .pokemon_by_api_id
             .get(&api_id)
             .expect("Database values should always be valid!");
-        let emoji = emoji::get_any_pokemon_emoji_with_space(&data.database, pokemon);
+        let emoji = emoji::get_any_pokemon_emoji_with_space(ctx, &data.database, pokemon);
 
         character_list.push_str(&format!(
             "### {}{} – {}\n        Level: {} ({} exp)\n",

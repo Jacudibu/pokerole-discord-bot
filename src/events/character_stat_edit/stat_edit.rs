@@ -128,7 +128,7 @@ async fn edit_stat(
     mut args: Vec<&str>,
     amount: i64,
 ) -> Result<(), Error> {
-    let character = get_character_data_for_edit(database, game_data, character_id).await;
+    let character = get_character_data_for_edit(ctx, database, game_data, character_id).await;
 
     match args.remove(0) {
         "strength" => edit_specific_stat(ctx, interaction, database, game_data, character, amount, SingleCharacterStatType::Strength).await,
@@ -223,6 +223,7 @@ async fn edit_specific_stat(
     .await;
 
     let edit_message = create_stat_edit_overview_message(
+        ctx,
         database,
         game_data,
         character.id,

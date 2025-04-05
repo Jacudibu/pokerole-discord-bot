@@ -29,7 +29,12 @@ pub async fn server_stats(ctx: Context<'_>) -> Result<(), Error> {
         {
             result.push_str(&format!(
                 "- {}{}: {}\n",
-                emoji::get_any_pokemon_emoji_with_space(&ctx.data().database, pokemon).await,
+                emoji::get_any_pokemon_emoji_with_space(
+                    ctx.serenity_context(),
+                    &ctx.data().database,
+                    pokemon
+                )
+                .await,
                 pokemon.name,
                 record.count
             ));

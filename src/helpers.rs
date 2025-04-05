@@ -101,12 +101,14 @@ struct Signup {
 const MAX_SIGNUP_DISPLAY_COUNT: usize = 18;
 
 pub async fn generate_quest_post_message_content(
+    context: &Context,
     data: &Data,
     channel_id: i64,
     maximum_participants: i64,
     selection_mechanism: QuestParticipantSelectionMechanism,
 ) -> Result<(String, bool), Error> {
     let (mut text, too_many_signups) = create_quest_participant_list(
+        context,
         data,
         channel_id,
         maximum_participants,
@@ -127,6 +129,7 @@ pub async fn generate_quest_post_message_content(
 }
 
 pub async fn create_quest_participant_list(
+    context: &Context,
     data: &Data,
     channel_id: i64,
     maximum_participants: i64,
@@ -148,7 +151,7 @@ ORDER BY quest_signup.accepted DESC, quest_signup.timestamp ASC
 
     let mut quest_signups = Vec::new();
     for record in records {
-        let emoji = match emoji::get_character_emoji(data, record.character_id).await {
+        let emoji = match emoji::get_character_emoji(context, data, record.character_id).await {
             Some(emoji) => format!("{} ", emoji),
             None => String::new(),
         };
@@ -296,6 +299,7 @@ pub async fn update_quest_message(
             .expect("Should always be valid!");
 
     let (text, too_many_signups) = generate_quest_post_message_content(
+        context,
         data,
         channel_id,
         quest_record.maximum_participant_count,

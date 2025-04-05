@@ -24,6 +24,7 @@ pub async fn quest_list_all_participants(
             .expect("Should always be valid!");
 
     let (text, _) = helpers::create_quest_participant_list(
+        context,
         data,
         channel_id,
         quest_record.maximum_participant_count,

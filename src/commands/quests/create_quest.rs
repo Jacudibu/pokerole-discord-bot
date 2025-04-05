@@ -55,6 +55,7 @@ pub async fn create_quest(
     match result {
         Ok(_) => {
             let (text, too_many_signups) = helpers::generate_quest_post_message_content(
+                ctx.serenity_context(),
                 ctx.data(),
                 channel_id,
                 max_participants,

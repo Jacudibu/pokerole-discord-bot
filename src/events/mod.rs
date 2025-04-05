@@ -59,7 +59,7 @@ pub async fn handle_events<'a>(
             }
         }
         FullEvent::GuildMemberAddition { new_member } => {
-            handle_guild_member_addition(context, &framework.user_data, new_member).await
+            handle_guild_member_addition(context, framework.user_data, new_member).await
         }
         FullEvent::MessageDelete {
             channel_id,
@@ -302,7 +302,7 @@ async fn update_character_post<'a>(
     id: i64,
 ) {
     if let Some(result) =
-        crate::commands::characters::build_character_string(database, game_data, id).await
+        crate::commands::characters::build_character_string(ctx, database, game_data, id).await
     {
         let message = ctx
             .http

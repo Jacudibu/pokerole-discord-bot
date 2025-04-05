@@ -1,10 +1,10 @@
 use tokio::join;
 
-use crate::commands::{
-    Context, ensure_user_exists, ensure_user_owns_character, Error, find_character,
-};
 use crate::commands::autocompletion::autocomplete_owned_character_name;
-use crate::commands::characters::{ActionType, change_character_stat_after_validation, log_action};
+use crate::commands::characters::{change_character_stat_after_validation, log_action, ActionType};
+use crate::commands::{
+    ensure_user_exists, ensure_user_owns_character, find_character, Context, Error,
+};
 use crate::emoji::get_character_emoji;
 use crate::errors::{CommandInvocationError, ValidationError};
 
@@ -52,7 +52,7 @@ pub async fn use_gm_experience(
                 .await
             {
                 Ok(_) => {
-                    let emoji = get_character_emoji(ctx.data(), character.id).await;
+                    let emoji = get_character_emoji(ctx.serenity_context(), ctx.data(), character.id).await;
                     let text = format!("Used {} GM Experience on {}{}!", amount, emoji.unwrap_or(String::new()), character.name);
                     let reply = ctx.say(&text);
                     let log = log_action(&ActionType::UseGMExperience, &ctx, &text);

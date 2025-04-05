@@ -135,6 +135,7 @@ pub fn append_tera_charges(
 }
 
 pub async fn build_character_string(
+    context: &serenity::all::Context,
     database: &Pool<Sqlite>,
     game_data: &GameData,
     character_id: i64,
@@ -165,6 +166,7 @@ pub async fn build_character_string(
                 .expect("All mons inside the Database should have a valid API ID assigned.");
             let gender = Gender::from_phenotype(record.phenotype);
             let emoji = emoji::get_pokemon_emoji(
+                context,
                 database,
                 record.guild_id,
                 pokemon,

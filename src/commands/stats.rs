@@ -7,7 +7,12 @@ use std::default::Default;
 
 async fn print_poke_stats(ctx: Context<'_>, name: String) -> Result<(), Error> {
     let pokemon = pokemon_from_autocomplete_string(&ctx, &name).await?;
-    let emoji = emoji::get_any_pokemon_emoji_with_space(&ctx.data().database, pokemon).await;
+    let emoji = emoji::get_any_pokemon_emoji_with_space(
+        ctx.serenity_context(),
+        &ctx.data().database,
+        pokemon,
+    )
+    .await;
     ctx.send(
         CreateReply::default()
             .content(pokemon.build_stats_string(emoji))

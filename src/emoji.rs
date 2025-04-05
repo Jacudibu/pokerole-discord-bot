@@ -1,9 +1,9 @@
-use sqlx::{Pool, Sqlite};
-
+use crate::commands::create_emojis;
 use crate::data::Data;
 use crate::enums::{Gender, PokemonType, RegionalVariant};
 use crate::game_data::pokemon::Pokemon;
 use crate::game_data::PokemonApiId;
+use sqlx::{Pool, Sqlite};
 
 pub const POKE_COIN: &str = "<:poke_coin:1120237132200546304>";
 pub const BATTLE_POINT: &str = "<:battle_point:1202570025802661938>";
@@ -30,7 +30,11 @@ pub const DOT_EMPTY: char = '⭘';
 pub const DOT_FILLED: char = '⬤';
 pub const DOT_OVERCHARGED: char = '⧳';
 
-pub async fn get_character_emoji(data: &Data, character_id: i64) -> Option<String> {
+pub async fn get_character_emoji(
+    context: &serenity::all::Context,
+    data: &Data,
+    character_id: i64,
+) -> Option<String> {
     let result = sqlx::query!(
         "SELECT guild_id, species_api_id, is_shiny, phenotype FROM character WHERE id = ?",
         character_id
@@ -49,6 +53,7 @@ pub async fn get_character_emoji(data: &Data, character_id: i64) -> Option<Strin
             .expect("DB species ID should always be set!");
 
         get_pokemon_emoji(
+            context,
             &data.database,
             record.guild_id,
             pokemon,
@@ -62,6 +67,7 @@ pub async fn get_character_emoji(data: &Data, character_id: i64) -> Option<Strin
 }
 
 pub async fn get_pokemon_emoji(
+    context: &serenity::all::Context,
     database: &Pool<Sqlite>,
     guild_id: i64,
     pokemon: &Pokemon,
@@ -80,54 +86,38 @@ pub async fn get_pokemon_emoji(
         return Some(result.discord_string);
     }
 
-    // Try again, without guild_id. Technically we could just leech emojis off of extra servers
-    let result = sqlx::query!("SELECT discord_string FROM emoji WHERE species_api_id = ? AND is_female = ? AND is_shiny = ? AND is_animated = ?", api_id, is_female, is_shiny, is_animated)
-        .fetch_one(database)
-        .await;
-
-    if let Ok(result) = result {
-        return Some(result.discord_string);
-    }
-
-    // Any will do! Please!~
-    get_any_pokemon_emoji(database, pokemon).await
+    get_application_emoji(context, database, pokemon).await
 }
 
-pub async fn get_any_pokemon_emoji(database: &Pool<Sqlite>, pokemon: &Pokemon) -> Option<String> {
+pub async fn get_application_emoji(
+    context: &serenity::all::Context,
+    database: &Pool<Sqlite>,
+    pokemon: &Pokemon,
+) -> Option<String> {
     let api_id = pokemon.poke_api_id.0 as i64;
 
-    if pokemon.has_animated_sprite() {
-        let result = sqlx::query!(
-            "SELECT discord_string FROM emoji WHERE species_api_id = ? AND is_animated = true",
-            api_id
-        )
-        .fetch_one(database)
-        .await;
-
-        if let Ok(result) = result {
-            return Some(result.discord_string);
-        }
-    }
-
     let result = sqlx::query!(
-        "SELECT discord_string FROM emoji WHERE species_api_id = ?",
+        "SELECT discord_string FROM application_emoji WHERE species_api_id = ?",
         api_id
     )
     .fetch_one(database)
     .await;
 
-    if let Ok(result) = result {
-        return Some(result.discord_string);
+    match result {
+        Ok(result) => Some(result.discord_string),
+        Err(_) => match create_emojis::create_application_emoji(context, database, pokemon).await {
+            Ok(result) => Some(result.to_string()),
+            Err(_) => None,
+        },
     }
-
-    None
 }
 
 pub async fn get_any_pokemon_emoji_with_space(
+    context: &serenity::all::Context,
     database: &Pool<Sqlite>,
     pokemon: &Pokemon,
 ) -> String {
-    if let Some(emoji) = get_any_pokemon_emoji(database, pokemon).await {
+    if let Some(emoji) = get_application_emoji(context, database, pokemon).await {
         format!("{} ", emoji)
     } else {
         String::new()

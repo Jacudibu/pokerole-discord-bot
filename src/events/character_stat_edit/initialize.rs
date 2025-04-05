@@ -96,6 +96,7 @@ async fn initialize_combat(
                         ctx,
                         CreateInteractionResponse::Message(
                             create_stat_edit_overview_message(
+                                ctx,
                                 database,
                                 game_data,
                                 character_id,
@@ -192,6 +193,7 @@ async fn initialize_social(
                         ctx,
                         CreateInteractionResponse::Message(
                             create_stat_edit_overview_message(
+                                ctx,
                                 database,
                                 game_data,
                                 character_id,

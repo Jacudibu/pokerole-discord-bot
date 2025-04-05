@@ -174,6 +174,7 @@ impl CharacterDataForStatEditing {
 }
 
 async fn get_character_data_for_edit(
+    context: &serenity::all::Context,
     database: &Pool<Sqlite>,
     game_data: &GameData,
     character_id: i64,
@@ -206,10 +207,16 @@ async fn get_character_data_for_edit(
         ))
         .expect("All mons inside the Database should have a valid API ID assigned.");
     let gender = Gender::from_phenotype(record.phenotype);
-    let emoji =
-        emoji::get_pokemon_emoji(database, record.guild_id, pokemon, &gender, record.is_shiny)
-            .await
-            .unwrap_or(format!("[{}]", pokemon.name));
+    let emoji = emoji::get_pokemon_emoji(
+        context,
+        database,
+        record.guild_id,
+        pokemon,
+        &gender,
+        record.is_shiny,
+    )
+    .await
+    .unwrap_or(format!("[{}]", pokemon.name));
 
     let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
         level,
@@ -287,12 +294,14 @@ impl From<MessageContent> for EditInteractionResponse {
 }
 
 async fn create_stat_edit_overview_message(
+    context: &serenity::all::Context,
     database: &Pool<Sqlite>,
     game_data: &GameData,
     character_id: i64,
     stat_type: StatType,
 ) -> MessageContent {
-    let character_data = get_character_data_for_edit(database, game_data, character_id).await;
+    let character_data =
+        get_character_data_for_edit(context, database, game_data, character_id).await;
 
     let (stats, remaining_points) = match stat_type {
         StatType::Combat => {
