@@ -1,13 +1,14 @@
 use std::str::FromStr;
 
-use crate::character_stats::SingleCharacterStatType;
 use crate::events::character_stat_edit::{
     create_stat_edit_overview_message, get_character_data_for_edit, CharacterDataForStatEditing,
     StatType,
 };
 use crate::events::{send_error, update_character_post};
-use crate::game_data::GameData;
-use crate::{helpers, Error};
+use crate::shared::character_stats::SingleCharacterStatType;
+use crate::shared::game_data::GameData;
+use crate::shared::helpers;
+use crate::Error;
 use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
 use sqlx::{Pool, Sqlite};
 

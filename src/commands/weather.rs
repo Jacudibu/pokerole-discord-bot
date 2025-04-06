@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_weather;
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 
 /// Display the Weather
 #[poise::command(slash_command)]
 pub async fn weather(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which weather?"]
     #[rename = "name"]
     #[autocomplete = "autocomplete_weather"]

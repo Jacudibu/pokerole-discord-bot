@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::{pokemon_from_autocomplete_string, Context, Error};
-use crate::{emoji, helpers};
+use crate::commands::{pokemon_from_autocomplete_string, Error};
+use crate::shared::helpers;
+use crate::shared::{emoji, PoiseContext};
 use poise::CreateReply;
 use serenity::all::CreateActionRow;
 use std::default::Default;
 
-async fn print_poke_stats(ctx: Context<'_>, name: String) -> Result<(), Error> {
+async fn print_poke_stats(ctx: PoiseContext<'_>, name: String) -> Result<(), Error> {
     let pokemon = pokemon_from_autocomplete_string(&ctx, &name).await?;
     let emoji = emoji::get_any_pokemon_emoji_with_space(
         ctx.serenity_context(),
@@ -26,7 +27,7 @@ async fn print_poke_stats(ctx: Context<'_>, name: String) -> Result<(), Error> {
 /// Display Pokemon stats. Same as /stats.
 #[poise::command(slash_command)]
 pub async fn pokemon(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which pokemon?"]
     #[rename = "pokemon"]
     #[autocomplete = "autocomplete_pokemon"]
@@ -38,7 +39,7 @@ pub async fn pokemon(
 /// Display Pokemon stats. Same as /pokemon
 #[poise::command(slash_command)]
 pub async fn stats(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which pokemon?"]
     #[rename = "pokemon"]
     #[autocomplete = "autocomplete_pokemon"]

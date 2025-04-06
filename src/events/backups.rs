@@ -6,8 +6,8 @@ use serenity::all::{CreateAttachment, CreateMessage};
 use serenity::model::id::ChannelId;
 use serenity::prelude::Context;
 
-use crate::data::Data;
 use crate::events::send_error_to_log_channel;
+use crate::shared::data::Data;
 
 pub async fn start_backup_thread(ctx: &Context, data: &Data) {
     if let Ok(backup_channel_id) = std::env::var("DB_BACKUP_CHANNEL_ID") {

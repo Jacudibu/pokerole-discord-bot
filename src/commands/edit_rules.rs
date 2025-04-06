@@ -1,7 +1,8 @@
 use crate::commands::autocompletion::{autocomplete_rule, autocomplete_server_name};
-use crate::commands::characters::{log_action, ActionType};
-use crate::commands::{get_servers_this_user_is_active_in, send_ephemeral_reply, Context};
-use crate::errors::{CommandInvocationError, DatabaseError, ValidationError};
+use crate::commands::character_commands::{log_action, ActionType};
+use crate::commands::{get_servers_this_user_is_active_in, send_ephemeral_reply};
+use crate::shared::errors::{CommandInvocationError, DatabaseError, ValidationError};
+use crate::shared::PoiseContext;
 use crate::Error;
 
 /// Edit this server's rules.
@@ -13,7 +14,7 @@ use crate::Error;
     subcommand_required,
     default_member_permissions = "ADMINISTRATOR"
 )]
-pub async fn edit_rules(_: Context<'_>) -> Result<(), Error> {
+pub async fn edit_rules(_: PoiseContext<'_>) -> Result<(), Error> {
     Ok(())
 }
 
@@ -30,7 +31,7 @@ fn validate(variable_name: &str, max_length: usize, content: &str) -> Result<(),
 /// Create a new rule or update an existing one with the same name. Use \n for linebreaks.
 #[poise::command(prefix_command, slash_command)]
 pub async fn create_or_update(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "How should we call it?"] name: String,
     #[description = "What does the rule say?"] text: String,
     #[description = "A little flavor text for the rule?"] flavor: Option<String>,
@@ -74,7 +75,7 @@ ON CONFLICT (guild_id, name) DO UPDATE SET (text, flavor, example) = (excluded.t
 /// Delete an existing rule.
 #[poise::command(prefix_command, slash_command)]
 pub async fn delete(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which rule?"]
     #[autocomplete = "autocomplete_rule"]
     name: String,
@@ -107,7 +108,7 @@ pub async fn delete(
 /// Clone all rules from a different server. You need to own a character on the server to do this.
 #[poise::command(prefix_command, slash_command)]
 pub async fn clone(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which server?"]
     #[autocomplete = "autocomplete_server_name"]
     server_name: String,
@@ -147,7 +148,7 @@ pub async fn clone(
     }
 }
 
-async fn count_existing_guild_rules(ctx: &Context<'_>, guild_id: i64) -> i64 {
+async fn count_existing_guild_rules(ctx: &PoiseContext<'_>, guild_id: i64) -> i64 {
     if let Ok(existing_rule_count) = sqlx::query!(
         "SELECT COUNT(*) as count FROM guild_rules WHERE guild_id = ?",
         guild_id
@@ -161,7 +162,7 @@ async fn count_existing_guild_rules(ctx: &Context<'_>, guild_id: i64) -> i64 {
     }
 }
 
-async fn clone_all_rules(ctx: &Context<'_>, from: i64, to: i64) {
+async fn clone_all_rules(ctx: &PoiseContext<'_>, from: i64, to: i64) {
     for record in sqlx::query!("SELECT * FROM guild_rules WHERE guild_id = ?", from)
         .fetch_all(&ctx.data().database)
         .await
@@ -188,7 +189,7 @@ pub struct Rule {
 }
 
 impl Rule {
-    pub(crate) fn build_string(&self) -> impl Into<String> + Sized {
+    pub fn build_string(&self) -> impl Into<String> + Sized {
         let mut builder = serenity::utils::MessageBuilder::default();
         builder.push(std::format!("**{}**\n", &self.name));
         if let Some(flavor) = &self.flavor {

@@ -7,8 +7,8 @@ use serenity::model::id::ChannelId;
 use serenity::prelude::Context;
 use sqlx::{Pool, Sqlite};
 
-use crate::data::Data;
 use crate::events::send_error_to_log_channel;
+use crate::shared::data::Data;
 
 pub async fn start_weekly_reset_thread(ctx: &Context, data: &Data) {
     let ctx = Arc::new(ctx.clone());

@@ -1,13 +1,14 @@
 use std::str::FromStr;
 
-use crate::character_stats::GenericCharacterStats;
-use crate::enums::MysteryDungeonRank;
 use crate::events::character_stat_edit::{
     create_stat_edit_overview_message, reset_stat_edit_values, StatType,
 };
 use crate::events::send_error;
-use crate::game_data::{GameData, PokemonApiId};
-use crate::{helpers, Error};
+use crate::shared::character_stats::GenericCharacterStats;
+use crate::shared::enums::MysteryDungeonRank;
+use crate::shared::game_data::{GameData, PokemonApiId};
+use crate::shared::helpers;
+use crate::Error;
 use serenity::all::{ComponentInteraction, Context, CreateInteractionResponse};
 use sqlx::{Pool, Sqlite};
 
@@ -175,7 +176,7 @@ async fn initialize_social(
                     record.stat_clever,
                 );
 
-                let remaining_points = helpers::calculate_available_social_points(&rank) as i64
+                let remaining_points = rank.social_stat_points() as i64
                     - social_stats.calculate_invested_stat_points();
 
                 if remaining_points <= 0 {

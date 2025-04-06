@@ -1,5 +1,6 @@
 use crate::events::FrameworkContext;
-use crate::{emoji, Error};
+use crate::shared::emoji;
+use crate::Error;
 use log::info;
 use serenity::all::{MessageInteractionMetadata, RoleId};
 use serenity::client::Context;

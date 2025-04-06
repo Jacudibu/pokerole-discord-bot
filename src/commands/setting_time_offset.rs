@@ -1,4 +1,5 @@
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use chrono::{FixedOffset, Utc};
 use poise::CreateReply;
 use serenity::all::{CreateActionRow, CreateSelectMenu, CreateSelectMenuKind};
@@ -19,7 +20,7 @@ fn build_select_menu_option(hours: i32, minutes: i32) -> CreateSelectMenuOption 
 
 /// Open a dialogue to select your local timezone.
 #[poise::command(slash_command)]
-pub async fn setting_time_offset(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn setting_time_offset(ctx: PoiseContext<'_>) -> Result<(), Error> {
     let user_id = ctx.author().id.get() as i64;
     let user = sqlx::query!(
         "SELECT setting_time_offset_hours, setting_time_offset_minutes FROM user WHERE id = ?",

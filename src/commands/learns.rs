@@ -1,14 +1,10 @@
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::{pokemon_from_autocomplete_string, Context, Error};
-use crate::game_data::pokemon::Pokemon;
-use crate::{emoji, helpers};
-use poise::CreateReply;
-use serenity::all::CreateActionRow;
-
+use crate::commands::{pokemon_from_autocomplete_string, Error};
+use crate::shared::{clunky_stuff, emoji, PoiseContext};
 /// Display Pokemon moves
 #[poise::command(slash_command, prefix_command)]
 pub async fn learns(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which pokemon?"]
     #[rename = "pokemon"]
     #[autocomplete = "autocomplete_pokemon"]
@@ -22,19 +18,8 @@ pub async fn learns(
     )
     .await;
 
-    ctx.send(create_reply(pokemon, emoji)).await?;
+    ctx.send(clunky_stuff::create_learns_reply(pokemon, emoji))
+        .await?;
 
     Ok(())
-}
-
-pub fn create_reply(pokemon: &Pokemon, emoji: String) -> CreateReply {
-    CreateReply::default()
-        .content(pokemon.build_move_string(emoji))
-        .components(vec![CreateActionRow::Buttons(vec![
-            helpers::create_button(
-                "Show All Learnable Moves",
-                format!("learns-all_{}", pokemon.name.to_lowercase()).as_str(),
-                false,
-            ),
-        ])])
 }

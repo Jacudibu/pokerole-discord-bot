@@ -1,4 +1,5 @@
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 use serenity::all::CreateMessage;
 use serenity::model::channel::Channel;
@@ -10,7 +11,7 @@ use serenity::utils::MessageBuilder;
 #[poise::command(slash_command, default_member_permissions = "ADMINISTRATOR")]
 #[allow(clippy::too_many_arguments)]
 pub async fn create_role_reaction_post(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "In which channel?"] channel: Channel,
     #[description = "What should be the post title?"] text: String,
     #[description = "The emoji for the first role"] emoji_1: String,

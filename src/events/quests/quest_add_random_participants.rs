@@ -1,5 +1,6 @@
-use crate::data::Data;
-use crate::{helpers, Error};
+use crate::shared::data::Data;
+use crate::shared::helpers;
+use crate::Error;
 use rand::Rng;
 use serenity::all::{
     ComponentInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,

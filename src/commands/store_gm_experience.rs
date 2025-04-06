@@ -1,8 +1,9 @@
 use tokio::join;
 
-use crate::commands::characters::{log_action, ActionType};
-use crate::commands::{ensure_user_exists, Context, Error};
-use crate::errors::CommandInvocationError;
+use crate::commands::character_commands::{log_action, ActionType};
+use crate::commands::{ensure_user_exists, Error};
+use crate::shared::errors::CommandInvocationError;
+use crate::shared::PoiseContext;
 
 /// Store your GM Experience after a quest.
 #[poise::command(
@@ -11,7 +12,7 @@ use crate::errors::CommandInvocationError;
     default_member_permissions = "ADMINISTRATOR"
 )]
 pub async fn store_gm_experience(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[min = 1_i64]
     #[max = 100_i64]
     amount: i64,

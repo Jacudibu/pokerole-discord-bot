@@ -1,12 +1,13 @@
 use tokio::join;
 
 use crate::commands::autocompletion::autocomplete_owned_character_name;
-use crate::commands::characters::{change_character_stat_after_validation, log_action, ActionType};
-use crate::commands::{
-    ensure_user_exists, ensure_user_owns_character, find_character, Context, Error,
+use crate::commands::character_commands::{
+    change_character_stat_after_validation, log_action, ActionType,
 };
-use crate::emoji::get_character_emoji;
-use crate::errors::{CommandInvocationError, ValidationError};
+use crate::commands::{ensure_user_exists, ensure_user_owns_character, find_character, Error};
+use crate::shared::emoji::get_character_emoji;
+use crate::shared::errors::{CommandInvocationError, ValidationError};
+use crate::shared::PoiseContext;
 
 /// Store your GM Experience after a quest.
 #[poise::command(
@@ -15,7 +16,7 @@ use crate::errors::{CommandInvocationError, ValidationError};
     default_member_permissions = "ADMINISTRATOR"
 )]
 pub async fn use_gm_experience(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[min = 1_i64] amount: i64,
     #[autocomplete = "autocomplete_owned_character_name"] character: String,
 ) -> Result<(), Error> {

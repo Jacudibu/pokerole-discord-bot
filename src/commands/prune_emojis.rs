@@ -1,5 +1,6 @@
-use crate::commands::{send_ephemeral_reply, Context};
-use crate::{helpers, Error};
+use crate::commands::send_ephemeral_reply;
+use crate::shared::{helpers, PoiseContext};
+use crate::Error;
 
 /// Removes emoji which have been manually deleted from the server from the database.
 #[poise::command(
@@ -7,7 +8,7 @@ use crate::{helpers, Error};
     guild_only,
     default_member_permissions = "ADMINISTRATOR"
 )]
-pub async fn prune_emojis(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn prune_emojis(ctx: PoiseContext<'_>) -> Result<(), Error> {
     let guild_id = ctx.guild_id().expect("Command is guild_only!");
     let emojis = ctx.serenity_context().http.get_emojis(guild_id).await?;
     let guild_id = guild_id.get() as i64;

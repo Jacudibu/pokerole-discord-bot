@@ -1,22 +1,15 @@
-mod cache;
-mod character_stats;
 mod commands;
-mod csv_utils;
-mod data;
-mod database_helpers;
-mod discord_error_codes;
-mod emoji;
-mod enums;
-mod errors;
+mod database_mocks;
 mod events;
-mod game_data;
-mod helpers;
-mod logger;
+mod shared;
 
-use crate::data::Data;
-use crate::errors::CommandInvocationError;
+use env_logger::Builder;
+use log::LevelFilter;
 use poise::builtins::on_error;
 use poise::{serenity_prelude as serenity, CreateReply, FrameworkError};
+use shared::data::Data;
+use shared::errors::CommandInvocationError;
+use shared::game_data;
 use sqlx::{Pool, Sqlite};
 use std::str::FromStr;
 use std::sync::Arc;
@@ -25,7 +18,7 @@ pub type Error = Box<dyn std::error::Error + Send + Sync>;
 
 #[tokio::main]
 async fn main() {
-    logger::init_logging();
+    init_logging();
 
     let data = Data::new(
         initialize_database().await,
@@ -120,4 +113,12 @@ async fn get_db_pool() -> Pool<Sqlite> {
         )
         .await
         .expect("Couldn't connect to database")
+}
+
+pub fn init_logging() {
+    Builder::new()
+        .format_module_path(true)
+        .filter(None, LevelFilter::Warn)
+        .filter_module("pokerole_discord_bot", LevelFilter::max())
+        .init();
 }

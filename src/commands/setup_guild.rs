@@ -1,6 +1,7 @@
-use crate::commands::characters::{log_action, validate_user_input, ActionType};
-use crate::commands::{send_ephemeral_reply, Context, Error};
-use crate::errors::CommandInvocationError;
+use crate::commands::character_commands::{log_action, validate_user_input, ActionType};
+use crate::commands::{send_ephemeral_reply, Error};
+use crate::shared::errors::CommandInvocationError;
+use crate::shared::PoiseContext;
 use serenity::all::{Mention, Role, RoleId};
 use serenity::model::channel::Channel;
 
@@ -11,7 +12,7 @@ use serenity::model::channel::Channel;
     default_member_permissions = "ADMINISTRATOR"
 )]
 pub async fn setup_guild(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     name: Option<String>,
     action_log_channel: Option<Channel>,
     default_member_role: Option<Role>,

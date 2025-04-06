@@ -1,7 +1,8 @@
-use crate::data::Data;
-use crate::enums::QuestParticipantSelectionMechanism;
 use crate::events::send_ephemeral_reply;
-use crate::{helpers, Error};
+use crate::shared::data::Data;
+use crate::shared::enums::QuestParticipantSelectionMechanism;
+use crate::shared::helpers;
+use crate::Error;
 use serenity::all::{ComponentInteraction, CreateInteractionResponseFollowup};
 use serenity::client::Context;
 

@@ -1,17 +1,18 @@
 use serenity::all::{ChannelId, Member, User};
 use tokio::join;
 
-use crate::commands::{Context, Error};
-use crate::data::Data;
-use crate::errors::DatabaseError;
-use crate::game_data::PokemonApiId;
-use crate::helpers::split_long_messages;
-use crate::{emoji, helpers};
+use crate::commands::Error;
+use crate::shared::data::Data;
+use crate::shared::errors::DatabaseError;
+use crate::shared::game_data::PokemonApiId;
+use crate::shared::helpers;
+use crate::shared::helpers::split_long_messages;
+use crate::shared::{emoji, PoiseContext};
 
 /// Display Stats for a player
 #[poise::command(slash_command, guild_only)]
 pub async fn player_info(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which player?"] player: User,
 ) -> Result<(), Error> {
     let user_id = player.id.get() as i64;
@@ -55,7 +56,11 @@ pub async fn player_info(
     Ok(())
 }
 
-async fn query_hosted_quest_count(ctx: &Context<'_>, user_id: i64, guild_id: i64) -> Option<i64> {
+async fn query_hosted_quest_count(
+    ctx: &PoiseContext<'_>,
+    user_id: i64,
+    guild_id: i64,
+) -> Option<i64> {
     match sqlx::query!(
         "SELECT COUNT(*) as count FROM quest WHERE creator_id = ? AND guild_id = ? AND completion_timestamp IS NOT NULL",
         user_id,
@@ -68,7 +73,7 @@ async fn query_hosted_quest_count(ctx: &Context<'_>, user_id: i64, guild_id: i64
     }
 }
 
-async fn query_gm_experience(ctx: &Context<'_>, user_id: i64, guild_id: i64) -> Option<i64> {
+async fn query_gm_experience(ctx: &PoiseContext<'_>, user_id: i64, guild_id: i64) -> Option<i64> {
     match sqlx::query!(
         "SELECT gm_experience FROM user_in_guild WHERE user_id = ? AND guild_id = ?",
         user_id,

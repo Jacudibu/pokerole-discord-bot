@@ -2,17 +2,20 @@ use rand::seq::IteratorRandom;
 use rand::{rng, Rng};
 
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::{pokemon_from_autocomplete_string, Context, Error};
-use crate::enums::{CombatOrSocialStat, Gender, MysteryDungeonRank, PokemonType, SocialStat, Stat};
-use crate::game_data::pokemon::Pokemon;
-use crate::game_data::r#move::Move;
-use crate::game_data::GameData;
-use crate::helpers;
+use crate::commands::{pokemon_from_autocomplete_string, Error};
+use crate::shared::enums::{
+    CombatOrSocialStat, Gender, MysteryDungeonRank, PokemonType, SocialStat, Stat,
+};
+use crate::shared::game_data::pokemon::Pokemon;
+use crate::shared::game_data::r#move::Move;
+use crate::shared::game_data::GameData;
+use crate::shared::helpers;
+use crate::shared::PoiseContext;
 
 /// Encounter some wild pokemon!
 #[poise::command(slash_command)]
 pub async fn encounter(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which pokemon?"]
     #[autocomplete = "autocomplete_pokemon"]
     pokemon: String,
@@ -131,7 +134,7 @@ impl EncounterMon {
             SocialStat::Clever,
             SocialStat::Cute,
         ];
-        let mut remaining_social_points = helpers::calculate_available_social_points(&result.rank);
+        let mut remaining_social_points = result.rank.social_stat_points();
         while remaining_social_points > 0 {
             if let Some(mut stat) = non_maxed_social_stats.iter().choose(&mut rng) {
                 result.increase_social_stat(stat);

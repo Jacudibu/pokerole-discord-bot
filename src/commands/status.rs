@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_status_effect;
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 
 /// Display status effects
 #[poise::command(slash_command)]
 pub async fn status(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which status effect?"]
     #[rename = "name"]
     #[autocomplete = "autocomplete_status_effect"]

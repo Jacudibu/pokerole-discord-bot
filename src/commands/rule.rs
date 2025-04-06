@@ -1,12 +1,13 @@
 use crate::commands::autocompletion::autocomplete_rule;
-use crate::commands::{edit_rules, Context, Error};
-use crate::errors::ValidationError;
-use crate::helpers;
+use crate::commands::{edit_rules, Error};
+use crate::shared::errors::ValidationError;
+use crate::shared::helpers;
+use crate::shared::PoiseContext;
 
 /// Display rule
 #[poise::command(slash_command, guild_only)]
 pub async fn rule(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which rule?"]
     #[rename = "name"]
     #[autocomplete = "autocomplete_rule"]

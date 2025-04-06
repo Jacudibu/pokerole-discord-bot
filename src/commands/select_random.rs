@@ -1,10 +1,11 @@
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use rand::Rng;
 
 /// Get randomized targets from a comma separated list of targets.
 #[poise::command(slash_command)]
 pub async fn select_random(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "How many targets?"] amount: u8,
     #[description = "name1, name2, name3, name4..."] targets: String,
 ) -> Result<(), Error> {

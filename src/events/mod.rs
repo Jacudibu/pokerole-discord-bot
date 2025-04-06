@@ -1,6 +1,7 @@
-use crate::data::Data;
-use crate::game_data::GameData;
-use crate::{helpers, Error};
+use crate::shared::data::Data;
+use crate::shared::game_data::GameData;
+use crate::shared::{character, constants, helpers};
+use crate::Error;
 use serenity::all::{
     ComponentInteraction, ComponentInteractionDataKind, CreateActionRow, CreateAllowedMentions,
     CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, EditMessage,
@@ -49,7 +50,7 @@ pub async fn handle_events<'a>(
             if let Some(new) = new {
                 handle_guild_member_update(context, &framework.user_data, new).await
             } else {
-                let _ = helpers::ERROR_LOG_CHANNEL
+                let _ = constants::ERROR_LOG_CHANNEL
                     .send_message(&context, CreateMessage::new().content(
                         format!("Encountered a weird edge case in GuildMemberUpdate.\n old: {:?}\n new: {:?}, event: {:?}",
                                 old_if_available, new, event)))
@@ -290,7 +291,7 @@ async fn send_error(
 }
 
 async fn send_error_to_log_channel(ctx: &Context, message: impl Into<String>) {
-    let _ = helpers::ERROR_LOG_CHANNEL
+    let _ = constants::ERROR_LOG_CHANNEL
         .send_message(ctx, CreateMessage::new().content(message))
         .await;
 }
@@ -301,9 +302,7 @@ async fn update_character_post<'a>(
     game_data: &GameData,
     id: i64,
 ) {
-    if let Some(result) =
-        crate::commands::characters::build_character_string(ctx, database, game_data, id).await
-    {
+    if let Some(result) = character::build_character_string(ctx, database, game_data, id).await {
         let message = ctx
             .http
             .get_message(

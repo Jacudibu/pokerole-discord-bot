@@ -1,11 +1,12 @@
-use crate::commands::{Context, Error};
-use crate::game_data::PokemonApiId;
-use crate::{emoji, helpers};
+use crate::commands::Error;
+use crate::shared::game_data::PokemonApiId;
+use crate::shared::helpers;
+use crate::shared::{emoji, PoiseContext};
 use log::warn;
 
 /// View some fancy server stats.
 #[poise::command(slash_command, guild_only)]
-pub async fn server_stats(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn server_stats(ctx: PoiseContext<'_>) -> Result<(), Error> {
     let defer = ctx.defer();
     let guild_id = ctx.guild_id().expect("Command is guild_only!").get() as i64;
     let records = sqlx::query!(

@@ -6,52 +6,50 @@ use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;
 
-use crate::cache::{CharacterCacheItem, WalletCacheItem};
-use crate::commands::characters::build_character_string;
-use crate::data::Data;
-use crate::errors::{ParseError, ValidationError};
-use crate::game_data::pokemon::Pokemon;
-use crate::{helpers, Error};
-
-type Context<'a> = poise::Context<'a, Data, Error>;
+use crate::shared::cache::{CharacterCacheItem, WalletCacheItem};
+use crate::shared::data::Data;
+use crate::shared::errors::{ParseError, ValidationError};
+use crate::shared::game_data::pokemon::Pokemon;
+use crate::shared::{character, helpers, PoiseContext};
+use crate::Error;
 
 mod autocompletion;
 
-pub mod ability;
-pub mod about;
-pub mod calculate_hp_damage_modifier;
-pub mod create_emojis;
+mod ability;
+mod about;
+mod calculate_hp_damage_modifier;
+mod create_emojis;
 mod create_role_reaction_post;
-pub mod efficiency;
-pub mod encounter;
-pub mod item;
-pub mod learns;
-pub mod metronome;
-pub mod r#move;
-pub mod nature;
-pub mod potion;
-pub mod roll;
-pub mod rule;
-pub mod scale;
-pub mod select_random;
-pub mod stats;
-pub mod status;
-pub mod timestamp;
-pub mod weather;
+mod efficiency;
+mod encounter;
+mod item;
+mod learns;
+mod metronome;
+mod r#move;
+mod nature;
+mod potion;
+mod roll;
+mod rule;
+mod scale;
+mod select_random;
+mod stats;
+mod status;
+mod timestamp;
+mod weather;
 
-pub mod characters;
+mod character_commands;
 mod edit_rules;
 mod pin_or_unpin;
 mod player_info;
 mod prune_emojis;
-mod quests;
+mod quest_commands;
 mod say;
 mod server_stats;
 mod setting_time_offset;
 mod setup_guild;
 mod store_gm_experience;
 mod use_gm_experience;
-mod wallets;
+mod wallet_commands;
 
 pub fn get_all_commands() -> Vec<Command<Data, Error>> {
     let mut result = vec![
@@ -91,26 +89,26 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         use_gm_experience::use_gm_experience(),
     ];
 
-    for x in characters::get_all_commands() {
+    for x in character_commands::get_all_commands() {
         result.push(x);
     }
-    for x in wallets::get_all_commands() {
+    for x in wallet_commands::get_all_commands() {
         result.push(x);
     }
-    for x in quests::get_all_commands() {
+    for x in quest_commands::get_all_commands() {
         result.push(x);
     }
 
     result
 }
 
-pub async fn send_error<'a>(ctx: &Context<'a>, content: &str) -> Result<(), Error> {
+pub async fn send_error<'a>(ctx: &PoiseContext<'a>, content: &str) -> Result<(), Error> {
     send_ephemeral_reply(ctx, content).await?;
     Ok(())
 }
 
 pub async fn send_ephemeral_reply<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     content: impl Into<String>,
 ) -> Result<ReplyHandle<'a>, serenity::Error> {
     ctx.send(CreateReply::default().content(content).ephemeral(true))
@@ -189,7 +187,7 @@ pub async fn parse_user_input_to_character<'a>(
 }
 
 async fn parse_character_names<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     guild_id: u64,
     names: &Vec<String>,
 ) -> Result<Vec<CharacterCacheItem>, String> {
@@ -266,13 +264,13 @@ pub async fn parse_user_input_to_wallet<'a>(
     }
 }
 
-async fn ensure_guild_exists<'a>(ctx: &Context<'a>, guild_id: i64) {
+async fn ensure_guild_exists<'a>(ctx: &PoiseContext<'a>, guild_id: i64) {
     let _ = sqlx::query!("INSERT OR IGNORE INTO guild (id) VALUES (?)", guild_id)
         .execute(&ctx.data().database)
         .await;
 }
 
-async fn ensure_user_exists<'a>(ctx: &Context<'a>, user_id: i64, guild_id: i64) {
+async fn ensure_user_exists<'a>(ctx: &PoiseContext<'a>, user_id: i64, guild_id: i64) {
     let _ = sqlx::query!("INSERT OR IGNORE INTO user (id) VALUES (?)", user_id)
         .execute(&ctx.data().database)
         .await;
@@ -349,10 +347,10 @@ fn ensure_money_record_has_money(
                 "**Unable to {} {} {}.**\n*{} only owns {} {}.*",
                 verb,
                 amount,
-                crate::emoji::POKE_COIN,
+                crate::shared::emoji::POKE_COIN,
                 entity_name,
                 character_record.money,
-                crate::emoji::POKE_COIN
+                crate::shared::emoji::POKE_COIN
             )))
         }
     } else {
@@ -420,10 +418,15 @@ pub async fn ensure_user_owns_wallet_or_is_gm(
     }
 }
 
-async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
+async fn update_character_post<'a>(ctx: &PoiseContext<'a>, id: i64) {
     let game_data = ctx.data().game.get_by_context(&ctx).await;
-    if let Some(result) =
-        build_character_string(&ctx.serenity_context(), &ctx.data().database, game_data, id).await
+    if let Some(result) = character::build_character_string(
+        &ctx.serenity_context(),
+        &ctx.data().database,
+        game_data,
+        id,
+    )
+    .await
     {
         let message = ctx
             .serenity_context()
@@ -458,7 +461,7 @@ async fn update_character_post<'a>(ctx: &Context<'a>, id: i64) {
 }
 
 async fn handle_error_during_message_edit<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     e: serenity::Error,
     message_to_edit: Message,
     updated_message_content: impl Into<String>,
@@ -478,7 +481,7 @@ async fn handle_error_during_message_edit<'a>(
 }
 
 async fn pokemon_from_autocomplete_string<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     name: &String,
 ) -> Result<&'a Pokemon, ParseError> {
     let pokemon = ctx
@@ -501,7 +504,7 @@ pub struct ServerData {
 }
 
 async fn get_servers_this_user_is_active_in(
-    ctx: &Context<'_>,
+    ctx: &PoiseContext<'_>,
 ) -> Result<Vec<ServerData>, sqlx::Error> {
     let user_id = ctx.author().id.get() as i64;
 

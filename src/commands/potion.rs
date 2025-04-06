@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_potion;
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 
 /// List potion effects and crafting recipes
 #[poise::command(slash_command)]
 pub async fn potion(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which item?"]
     #[rename = "name"]
     #[autocomplete = "autocomplete_potion"]

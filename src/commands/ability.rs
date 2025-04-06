@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_ability;
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 
 /// Display an Ability
 #[poise::command(slash_command)]
 pub async fn ability(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which ability?"]
     #[rename = "ability"]
     #[autocomplete = "autocomplete_ability"]

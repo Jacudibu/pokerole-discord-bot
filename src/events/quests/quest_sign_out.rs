@@ -1,5 +1,6 @@
-use crate::data::Data;
-use crate::{helpers, Error};
+use crate::shared::data::Data;
+use crate::shared::helpers;
+use crate::Error;
 use serenity::all::{
     ComponentInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
 };
@@ -64,14 +65,14 @@ async fn execute_sign_out(
 
 #[cfg(test)]
 mod tests {
-    use crate::enums::QuestParticipantSelectionMechanism;
     use crate::events::quests::quest_sign_out::execute_sign_out;
-    use crate::{database_helpers, Error};
+    use crate::shared::enums::QuestParticipantSelectionMechanism;
+    use crate::{database_mocks, Error};
     use sqlx::{Pool, Sqlite};
 
     #[sqlx::test]
     async fn sign_out(db: Pool<Sqlite>) -> Result<(), Error> {
-        let data = database_helpers::create_mock::data(db).await;
+        let data = database_mocks::create_mock::data(db).await;
         let channel_id = 100;
         let user1_id = 200;
         let user2_id = 201;
@@ -84,10 +85,10 @@ mod tests {
         let character12_name = String::from("test12");
         let character21_name = String::from("test21");
 
-        database_helpers::create_mock::guild(&data.database, guild_id).await;
-        database_helpers::create_mock::user(&data.database, user1_id).await;
-        database_helpers::create_mock::user(&data.database, user2_id).await;
-        database_helpers::create_mock::quest(
+        database_mocks::create_mock::guild(&data.database, guild_id).await;
+        database_mocks::create_mock::user(&data.database, user1_id).await;
+        database_mocks::create_mock::user(&data.database, user2_id).await;
+        database_mocks::create_mock::quest(
             &data.database,
             channel_id,
             guild_id,
@@ -97,7 +98,7 @@ mod tests {
             QuestParticipantSelectionMechanism::Random,
         )
         .await;
-        database_helpers::create_mock::character(
+        database_mocks::create_mock::character(
             &data,
             guild_id,
             user1_id,
@@ -105,7 +106,7 @@ mod tests {
             &character11_name,
         )
         .await;
-        database_helpers::create_mock::character(
+        database_mocks::create_mock::character(
             &data,
             guild_id,
             user1_id,
@@ -113,7 +114,7 @@ mod tests {
             &character12_name,
         )
         .await;
-        database_helpers::create_mock::character(
+        database_mocks::create_mock::character(
             &data,
             guild_id,
             user2_id,
@@ -121,12 +122,9 @@ mod tests {
             &character21_name,
         )
         .await;
-        database_helpers::create_mock::quest_signup(&data.database, channel_id, character11_id)
-            .await;
-        database_helpers::create_mock::quest_signup(&data.database, channel_id, character12_id)
-            .await;
-        database_helpers::create_mock::quest_signup(&data.database, channel_id, character21_id)
-            .await;
+        database_mocks::create_mock::quest_signup(&data.database, channel_id, character11_id).await;
+        database_mocks::create_mock::quest_signup(&data.database, channel_id, character12_id).await;
+        database_mocks::create_mock::quest_signup(&data.database, channel_id, character21_id).await;
 
         execute_sign_out(&data, guild_id, user1_id, channel_id).await?;
 

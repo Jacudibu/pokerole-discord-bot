@@ -1,182 +1,18 @@
 use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::{
     ensure_guild_exists, pokemon_from_autocomplete_string, send_ephemeral_reply, send_error,
-    Context,
 };
-use crate::enums::Gender;
-use crate::game_data::pokemon::Pokemon;
-use crate::{emoji, helpers, Error};
-use image::{DynamicImage, GenericImageView, ImageFormat};
+use crate::shared::emoji::EmojiData;
+use crate::shared::enums::Gender;
+use crate::shared::game_data::pokemon::Pokemon;
+use crate::shared::{emoji, PoiseContext};
+use crate::Error;
 use log::info;
-use rand::Rng;
-use serenity::all::{CreateAttachment, CreateMessage, Emoji, GuildId};
+use serenity::all::{CreateAttachment, Emoji, GuildId};
 use sqlx::{Pool, Sqlite};
-use std::fs::File;
-use std::io::{BufReader, Cursor, Read, Seek};
-
-fn find_top_border(image: &DynamicImage) -> u32 {
-    for y in 0..image.height() {
-        let mut contains_something = false;
-        for x in 0..image.width() {
-            let pixel = image.get_pixel(x, y);
-            if pixel.0[3] > 0 {
-                contains_something = true;
-                break;
-            }
-        }
-
-        if contains_something {
-            return y;
-        }
-    }
-
-    0
-}
-
-fn find_bottom_border(image: &DynamicImage) -> u32 {
-    for y in (0..image.height()).rev() {
-        let mut contains_something = false;
-        for x in 0..image.width() {
-            let pixel = image.get_pixel(x, y);
-            if pixel.0[3] > 0 {
-                contains_something = true;
-                break;
-            }
-        }
-
-        if contains_something {
-            return y + 1;
-        }
-    }
-
-    image.height()
-}
-
-fn find_left_border(image: &DynamicImage) -> u32 {
-    for x in 0..image.width() {
-        let mut contains_something = false;
-        for y in 0..image.height() {
-            let pixel = image.get_pixel(x, y);
-            if pixel.0[3] > 0 {
-                contains_something = true;
-                break;
-            }
-        }
-
-        if contains_something {
-            return x;
-        }
-    }
-
-    0
-}
-
-fn find_right_border(image: &DynamicImage) -> u32 {
-    for x in (0..image.width()).rev() {
-        let mut contains_something = false;
-        for y in 0..image.height() {
-            let pixel = image.get_pixel(x, y);
-            if pixel.0[3] > 0 {
-                contains_something = true;
-                break;
-            }
-        }
-
-        if contains_something {
-            return x + 1;
-        }
-    }
-
-    image.width()
-}
-
-struct EmojiData {
-    data: Vec<u8>,
-    name: String,
-}
-
-fn local_emoji_path(
-    pokemon: &Pokemon,
-    is_female: bool,
-    is_shiny: bool,
-    is_animated: bool,
-) -> String {
-    let path = std::env::var("POKEMON_API_SPRITES")
-        .expect("missing POKEMON_API_SPRITES environment variable.");
-
-    let animated_path = if is_animated {
-        "versions/generation-v/black-white/animated/"
-    } else {
-        ""
-    };
-    let shiny_path = if is_shiny { "shiny/" } else { "" };
-    let gender_path = if is_female { "female/" } else { "" };
-    let file_type = if is_animated { "gif" } else { "png" };
-
-    format!(
-        "{}sprites/pokemon/{}{}{}{}.{}",
-        path, animated_path, shiny_path, gender_path, pokemon.poke_api_id.0, file_type
-    )
-}
-
-fn get_emoji_data(
-    pokemon: &Pokemon,
-    gender: &Gender,
-    is_shiny: bool,
-    is_animated: bool,
-) -> Result<EmojiData, Error> {
-    let use_female_sprite =
-        pokemon.species_data.has_gender_differences && gender == &Gender::Female;
-
-    let path = local_emoji_path(pokemon, use_female_sprite, is_shiny, is_animated);
-    if is_animated {
-        let mut file = File::open(path)?;
-        let mut out = Vec::new();
-        file.read_to_end(&mut out)?;
-        return Ok(EmojiData {
-            data: out,
-            name: emoji::pokemon_to_emoji_name(pokemon, use_female_sprite, is_shiny, is_animated),
-        });
-    }
-
-    let image = crop_whitespace(image::open(path)?);
-    let mut cursor = Cursor::new(Vec::new());
-    image.write_to(&mut cursor, ImageFormat::Png)?;
-
-    cursor.rewind()?;
-    let reader = &mut BufReader::new(&mut cursor);
-    let mut out = Vec::new();
-    reader.read_to_end(&mut out)?;
-
-    Ok(EmojiData {
-        data: out,
-        name: emoji::pokemon_to_emoji_name(pokemon, use_female_sprite, is_shiny, is_animated),
-    })
-}
-
-fn crop_whitespace(image: DynamicImage) -> DynamicImage {
-    let mut top_border = find_top_border(&image);
-    let bottom_border = find_bottom_border(&image);
-    let left_border = find_left_border(&image);
-    let right_border = find_right_border(&image);
-
-    let height = bottom_border - top_border;
-    let width = right_border - left_border;
-    if height < width {
-        // Make it square and move the cutout towards the bottom so the mon "stands" on the ground.
-        let diff = width - height;
-        if (top_border as i32) - (diff as i32) < 0 {
-            top_border = 0;
-        } else {
-            top_border -= diff;
-        }
-    }
-
-    image.crop_imm(left_border, top_border, width, bottom_border - top_border)
-}
 
 async fn upload_emoji_to_guild<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     emoji_data: EmojiData,
 ) -> Result<(GuildId, Emoji), serenity::all::Error> {
     let guild_id = ctx.guild_id().expect("create_emoji Command is guild_only!");
@@ -196,79 +32,6 @@ async fn upload_emoji_to_guild<'a>(
     }
 }
 
-pub async fn create_application_emoji<'a>(
-    ctx: &serenity::all::Context,
-    database: &Pool<Sqlite>,
-    pokemon: &Pokemon,
-) -> Result<Emoji, String> {
-    let gender = if pokemon.species_data.has_gender_differences {
-        if rand::rng().random_bool(0.5) {
-            Gender::Female
-        } else {
-            Gender::Male
-        }
-    } else {
-        Gender::Male
-    };
-
-    match get_emoji_data(pokemon, &gender, false, pokemon.has_animated_sprite()) {
-        Ok(emoji_data) => {
-            match upload_emoji_to_application(ctx, emoji_data).await {
-                Ok(emoji) => {
-                    let api_id = pokemon.poke_api_id.0 as i64;
-                    let discord_string = emoji.to_string();
-
-                    let _ = sqlx::query!("INSERT into application_emoji (species_api_id, discord_string) VALUES (?, ?)", api_id, discord_string).
-                        execute(database)
-                        .await;
-
-                    Ok(emoji)
-                }
-                Err(e) => {
-                    let message = format!(
-                        "Unable to upload emoji for pokemon {} with id {} to application: {:?}",
-                        pokemon.name, pokemon.poke_api_id.0, e
-                    );
-                    let _ = helpers::ERROR_LOG_CHANNEL
-                        .send_message(
-                            ctx,
-                            CreateMessage::new()
-                                .content(format!("Unable to upload emoji for pokemon {} with id {} to application: {:?}", pokemon.name, pokemon.poke_api_id.0, e)),
-                        )
-                        .await;
-
-                    Err(message)
-                }
-            }
-        }
-        Err(e) => Err(e.to_string()),
-    }
-}
-
-pub async fn upload_emoji_to_application(
-    ctx: &serenity::all::Context,
-    emoji_data: EmojiData,
-) -> Result<Emoji, serenity::all::Error> {
-    let attachment = CreateAttachment::bytes(emoji_data.data, &emoji_data.name);
-    match ctx
-        .create_application_emoji(&emoji_data.name, &attachment.to_base64())
-        .await
-    {
-        Ok(emoji) => Ok(emoji),
-        Err(e) => {
-            let _ = helpers::ERROR_LOG_CHANNEL
-                .send_message(
-                    &ctx,
-                    CreateMessage::new()
-                        .content(format!("Failed to create Application Emoji: {:?}", e)),
-                )
-                .await;
-
-            Err(e)
-        }
-    }
-}
-
 /// Creates new emojis!
 #[poise::command(
     slash_command,
@@ -276,7 +39,7 @@ pub async fn upload_emoji_to_application(
     default_member_permissions = "ADMINISTRATOR"
 )]
 pub async fn create_emojis(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which pokemon?"]
     #[rename = "pokemon"]
     #[autocomplete = "autocomplete_pokemon"]
@@ -294,7 +57,7 @@ pub async fn create_emojis(
 }
 
 pub async fn create_emojis_for_pokemon<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     pokemon: &Pokemon,
     gender: &Gender,
     is_shiny: bool,
@@ -375,7 +138,7 @@ pub async fn does_emoji_exist_in_database(
 }
 
 async fn create_emoji_and_notify_user<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     pokemon: &Pokemon,
     gender: &Gender,
     is_shiny: bool,
@@ -384,7 +147,7 @@ async fn create_emoji_and_notify_user<'a>(
     let guild_id = ctx.guild_id().expect("Creating emoji is guild_only!").get() as i64;
     ensure_guild_exists(ctx, guild_id).await;
 
-    match get_emoji_data(pokemon, gender, is_shiny, is_animated) {
+    match emoji::get_emoji_data(pokemon, gender, is_shiny, is_animated) {
         Ok(emoji_data) => match upload_emoji_to_guild(ctx, emoji_data).await {
             Ok((guild_id, emoji)) => {
                 store_emoji_in_database(

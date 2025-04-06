@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_nature;
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 
 /// Display an Ability
 #[poise::command(slash_command)]
 pub async fn nature(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which nature?"]
     #[rename = "nature"]
     #[autocomplete = "autocomplete_nature"]

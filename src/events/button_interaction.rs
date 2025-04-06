@@ -7,13 +7,13 @@ use serenity::all::{
 use serenity::builder::{CreateActionRow, CreateButton};
 use serenity::client::Context;
 
-use crate::commands::{efficiency, learns};
-use crate::errors::CommandInvocationError;
 use crate::events::{
     character_stat_edit, parse_interaction_command, quests, send_ephemeral_reply, FrameworkContext,
 };
-use crate::game_data::GameData;
-use crate::{commands, emoji, helpers, Error};
+use crate::shared::errors::CommandInvocationError;
+use crate::shared::game_data::GameData;
+use crate::shared::{clunky_stuff, dice_rolls, emoji, helpers};
+use crate::{shared, Error};
 
 async fn get_game_data<'a>(
     framework: &'a FrameworkContext<'_>,
@@ -43,7 +43,7 @@ pub async fn handle_button_interaction(
 
             interaction
                 .message
-                .reply(context, commands::metronome::get_metronome_text(game_data))
+                .reply(context, shared::metronome::get_metronome_text(game_data))
                 .await?;
         }
         "ignore" => {
@@ -88,11 +88,11 @@ pub async fn handle_button_interaction(
                 .message
                 .reply(
                     context,
-                    efficiency::get_type_resistances_string(
-                        pokemon,
-                        emoji,
-                        &framework.user_data.game.type_efficiency,
-                    ),
+                    &framework
+                        .user_data
+                        .game
+                        .type_efficiency
+                        .get_type_resistances_string(pokemon, emoji),
                 )
                 .await?;
         }
@@ -117,7 +117,7 @@ pub async fn handle_button_interaction(
             interaction
                 .create_followup(
                     context,
-                    learns::create_reply(pokemon, emoji)
+                    clunky_stuff::create_learns_reply(pokemon, emoji)
                         .to_slash_followup_response(CreateInteractionResponseFollowup::new()),
                 )
                 .await?;
@@ -143,7 +143,7 @@ pub async fn handle_button_interaction(
                 .await?;
         }
         "roll-dice" => {
-            let message = commands::roll::parse_query(args[0])
+            let message = dice_rolls::parse_query(args[0])
                 .expect("This should always be a valid query in buttons!")
                 .execute();
             interaction

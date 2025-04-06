@@ -1,4 +1,5 @@
-use crate::commands::{send_ephemeral_reply, Context, Error};
+use crate::commands::{send_ephemeral_reply, Error};
+use crate::shared::PoiseContext;
 use chrono::{Datelike, Duration, FixedOffset, NaiveDate, TimeZone, Timelike, Utc};
 use poise::ReplyHandle;
 use serenity::utils::MessageBuilder;
@@ -6,7 +7,7 @@ use serenity::utils::MessageBuilder;
 /// Create a timestamp which automagically displays local time for everyone.
 #[poise::command(slash_command)]
 pub async fn timestamp(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which minute? Default now."] minute: Option<u8>,
     #[description = "Which hour? Default now."] hour: Option<u8>,
     #[description = "Which day? Default today."] day: Option<u8>,
@@ -47,7 +48,9 @@ pub async fn timestamp(
     }
 }
 
-async fn send_settings_hint<'a>(ctx: &Context<'a>) -> Result<ReplyHandle<'a>, serenity::Error> {
+async fn send_settings_hint<'a>(
+    ctx: &PoiseContext<'a>,
+) -> Result<ReplyHandle<'a>, serenity::Error> {
     let current_datetime = Utc::now().naive_utc();
     send_ephemeral_reply(
         ctx,
@@ -64,7 +67,7 @@ In order to change this, use `/setting_time_offset` and select your local time f
 
 #[allow(clippy::too_many_arguments)]
 async fn print_timestamp<'a>(
-    ctx: &Context<'a>,
+    ctx: &PoiseContext<'a>,
     minute: Option<u8>,
     hour: Option<u8>,
     day: Option<u8>,

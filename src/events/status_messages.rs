@@ -1,5 +1,5 @@
-use crate::data::Data;
-use crate::helpers;
+use crate::shared::data::Data;
+use crate::shared::helpers;
 use log::info;
 use serenity::all::{ChannelId, Context, CreateMessage};
 

@@ -1,5 +1,6 @@
-use crate::data::Data;
-use crate::{helpers, Error};
+use crate::shared::data::Data;
+use crate::shared::helpers;
+use crate::Error;
 use chrono::Utc;
 use serenity::all::{
     ComponentInteraction, CreateButton, CreateInteractionResponse, CreateInteractionResponseMessage,
@@ -175,15 +176,15 @@ async fn persist_signup(
 
 #[cfg(test)]
 mod tests {
-    use crate::enums::QuestParticipantSelectionMechanism;
     use crate::events::quests::quest_sign_up::persist_signup;
-    use crate::{database_helpers, Error};
+    use crate::shared::enums::QuestParticipantSelectionMechanism;
+    use crate::{database_mocks, Error};
     use chrono::Utc;
     use sqlx::{Pool, Sqlite};
 
     #[sqlx::test]
     async fn sign_up(db: Pool<Sqlite>) -> Result<(), Error> {
-        let data = database_helpers::create_mock::data(db).await;
+        let data = database_mocks::create_mock::data(db).await;
         let channel_id = 100;
         let creator_id = 200;
         let guild_id = 300;
@@ -191,9 +192,9 @@ mod tests {
         let character_id = 500;
         let character_name = String::from("test");
 
-        database_helpers::create_mock::guild(&data.database, guild_id).await;
-        database_helpers::create_mock::user(&data.database, creator_id).await;
-        database_helpers::create_mock::quest(
+        database_mocks::create_mock::guild(&data.database, guild_id).await;
+        database_mocks::create_mock::user(&data.database, creator_id).await;
+        database_mocks::create_mock::quest(
             &data.database,
             channel_id,
             guild_id,
@@ -203,7 +204,7 @@ mod tests {
             QuestParticipantSelectionMechanism::Random,
         )
         .await;
-        database_helpers::create_mock::character(
+        database_mocks::create_mock::character(
             &data,
             guild_id,
             creator_id,

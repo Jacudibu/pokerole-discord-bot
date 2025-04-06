@@ -1,8 +1,9 @@
-use crate::character_stats::GenericCharacterStats;
-use crate::enums::{Gender, MysteryDungeonRank};
 use crate::events::send_error;
-use crate::game_data::{GameData, PokemonApiId};
-use crate::{emoji, helpers, Error};
+use crate::shared::character_stats::GenericCharacterStats;
+use crate::shared::enums::{Gender, MysteryDungeonRank};
+use crate::shared::game_data::{GameData, PokemonApiId};
+use crate::shared::{emoji, helpers};
+use crate::Error;
 use serenity::all::{
     ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
     EditInteractionResponse, EditMessage, ReactionType,
@@ -168,8 +169,7 @@ impl CharacterDataForStatEditing {
             - self.combat_stats.calculate_invested_stat_points()
     }
     pub fn remaining_social_points(&self) -> i64 {
-        helpers::calculate_available_social_points(&self.rank) as i64
-            - self.social_stats.calculate_invested_stat_points()
+        self.rank.social_stat_points() as i64 - self.social_stats.calculate_invested_stat_points()
     }
 }
 

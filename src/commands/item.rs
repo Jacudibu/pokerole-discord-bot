@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::autocomplete_item;
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 
 /// Display item description
 #[poise::command(slash_command)]
 pub async fn item(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which item?"]
     #[rename = "name"]
     #[autocomplete = "autocomplete_item"]

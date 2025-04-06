@@ -1,14 +1,15 @@
 use crate::commands::autocompletion::autocomplete_move;
-use crate::commands::{Context, Error};
-use crate::game_data::r#move::Move;
-use crate::helpers;
+use crate::commands::Error;
+use crate::shared::game_data::r#move::Move;
+use crate::shared::helpers;
+use crate::shared::PoiseContext;
 use poise::CreateReply;
 use serenity::all::CreateActionRow;
 
 /// Display a move
 #[poise::command(slash_command, rename = "move")]
 pub async fn poke_move(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which move?"]
     #[rename = "move"]
     #[autocomplete = "autocomplete_move"]
@@ -32,7 +33,7 @@ pub async fn poke_move(
     Ok(())
 }
 
-async fn execute_metronome<'a>(ctx: Context<'a>, poke_move: &Move) -> Result<(), Error> {
+async fn execute_metronome<'a>(ctx: PoiseContext<'a>, poke_move: &Move) -> Result<(), Error> {
     let reply = ctx
         .send(
             CreateReply::default()

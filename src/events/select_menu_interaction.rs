@@ -1,5 +1,5 @@
-use crate::errors::ParseError;
 use crate::events::FrameworkContext;
+use crate::shared::errors::ParseError;
 use crate::{events, Error};
 use serenity::all::{ComponentInteraction, ComponentInteractionDataKind};
 use serenity::client::Context;

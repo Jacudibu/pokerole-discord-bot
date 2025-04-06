@@ -1,9 +1,10 @@
-use crate::commands::{Context, Error};
+use crate::commands::Error;
+use crate::shared::PoiseContext;
 
 /// Use this to calculate your die count for reversal and other HP based moves
 #[poise::command(slash_command)]
 pub async fn calculate_hp_damage_modifier(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "What's your max HP?"] max_hp: u8,
 ) -> Result<(), Error> {
     ctx.say(build_string(max_hp)).await?;

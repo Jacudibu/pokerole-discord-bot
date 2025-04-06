@@ -1,12 +1,13 @@
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::{pokemon_from_autocomplete_string, Context, Error};
+use crate::commands::{pokemon_from_autocomplete_string, Error};
+use crate::shared::PoiseContext;
 use serenity::utils::MessageBuilder;
 use std::default::Default;
 
 /// Scale a pokemon's size and weight!
 #[poise::command(slash_command)]
 pub async fn scale(
-    ctx: Context<'_>,
+    ctx: PoiseContext<'_>,
     #[description = "Which pokemon?"]
     #[rename = "pokemon"]
     #[autocomplete = "autocomplete_pokemon"]
