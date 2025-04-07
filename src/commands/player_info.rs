@@ -1,12 +1,14 @@
+use log::error;
 use serenity::all::{ChannelId, Member, User};
+use serenity::builder::CreateMessage;
 use tokio::join;
 
 use crate::commands::Error;
 use crate::shared::data::Data;
 use crate::shared::errors::DatabaseError;
 use crate::shared::game_data::PokemonApiId;
-use crate::shared::helpers;
 use crate::shared::helpers::split_long_messages;
+use crate::shared::{constants, helpers};
 use crate::shared::{emoji, PoiseContext};
 
 /// Display Stats for a player
@@ -109,12 +111,15 @@ async fn build_reply(
         let channel_id = ChannelId::new(character.stat_channel_id as u64);
         let api_id = PokemonApiId(character.species_api_id as u16);
 
-        let pokemon = data
-            .game
-            .base_data
-            .pokemon_by_api_id
-            .get(&api_id)
-            .expect("Database values should always be valid!");
+        let Some(pokemon) = data.game.base_data.pokemon_by_api_id.get(&api_id) else {
+            helpers::log_error(ctx, format!(
+                "Database values should always be valid, but couldn't find an API entry for character with id {:?} and poke_api id {:?}",
+                user_in_guild.user.id,
+                api_id
+            )).await;
+
+            continue;
+        };
         let emoji = emoji::get_any_pokemon_emoji_with_space(ctx, &data.database, pokemon);
 
         character_list.push_str(&format!(

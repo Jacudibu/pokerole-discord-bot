@@ -4,6 +4,7 @@ use crate::shared::game_data::pokemon::Pokemon;
 use crate::shared::game_data::{GameData, PokemonApiId};
 use crate::shared::{constants, emoji};
 use crate::Error;
+use log::error;
 use regex::Regex;
 use serenity::all::{
     ButtonStyle, ChannelId, Context, CreateActionRow, CreateButton, CreateMessage, EditMessage,
@@ -421,19 +422,19 @@ pub async fn handle_error_during_message_edit(
                             }
 
                             if let Err(e) = message_to_edit.edit(ctx, edit_message).await {
-                                let _ = constants::ERROR_LOG_CHANNEL.send_message(ctx, CreateMessage::new().content(format!(
+                                let _ = log_error(ctx, format!(
                                     "**Failed to update the stat message for {}!**.\nThe change has been tracked, but whilst updating the message some error occurred:\n```{:?}```\n",
                                     name.into(),
                                     e,
-                                ))).await;
+                                )).await;
                             }
                         }
                         Err(e) => {
                             let name = name.into();
-                            let _ = constants::ERROR_LOG_CHANNEL.send_message(ctx, CreateMessage::new().content(format!(
+                            log_error(ctx, format!(
                                 "Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n Error:\n```{:?}```",
                                 &name, e)
-                            )).await;
+                            ).await;
                             if let Some(reply_channel_id) = reply_channel_id {
                                 let _ = reply_channel_id.say(ctx, &format!(
                                     "Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n*This has been logged.*",
@@ -449,15 +450,22 @@ pub async fn handle_error_during_message_edit(
     }
 
     let name = name.into();
-    let _ = constants::ERROR_LOG_CHANNEL.send_message(ctx, CreateMessage::new().content(format!(
+    log_error(ctx, format!(
         "Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n Error:\n```{:?}```",
-        &name, e)
-    )).await;
+        &name, e)).await;
     if let Some(reply_channel_id) = reply_channel_id {
         let _ = reply_channel_id.say(ctx, &format!(
             "Some very random error occurred when updating the stat message for {}.\n**The requested change has been applied, but it isn't shown in the message there right now.**\n*This has been logged.*",
             &name)).await;
     }
+}
+
+pub async fn log_error(context: &Context, text: impl Into<String>) {
+    let string = text.into();
+    error!("{}", string);
+    let _ = constants::ERROR_LOG_CHANNEL
+        .send_message(context, CreateMessage::new().content(string))
+        .await;
 }
 
 pub fn validate_user_input<'a>(text: &str, max_length: usize) -> Result<(), &'a str> {
