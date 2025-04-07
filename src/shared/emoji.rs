@@ -98,7 +98,12 @@ pub async fn get_application_emoji(
     database: &Pool<Sqlite>,
     pokemon: &Pokemon,
 ) -> Option<String> {
-    let api_id = pokemon.poke_api_id.0 as i64;
+    // Matching for Pokémon with weird dual-forms where multiple emojis are valid but would result in the same name
+    // Maybe delete all emoji and use the api_id instead of species name if this affects more than 5 or so species
+    let api_id = match pokemon.poke_api_id.0 as i64 {
+        982 => 10255, // Dudunsparce
+        id => id,
+    };
 
     let result = sqlx::query!(
         "SELECT discord_string FROM application_emoji WHERE species_api_id = ?",
