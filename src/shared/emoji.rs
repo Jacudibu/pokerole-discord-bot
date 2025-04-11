@@ -145,7 +145,7 @@ pub fn pokemon_to_emoji_name(
         .name
         .to_lowercase()
         .replace([' ', '-'], "_")
-        .replace(['(', ')'], "");
+        .replace(['(', ')', '.'], "");
 
     let regional_prefix = if let Some(regional_variant) = pokemon.regional_variant {
         name = name
@@ -342,7 +342,7 @@ pub fn get_emoji_data(
         file.read_to_end(&mut out)?;
         return Ok(EmojiData {
             data: out,
-            name: emoji::pokemon_to_emoji_name(pokemon, use_female_sprite, is_shiny, is_animated),
+            name: pokemon_to_emoji_name(pokemon, use_female_sprite, is_shiny, is_animated),
         });
     }
 
