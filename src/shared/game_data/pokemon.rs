@@ -324,10 +324,12 @@ pub enum ApiIssueType {
 }
 
 fn special_mon_to_api_id(name: &str) -> Option<PokemonApiId> {
+    // These usually have multiple forms, between which we don't differentiate inside the bot.
+    // Take a look at how meowstic is set up (both this codebase and in GameData)
+    //    in case any of these need to be actively separated due to stat or move pool differences
     match name {
         "Alcremie" => Some(PokemonApiId(869)),
-        "Meowstic" => Some(PokemonApiId(678)), // TODO: Maybe differentiate between male and female
-        "Indeedee" => Some(PokemonApiId(876)), // TODO: Maybe differentiate between male and female
+        "Indeedee" => Some(PokemonApiId(876)),
         "Mimikyu" => Some(PokemonApiId(778)),
         "Morpeko" => Some(PokemonApiId(877)),
         "Greninja" => Some(PokemonApiId(658)),
@@ -355,6 +357,14 @@ fn special_mon_to_api_id(name: &str) -> Option<PokemonApiId> {
         "Galarian Darmanitan (Galarian Zen Form)" => Some(PokemonApiId(10178)),
         "Charizard (Mega X Form)" => Some(PokemonApiId(10034)),
         "Charizard (Mega Y Form)" => Some(PokemonApiId(10035)),
+        "Dudunsparce" => Some(PokemonApiId(982)),
+        "Maushold" => Some(PokemonApiId(925)),
+        "Tatsugiri" => Some(PokemonApiId(978)),
+        "Ogerpon" => Some(PokemonApiId(1017)),
+        "Gimmighoul" => Some(PokemonApiId(999)),
+        "Terapagos" => Some(PokemonApiId(1024)),
+        "Palafin" => Some(PokemonApiId(964)),
+        "Squawkabilly" => Some(PokemonApiId(931)),
         _ => None,
     }
 }
