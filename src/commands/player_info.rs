@@ -1,14 +1,12 @@
-use log::error;
 use serenity::all::{ChannelId, Member, User};
-use serenity::builder::CreateMessage;
 use tokio::join;
 
 use crate::commands::Error;
 use crate::shared::data::Data;
 use crate::shared::errors::DatabaseError;
 use crate::shared::game_data::PokemonApiId;
+use crate::shared::helpers;
 use crate::shared::helpers::split_long_messages;
-use crate::shared::{constants, helpers};
 use crate::shared::{emoji, PoiseContext};
 
 /// Display Stats for a player

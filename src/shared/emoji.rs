@@ -146,6 +146,7 @@ pub fn pokemon_to_emoji_name(
             .replace("paldean_form", "")
             .replace("hisuian_form", "")
             .replace("galarian_form", "")
+            .replace("galarian_zen_form", "zen")
             .replace("alolan_form", "");
 
         match regional_variant {
@@ -407,21 +408,10 @@ pub async fn create_application_emoji<'a>(
 
                     Ok(emoji)
                 }
-                Err(e) => {
-                    let message = format!(
-                        "Unable to upload emoji for pokemon {} with id {} to application: {:?}",
-                        pokemon.name, pokemon.poke_api_id.0, e
-                    );
-                    let _ = constants::ERROR_LOG_CHANNEL
-                        .send_message(
-                            ctx,
-                            CreateMessage::new()
-                                .content(format!("Unable to upload emoji for pokemon {} with id {} to application: {:?}", pokemon.name, pokemon.poke_api_id.0, e)),
-                        )
-                        .await;
-
-                    Err(message)
-                }
+                Err(e) => Err(format!(
+                    "Unable to upload emoji for pokemon {} with id {} to application: {:?}",
+                    pokemon.name, pokemon.poke_api_id.0, e
+                )),
             }
         }
         Err(e) => Err(e.to_string()),
