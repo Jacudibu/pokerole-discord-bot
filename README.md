@@ -8,10 +8,12 @@ Any persistent data is server specific, so there's no need to worry about breaki
 # Features
 
 Quickly get an overview of any Pokèmon's stats, moves, abilities...
+
 ![Stat Screenshot](screenshots/stats.png)
 ![Stat Screenshot](screenshots/moves.png)
 
 Create and keep track of your characters with the bot!
+
 ![Stat Screenshot](screenshots/character_post.png)
 ![Stat Screenshot](screenshots/character_edit.png)
 
