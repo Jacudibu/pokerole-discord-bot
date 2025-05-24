@@ -3,8 +3,9 @@
 ## 1. Conditions of Use
 
 - By using the bot or adding it to a server, you agree to these Terms of Service.
-- We reserve the right to update these Terms at any time, and notices of updates will be provided via the support
-  server. Continued use of the bot after such updates constitutes acceptance of the revised terms.
+- We reserve the right to update these Terms at any time, and notices of updates will be provided via the [support
+  server](https://discord.gg/jVrv2YG2zU). Continued use of the bot after such updates constitutes acceptance of the
+  revised terms.
 
 ## 2. Acceptable Use
 

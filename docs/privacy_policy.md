@@ -30,9 +30,9 @@ Backups are securely uploaded to a private discord channel, only accessible to o
 
 *The easiest way would be to just look at your character sheets.*
 
-You have a right to request a terribly formatted dump of all the data we store about you, just message us on the Support
-Server if you *really* want one of those, and you will get one within a month. ~~But seriously, please don't, I'm highly
-allergic to extra work.~~
+You have a right to request a terribly formatted dump of all the data we store about you, just message us on
+the [support server](https://discord.gg/jVrv2YG2zU) if you *really* want one of those, and you will get one within a
+month. ~~But seriously, please don't, I'm highly allergic to extra work.~~
 
 ## How long do you store my data?
 
@@ -42,7 +42,7 @@ randomly poof from the world because you are taking a vacation.
 
 ## How can I delete my data?
 
-You can always revoke your agreement and get both your account and data deleted by joining the support server and asking
-for it. **Doing it through discord is the only way for us to verify that it's really *you* who's asking for it.** *We
-will then try our best to figure out how the hell one deletes only specific user data from a
-database **within a month**. ChatGPT says I should just drop a table? Okay!*
+You can always revoke your agreement and get both your account and data deleted by joining the [support
+server](https://discord.gg/jVrv2YG2zU) and asking for it. **Doing it through discord is the only way for us to verify
+that it's really *you* who's asking for it.** *We will then try our best to figure out how the hell one deletes only
+specific user data from a database **within a month**. ChatGPT says I should just drop a table? Okay!*
