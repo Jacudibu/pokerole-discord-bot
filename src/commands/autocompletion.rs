@@ -113,6 +113,8 @@ pub async fn autocomplete_character_name<'a>(
     ctx: PoiseContext<'a>,
     partial: &'a str,
 ) -> Vec<String> {
+    let guild_id = ctx.guild_id().expect("Command should be guild_only!").get();
+
     filter_and_sort(
         partial,
         ctx.data()
@@ -120,9 +122,9 @@ pub async fn autocomplete_character_name<'a>(
             .get_characters()
             .await
             .iter()
-            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").get())
-            .filter(|x| !x.is_retired)
-            .map(|x| x.get_autocomplete_name()),
+            .filter(|(_, cache_item)| cache_item.guild_id == guild_id)
+            .filter(|(_, cache_item)| !cache_item.is_retired)
+            .map(|(_, cache_item)| cache_item.get_autocomplete_name()),
         0,
     )
 }
@@ -147,6 +149,9 @@ pub async fn autocomplete_owned_character_name<'a>(
     ctx: PoiseContext<'a>,
     partial: &'a str,
 ) -> Vec<String> {
+    let guild_id = ctx.guild_id().expect("Command should be guild_only!").get();
+    let author_id = ctx.author().id.get();
+
     filter_and_sort(
         partial,
         ctx.data()
@@ -154,10 +159,10 @@ pub async fn autocomplete_owned_character_name<'a>(
             .get_characters()
             .await
             .iter()
-            .filter(|x| x.user_id == ctx.author().id.get())
-            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").get())
-            .filter(|x| !x.is_retired)
-            .map(|x| x.get_autocomplete_name()),
+            .filter(|(_, cache_item)| cache_item.user_id == author_id)
+            .filter(|(_, cache_item)| cache_item.guild_id == guild_id)
+            .filter(|(_, cache_item)| !cache_item.is_retired)
+            .map(|(_, cache_item)| cache_item.get_autocomplete_name()),
         0,
     )
 }
@@ -166,6 +171,8 @@ pub async fn autocomplete_retired_character_name<'a>(
     ctx: PoiseContext<'a>,
     partial: &'a str,
 ) -> Vec<String> {
+    let guild_id = ctx.guild_id().expect("Command should be guild_only!").get();
+
     filter_and_sort(
         partial,
         ctx.data()
@@ -173,9 +180,9 @@ pub async fn autocomplete_retired_character_name<'a>(
             .get_characters()
             .await
             .iter()
-            .filter(|x| x.guild_id == ctx.guild_id().expect("Command should be guild_only!").get())
-            .filter(|x| x.is_retired)
-            .map(|x| x.get_autocomplete_name()),
+            .filter(|(_, cache_item)| cache_item.guild_id == guild_id)
+            .filter(|(_, cache_item)| cache_item.is_retired)
+            .map(|(_, cache_item)| cache_item.get_autocomplete_name()),
         0,
     )
 }

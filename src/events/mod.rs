@@ -48,7 +48,7 @@ pub async fn handle_events<'a>(
             event,
         } => {
             if let Some(new) = new {
-                handle_guild_member_update(context, &framework.user_data, new).await
+                handle_guild_member_update(&framework.user_data, new).await
             } else {
                 let _ = constants::ERROR_LOG_CHANNEL
                     .send_message(&context, CreateMessage::new().content(
@@ -84,6 +84,10 @@ pub async fn handle_events<'a>(
                 weekly_reset::start_weekly_reset_thread(context, framework.user_data),
                 monthly_reset::start_monthly_reset_thread(context, framework.user_data),
                 status_messages::restart_message(context, framework.user_data),
+                framework
+                    .user_data
+                    .cache
+                    .rebuild_everything(context, &framework.user_data.database)
             );
             Ok(())
         }
@@ -123,32 +127,19 @@ async fn handle_guild_member_addition(
             // database ded?
         }
     }
-    handle_guild_member_update(ctx, data, new_member).await?;
+    handle_guild_member_update(data, new_member).await?;
     Ok(())
 }
 
-async fn handle_guild_member_update(ctx: &Context, data: &Data, new: &Member) -> Result<(), Error> {
-    let user_id = new.user.id.get() as i64;
-    let guild_id = new.guild_id.get() as i64;
-
-    let nickname = match &new.nick {
-        None => &new.user.name,
-        Some(nick) => nick,
+async fn handle_guild_member_update(data: &Data, new: &Member) -> Result<(), Error> {
+    let new_name = match &new.nick {
+        None => new.user.name.clone(),
+        Some(nick) => nick.clone(),
     };
 
-    let result = sqlx::query!(
-        "
-INSERT INTO user_in_guild (name, user_id, guild_id) VALUES (?, ?, ?) 
-ON CONFLICT(user_id, guild_id) DO UPDATE SET name = ?",
-        nickname,
-        user_id,
-        guild_id,
-        nickname,
-    )
-    .execute(&data.database)
-    .await;
-
-    data.cache.reset(&data.database).await;
+    data.cache
+        .update_or_add_user_name(&new.guild_id, &new.user.id, new_name, &data.database)
+        .await;
 
     Ok(())
 }

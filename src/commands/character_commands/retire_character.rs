@@ -33,7 +33,10 @@ pub async fn retire_character(
             let message = format!("{} has been retired.", character.name);
             let a = ctx.reply(&message);
             let b = log_action(&ActionType::CharacterRetirement, &ctx, &message);
-            let c = ctx.data().cache.reset(&ctx.data().database);
+            let c = ctx
+                .data()
+                .cache
+                .update_character_names(&ctx.data().database);
             let d = update_character_post(&ctx, character.id);
 
             let (_, _, _, _) = join!(a, b, c, d);

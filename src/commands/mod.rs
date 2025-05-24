@@ -1,17 +1,16 @@
 use std::borrow::Cow;
 
-use poise::{Command, CreateReply, ReplyHandle};
-use serenity::all::{ChannelId, CreateActionRow, EditMessage, Message, MessageId};
-use serenity::model::guild::Member;
-use serenity::model::id::{GuildId, UserId};
-use serenity::model::prelude::User;
-
 use crate::shared::cache::{CharacterCacheItem, WalletCacheItem};
 use crate::shared::data::Data;
 use crate::shared::errors::{ParseError, ValidationError};
 use crate::shared::game_data::pokemon::Pokemon;
 use crate::shared::{character, helpers, PoiseContext};
 use crate::Error;
+use poise::{Command, CreateReply, ReplyHandle};
+use serenity::all::{ChannelId, CreateActionRow, EditMessage, Message, MessageId};
+use serenity::model::guild::Member;
+use serenity::model::id::{GuildId, UserId};
+use serenity::model::prelude::User;
 
 mod autocompletion;
 
@@ -166,9 +165,9 @@ pub async fn parse_user_input_to_character<'a>(
     text: &str,
 ) -> Option<CharacterCacheItem> {
     let characters = data.cache.get_characters().await;
-    for x in &characters {
-        if x.guild_id == guild_id && text == x.get_autocomplete_name() {
-            return Some(x.clone());
+    for (_, cache_item) in characters.iter() {
+        if cache_item.guild_id == guild_id && text == cache_item.get_autocomplete_name() {
+            return Some(cache_item.clone());
         }
     }
 
@@ -176,13 +175,16 @@ pub async fn parse_user_input_to_character<'a>(
     let lowercase_input = text.to_lowercase();
     let name_matches: Vec<&CharacterCacheItem> = characters
         .iter()
-        .filter(|x| x.guild_id == guild_id && x.name.to_lowercase() == lowercase_input)
+        .filter(|(_, cache_item)| {
+            cache_item.guild_id == guild_id && cache_item.name.to_lowercase() == lowercase_input
+        })
+        .map(|(_, cache_item)| cache_item)
         .collect();
 
     if name_matches.len() != 1 {
         None
     } else {
-        name_matches.get(0).cloned().cloned()
+        name_matches.first().cloned().cloned()
     }
 }
 
@@ -277,18 +279,34 @@ async fn ensure_user_exists<'a>(ctx: &PoiseContext<'a>, user_id: i64, guild_id: 
 
     let user = UserId::from(user_id as u64).to_user(ctx).await;
     if let Ok(user) = user {
-        let nickname = user
-            .nick_in(ctx, GuildId::from(guild_id as u64))
-            .await
-            .unwrap_or(user.name.clone());
-        let _ = sqlx::query!(
-            "INSERT OR IGNORE INTO user_in_guild (user_id, guild_id, name) VALUES (?, ?, ?)",
+        match sqlx::query!(
+            "INSERT OR IGNORE INTO user_in_guild (user_id, guild_id) VALUES (?, ?)",
             user_id,
             guild_id,
-            nickname
         )
         .execute(&ctx.data().database)
-        .await;
+        .await
+        {
+            Ok(result) => {
+                if result.rows_affected() > 0 {
+                    let nickname = user
+                        .nick_in(ctx, GuildId::from(guild_id as u64))
+                        .await
+                        .unwrap_or(user.name.clone());
+
+                    ctx.data()
+                        .cache
+                        .update_or_add_user_name(
+                            &GuildId::from(guild_id as u64),
+                            &UserId::from(user_id as u64),
+                            nickname,
+                            &ctx.data().database,
+                        )
+                        .await;
+                }
+            }
+            Err(_) => todo!(),
+        };
     }
 }
 

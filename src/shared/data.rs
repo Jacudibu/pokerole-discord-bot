@@ -20,13 +20,11 @@ impl Data {
         let result = Data {
             database,
             game,
-            cache: Arc::new(Cache::new()),
+            cache: Arc::new(Cache::default()),
             is_backup_thread_running: AtomicBool::new(false),
             is_weekly_reset_thread_running: AtomicBool::new(false),
             is_monthly_reset_thread_running: AtomicBool::new(false),
         };
-
-        result.cache.update_character_names(&result.database).await;
 
         result
     }

@@ -41,7 +41,10 @@ pub async fn unretire_character(
             )
             .await;
 
-            ctx.data().cache.reset(&ctx.data().database).await;
+            ctx.data()
+                .cache
+                .update_character_names(&ctx.data().database)
+                .await;
             update_character_post(&ctx, character.id).await;
         }
         Err(e) => {
