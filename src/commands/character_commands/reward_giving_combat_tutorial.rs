@@ -1,10 +1,9 @@
 use crate::commands::autocompletion::autocomplete_character_name;
-use crate::commands::character_commands::{
-    change_character_stat_after_validation, log_action, ActionType,
-};
-use crate::commands::{parse_user_input_to_character, send_error, Error};
-use crate::shared::cache::CharacterCacheItem;
+use crate::commands::character_commands::change_character_stat_after_validation;
+use crate::commands::{Error, parse_user_input_to_character, send_error};
 use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::cache::CharacterCacheItem;
 
 /// Reward players for giving a combat tutorial to new players.
 #[allow(clippy::too_many_arguments)]
@@ -110,7 +109,7 @@ async fn track_combat_tutorial_for_character<'a>(
 
     let _ = log_action(
         &ActionType::NewPlayerCombatTutorial,
-        ctx,
+        LogActionArguments::triggered_by_user(&ctx),
         &format!("{} gave a combat tutorial!", character.name),
     )
     .await;

@@ -1,8 +1,9 @@
-use crate::commands::character_commands::{log_action, validate_user_input, ActionType};
+use crate::commands::character_commands::validate_user_input;
 use crate::commands::wallet_commands::update_wallet_post;
-use crate::commands::{ensure_guild_exists, send_ephemeral_reply, send_error, Error};
+use crate::commands::{Error, ensure_guild_exists, send_ephemeral_reply, send_error};
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
 use crate::shared::data::Data;
-use crate::shared::{emoji, PoiseContext};
+use crate::shared::{PoiseContext, emoji};
 use chrono::Utc;
 use serenity::all::CreateMessage;
 
@@ -53,7 +54,7 @@ pub async fn create_wallet(
         update_wallet_post(&ctx, id).await;
         log_action(
             &ActionType::Initialization,
-            &ctx,
+            LogActionArguments::triggered_by_user(&ctx),
             &format!(
                 "Created a wallet for {} with {} {}.",
                 name,
@@ -109,7 +110,7 @@ async fn execute_create_wallet(
 #[cfg(test)]
 mod tests {
     use crate::commands::wallet_commands::create_wallet::execute_create_wallet;
-    use crate::{database_mocks, Error};
+    use crate::{Error, database_mocks};
     use chrono::Utc;
     use more_asserts::{assert_ge, assert_le};
     use sqlx::{Pool, Sqlite};

@@ -1,11 +1,12 @@
-use crate::commands::character_commands::{log_action, ActionType, EntityWithNameAndNumericValue};
+use crate::Error;
+use crate::commands::character_commands::EntityWithNameAndNumericValue;
 use crate::commands::{
-    handle_error_during_message_edit, send_error, BuildUpdatedStatMessageStringResult,
+    BuildUpdatedStatMessageStringResult, handle_error_during_message_edit, send_error,
 };
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
 use crate::shared::cache::WalletCacheItem;
 use crate::shared::data::Data;
-use crate::shared::{emoji, PoiseContext};
-use crate::Error;
+use crate::shared::{PoiseContext, emoji};
 use poise::Command;
 use serenity::all::{ChannelId, EditMessage, MessageId};
 
@@ -166,7 +167,9 @@ pub async fn change_wallet_stat_after_validation<'a>(
                 to_or_from = "from";
             }
 
-            log_action(action_type, ctx, format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
+            log_action(action_type,
+                       LogActionArguments::triggered_by_user(ctx),
+                       format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
         }
         Err(_) => {
             send_error(ctx, format!("Unable to find a wallet named {}.\n**Internal cache must be out of date. Please let me know if this ever happens.**", wallet.name).as_str()).await

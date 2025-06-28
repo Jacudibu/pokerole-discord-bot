@@ -1,7 +1,7 @@
+use crate::Error;
 use crate::shared::data::Data;
 use crate::shared::game_data::parser::issue_handler::IssueStorage;
 pub use crate::shared::game_data::pokemon_api::PokemonApiId;
-use crate::Error;
 use serenity::all::{ComponentInteraction, GuildId, UserId};
 use sqlx::{Pool, Sqlite};
 use std::collections::HashMap;
@@ -59,7 +59,7 @@ pub struct MultiSourceGameData {
 }
 
 impl MultiSourceGameData {
-    async fn get(
+    pub async fn get(
         &self,
         guild_id: Option<GuildId>,
         user_id: UserId,

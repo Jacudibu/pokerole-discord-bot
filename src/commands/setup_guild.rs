@@ -1,7 +1,8 @@
-use crate::commands::character_commands::{log_action, validate_user_input, ActionType};
-use crate::commands::{send_ephemeral_reply, Error};
-use crate::shared::errors::CommandInvocationError;
+use crate::commands::character_commands::validate_user_input;
+use crate::commands::{Error, send_ephemeral_reply};
 use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::errors::CommandInvocationError;
 use serenity::all::{Mention, Role, RoleId};
 use serenity::model::channel::Channel;
 
@@ -40,15 +41,17 @@ RETURNING *",
         action_log_channel_id,
         default_member_role_id
     )
-    .fetch_one(&ctx.data().database)
-    .await {
+        .fetch_one(&ctx.data().database)
+        .await {
         Ok(record) => {
             send_ephemeral_reply(&ctx, "Guild has been successfully set up!").await?;
-            log_action(&ActionType::Initialization, &ctx, "The action log channel has been set to this lovely place here. I recommend muting this channel, lul.").await?;
+            log_action(&ActionType::Initialization,
+                       LogActionArguments::triggered_by_user(&ctx),
+                       "The action log channel has been set to this lovely place here. I recommend muting this channel, lul.").await?;
             if let Some(name) = record.name {
                 log_action(
                     &ActionType::Initialization,
-                    &ctx,
+                    LogActionArguments::triggered_by_user(&ctx),
                     format!("Guild Name has been set to **{name}**"),
                 )
                     .await?;
@@ -58,7 +61,7 @@ RETURNING *",
                 let mention = Mention::Role(role);
                 log_action(
                     &ActionType::Initialization,
-                    &ctx,
+                    LogActionArguments::triggered_by_user(&ctx),
                     format!("Default Member Role has been set to **{mention}**"),
                 )
                     .await?;

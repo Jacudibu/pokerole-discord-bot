@@ -1,10 +1,11 @@
 use crate::commands::autocompletion::{
     autocomplete_owned_character_name, autocomplete_pokemon_type,
 };
-use crate::commands::{ensure_user_owns_character, find_character, update_character_post, Error};
+use crate::commands::{Error, ensure_user_owns_character, find_character};
+use crate::shared::PoiseContext;
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::enums::PokemonTypeWithoutShadow;
 use crate::shared::errors::ValidationError;
-use crate::shared::PoiseContext;
 
 #[derive(sqlx::FromRow)]
 struct TeraCharge {
@@ -64,7 +65,7 @@ pub async fn use_terastallization(
     ))
     .await?;
 
-    update_character_post(&ctx, character.id).await;
+    update_character_post_with_poise_context(&ctx, character.id).await;
 
     Ok(())
 }

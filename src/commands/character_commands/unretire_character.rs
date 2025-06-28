@@ -1,7 +1,8 @@
 use crate::commands::autocompletion::autocomplete_retired_character_name;
-use crate::commands::character_commands::{log_action, ActionType};
-use crate::commands::{find_character, update_character_post, Error};
-use crate::shared::{constants, PoiseContext};
+use crate::commands::{Error, find_character};
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::character::update_character_post_with_poise_context;
+use crate::shared::{PoiseContext, constants};
 
 /// Unretire a character.
 #[allow(clippy::too_many_arguments)]
@@ -36,7 +37,7 @@ pub async fn unretire_character(
 
             let _ = log_action(
                 &ActionType::CharacterUnRetirement,
-                &ctx,
+                LogActionArguments::triggered_by_user(&ctx),
                 &format!("{} has returned from their retirement.", character.name),
             )
             .await;
@@ -45,7 +46,7 @@ pub async fn unretire_character(
                 .cache
                 .update_character_names(&ctx.data().database)
                 .await;
-            update_character_post(&ctx, character.id).await;
+            update_character_post_with_poise_context(&ctx, character.id).await;
         }
         Err(e) => {
             let _ = ctx

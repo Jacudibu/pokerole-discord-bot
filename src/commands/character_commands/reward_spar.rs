@@ -1,12 +1,12 @@
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::character_commands::{
-    build_character_list, change_character_stat_after_validation, log_action, ActionType,
+    build_character_list, change_character_stat_after_validation,
 };
-use crate::commands::{
-    parse_character_names, parse_variadic_args, send_error, update_character_post, Error,
-};
-use crate::shared::cache::CharacterCacheItem;
+use crate::commands::{Error, parse_character_names, parse_variadic_args, send_error};
 use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::cache::CharacterCacheItem;
+use crate::shared::character::update_character_post_with_poise_context;
 
 /// Reward players for sparring outside of quests.
 #[allow(clippy::too_many_arguments)]
@@ -156,7 +156,7 @@ async fn track_spar_for_character<'a>(
 
     let _ = log_action(
         &ActionType::Spar,
-        ctx,
+        LogActionArguments::triggered_by_user(ctx),
         &format!("Tracked a sparring session for {}!", character.name),
     )
     .await;
@@ -172,6 +172,6 @@ async fn track_spar_for_character<'a>(
         )
         .await;
     } else {
-        update_character_post(ctx, character.id).await;
+        update_character_post_with_poise_context(ctx, character.id).await;
     }
 }

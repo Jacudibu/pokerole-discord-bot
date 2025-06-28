@@ -1,12 +1,12 @@
+use crate::Error;
 use crate::shared::data::Data;
 use crate::shared::game_data::GameData;
 use crate::shared::utility::error_handling;
 use crate::shared::{character, constants};
-use crate::Error;
 use serenity::all::{
-    ComponentInteraction, ComponentInteractionDataKind, CreateActionRow, CreateAllowedMentions,
-    CreateInteractionResponse, CreateInteractionResponseMessage, CreateMessage, EditMessage,
-    FullEvent, GuildId, Interaction, Member, Message, MessageId, RoleId, User,
+    ComponentInteraction, ComponentInteractionDataKind, CreateActionRow, CreateInteractionResponse,
+    CreateInteractionResponseMessage, CreateMessage, EditMessage, FullEvent, Interaction, Member,
+    Message, MessageId, RoleId,
 };
 use serenity::client::Context;
 use serenity::model::id::ChannelId;
@@ -16,6 +16,7 @@ use tokio::join;
 mod backups;
 mod button_interaction;
 mod character_stat_edit;
+mod guild_member_removal;
 mod monthly_reset;
 mod quests;
 mod role_reaction;
@@ -41,7 +42,13 @@ pub async fn handle_events<'a>(
             role_reaction::handle_reaction_remove(context, framework, removed_reaction).await
         }
         FullEvent::GuildMemberRemoval { guild_id, user, .. } => {
-            handle_guild_member_removal(context, framework.user_data, guild_id, user).await
+            guild_member_removal::handle_guild_member_removal(
+                context,
+                framework.user_data,
+                guild_id,
+                user,
+            )
+            .await
         }
         FullEvent::GuildMemberUpdate {
             old_if_available,
@@ -141,66 +148,6 @@ async fn handle_guild_member_update(data: &Data, new: &Member) -> Result<(), Err
     data.cache
         .update_or_add_user_name(&new.guild_id, &new.user.id, new_name, &data.database)
         .await;
-
-    Ok(())
-}
-
-async fn handle_guild_member_removal(
-    context: &Context,
-    data: &Data,
-    guild_id: &GuildId,
-    user: &User,
-) -> Result<(), Error> {
-    // TODO: Should be a Database setting instead of being hardcoded.
-    let channel_id: u64;
-    let user_name = &user.name;
-    let user_id = user.id.get() as i64;
-    let guild_id = guild_id.get() as i64;
-    if guild_id == 1113123066059436093 {
-        // Explorers of the Sea
-        channel_id = 1113127675586941140;
-    } else if guild_id == 1115690620342763645 {
-        // Test Server
-        channel_id = 1120344272571486309;
-    } else {
-        return Ok(());
-    }
-
-    let character_names = sqlx::query!(
-        "SELECT name FROM character WHERE user_id = ? AND guild_id = ?",
-        user_id,
-        guild_id
-    )
-    .fetch_all(&data.database)
-    .await;
-
-    let names;
-    if let Ok(character_names) = character_names {
-        if character_names.is_empty() {
-            names = String::from("didn't find any characters for them in the database");
-        } else {
-            names = character_names
-                .iter()
-                .map(|x| x.name.clone())
-                .collect::<Vec<String>>()
-                .join(", ");
-        }
-    } else {
-        names = String::from("failed to check database for matching character names...?");
-    }
-
-    let channel = ChannelId::from(channel_id);
-    channel
-        .send_message(
-            context,
-            CreateMessage::new()
-                .content(&format!(
-                    "{}/{} ({}) has left the server.",
-                    user_name, user, names
-                ))
-                .allowed_mentions(CreateAllowedMentions::default().empty_users()),
-        )
-        .await?;
 
     Ok(())
 }

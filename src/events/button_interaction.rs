@@ -8,14 +8,14 @@ use serenity::builder::{CreateActionRow, CreateButton};
 use serenity::client::Context;
 
 use crate::events::{
-    character_stat_edit, parse_interaction_command, quests, send_ephemeral_reply, FrameworkContext,
+    FrameworkContext, character_stat_edit, parse_interaction_command, quests, send_ephemeral_reply,
 };
 use crate::shared::errors::CommandInvocationError;
 use crate::shared::game_data::GameData;
 use crate::shared::utility::channel_id_ext::ChannelIdExt;
 use crate::shared::utility::message_splitting;
 use crate::shared::{clunky_stuff, dice_rolls, emoji};
-use crate::{shared, Error};
+use crate::{Error, shared};
 
 async fn get_game_data<'a>(
     framework: &'a FrameworkContext<'_>,
@@ -211,7 +211,7 @@ async fn post_quest_history(
     let Ok(character_id) = i64::from_str(args[0]) else {
         return Err(Box::new(
             CommandInvocationError::new(&format!("Invalid character ID in request: {}", args[0]))
-                .log(),
+                .should_be_logged(),
         ));
     };
 

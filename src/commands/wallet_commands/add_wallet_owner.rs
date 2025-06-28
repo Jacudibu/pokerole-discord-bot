@@ -1,11 +1,12 @@
 use crate::commands::autocompletion::{autocomplete_character_name, autocomplete_wallet_name};
-use crate::commands::character_commands::{log_action, validate_user_input, ActionType};
+use crate::commands::character_commands::validate_user_input;
 use crate::commands::{
-    ensure_guild_exists, find_character, find_wallet, send_ephemeral_reply, send_error, Error,
+    Error, ensure_guild_exists, find_character, find_wallet, send_ephemeral_reply, send_error,
 };
+use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
 use crate::shared::cache::{CharacterCacheItem, WalletCacheItem};
 use crate::shared::data::Data;
-use crate::shared::PoiseContext;
 
 /// Adds an existing character as owner for an existing wallet.
 #[poise::command(
@@ -42,7 +43,7 @@ pub async fn add_wallet_owner(
     .await?;
     log_action(
         &ActionType::WalletChange,
-        &ctx,
+        LogActionArguments::triggered_by_user(&ctx),
         &format!("Added {} as owner for {}", character_name, wallet_name,),
     )
     .await?;
@@ -89,7 +90,7 @@ async fn add_wallet_owner_to_db(
 #[cfg(test)]
 mod tests {
     use crate::commands::wallet_commands::add_wallet_owner::add_wallet_owner_impl;
-    use crate::{database_mocks, Error};
+    use crate::{Error, database_mocks};
     use sqlx::{Pool, Sqlite};
 
     #[sqlx::test]

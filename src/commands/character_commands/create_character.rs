@@ -2,14 +2,16 @@ use serenity::all::{CreateMessage, GetMessages};
 use serenity::model::user::User;
 
 use crate::commands::autocompletion::autocomplete_pokemon;
-use crate::commands::character_commands::{log_action, validate_user_input, ActionType};
+use crate::commands::character_commands::validate_user_input;
 use crate::commands::{
-    create_emojis, ensure_guild_exists, ensure_user_exists, pokemon_from_autocomplete_string,
-    send_ephemeral_reply, send_error, update_character_post, Error,
+    Error, create_emojis, ensure_guild_exists, ensure_user_exists,
+    pokemon_from_autocomplete_string, send_ephemeral_reply, send_error,
 };
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::enums::Gender;
 use crate::shared::utility::level_calculations;
-use crate::shared::{emoji, PoiseContext};
+use crate::shared::{PoiseContext, emoji};
 
 /// Create a new character within the database.
 #[allow(clippy::too_many_arguments)]
@@ -170,10 +172,10 @@ async fn execute(
 
     if let Ok(record) = record {
         send_ephemeral_reply(&ctx, "Character has been successfully created!").await?;
-        update_character_post(&ctx, record.id).await;
+        update_character_post_with_poise_context(&ctx, record.id).await;
         log_action(
             &ActionType::Initialization,
-            &ctx,
+            LogActionArguments::triggered_by_user(&ctx),
             &format!(
                 "Initialized character {} ({}) with {} {} and {} exp.",
                 name,

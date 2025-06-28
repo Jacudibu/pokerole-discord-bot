@@ -1,13 +1,14 @@
 use crate::commands::autocompletion::{
     autocomplete_owned_character_name, autocomplete_wallet_name,
 };
-use crate::commands::character_commands::{change_character_stat_after_validation, ActionType};
+use crate::commands::character_commands::change_character_stat_after_validation;
 use crate::commands::wallet_commands::change_wallet_stat_after_validation;
 use crate::commands::{
-    ensure_character_has_money, ensure_user_owns_character, find_character, find_wallet, Error,
+    Error, ensure_character_has_money, ensure_user_owns_character, find_character, find_wallet,
 };
+use crate::shared::action_log::ActionType;
 use crate::shared::cache::{CharacterCacheItem, WalletCacheItem};
-use crate::shared::{emoji, PoiseContext};
+use crate::shared::{PoiseContext, emoji};
 
 async fn transfer_money_from_character_to_wallet<'a>(
     ctx: &PoiseContext<'a>,

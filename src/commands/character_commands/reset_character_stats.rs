@@ -1,10 +1,11 @@
 use crate::commands::autocompletion::autocomplete_character_name;
-use crate::commands::character_commands::{log_action, ActionType};
-use crate::commands::{find_character, update_character_post, Error};
+use crate::commands::{Error, find_character};
+use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
 use crate::shared::cache::CharacterCacheItem;
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::game_data::PokemonApiId;
 use crate::shared::utility::level_calculations;
-use crate::shared::PoiseContext;
 
 /// Resets a characters stats to its default values.
 #[allow(clippy::too_many_arguments)]
@@ -23,14 +24,14 @@ pub async fn reset_character_stats(
     let character = find_character(ctx.data(), guild_id, &character).await?;
 
     reset_db_stats(&ctx, &character).await?;
-    update_character_post(&ctx, character.id).await;
+    update_character_post_with_poise_context(&ctx, character.id).await;
 
     let _ = ctx
         .reply(&format!("{}'s stats have been reset.", character.name))
         .await;
     let _ = log_action(
         &ActionType::CharacterStatReset,
-        &ctx,
+        LogActionArguments::triggered_by_user(&ctx),
         &format!("Reset {}'s stats", character.name),
     )
     .await;

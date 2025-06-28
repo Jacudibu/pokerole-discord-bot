@@ -1,12 +1,11 @@
 use crate::commands::autocompletion::{autocomplete_character_name, autocomplete_pokemon_type};
-use crate::commands::character_commands::{
-    build_character_list, change_character_stat, ActionType,
-};
-use crate::commands::{parse_variadic_args, Error};
+use crate::commands::character_commands::{build_character_list, change_character_stat};
+use crate::commands::{Error, parse_variadic_args};
+use crate::shared::PoiseContext;
+use crate::shared::action_log::ActionType;
 use crate::shared::cache::CharacterCacheItem;
 use crate::shared::enums::PokemonTypeWithoutShadow;
 use crate::shared::errors::CommandInvocationError;
-use crate::shared::PoiseContext;
 
 /// Reward players with a Terastallization charge.
 #[allow(clippy::too_many_arguments)]

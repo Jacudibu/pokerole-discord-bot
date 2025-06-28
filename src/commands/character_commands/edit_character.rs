@@ -1,16 +1,18 @@
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::autocompletion::autocomplete_pokemon_type;
-use crate::commands::character_commands::{log_action, reset_character_stats, ActionType};
+use crate::commands::character_commands::reset_character_stats;
 use crate::commands::create_emojis::create_emojis_for_pokemon;
 use crate::commands::{
-    ensure_user_exists, find_character, pokemon_from_autocomplete_string, send_ephemeral_reply,
-    update_character_post, Error,
+    Error, ensure_user_exists, find_character, pokemon_from_autocomplete_string,
+    send_ephemeral_reply,
 };
+use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::enums::{Gender, PokemonTypeWithoutShadow};
 use crate::shared::errors::ValidationError;
 use crate::shared::game_data::PokemonApiId;
-use crate::shared::PoiseContext;
 use serenity::all::User;
 use serenity::prelude::Mentionable;
 
@@ -134,7 +136,9 @@ You can't (and probably also don't really want to) edit a character's species an
                 tera_type, tera_count
             ));
         } else {
-            return Err(Box::new(ValidationError::new("To set tera_type, also set tera_count to the amount of tera charges that type should have.")));
+            return Err(Box::new(ValidationError::new(
+                "To set tera_type, also set tera_count to the amount of tera charges that type should have.",
+            )));
         }
     } else if tera_count.is_some() {
         return Err(Box::new(ValidationError::new(
@@ -197,12 +201,12 @@ You can't (and probably also don't really want to) edit a character's species an
             .await;
     }
 
-    update_character_post(&ctx, character.id).await;
+    update_character_post_with_poise_context(&ctx, character.id).await;
 
     let action_log = action_log.join(", ");
     let _ = log_action(
         &ActionType::CharacterEdit,
-        &ctx,
+        LogActionArguments::triggered_by_user(&ctx),
         &format!("Set {}'s {}.", character.name, action_log),
     )
     .await;

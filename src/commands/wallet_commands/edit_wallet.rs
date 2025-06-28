@@ -1,8 +1,8 @@
 use crate::commands::autocompletion::autocomplete_wallet_name;
-use crate::commands::character_commands::{log_action, ActionType};
 use crate::commands::wallet_commands::update_wallet_post;
-use crate::commands::{find_wallet, send_ephemeral_reply, send_error, Error};
+use crate::commands::{Error, find_wallet, send_ephemeral_reply, send_error};
 use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
 
 /// Update wallet data. All arguments are optional.
 #[allow(clippy::too_many_arguments)]
@@ -48,7 +48,7 @@ pub async fn edit_wallet(
     let action_log = action_log.join(", ");
     let _ = log_action(
         &ActionType::WalletEdit,
-        &ctx,
+        LogActionArguments::triggered_by_user(&ctx),
         &format!("Set {}'s {}.", wallet.name, action_log),
     )
     .await;

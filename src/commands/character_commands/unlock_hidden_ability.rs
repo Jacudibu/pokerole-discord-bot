@@ -4,11 +4,12 @@ use poise::{CreateReply, ReplyHandle};
 use serenity::all::{ButtonStyle, CreateActionRow};
 
 use crate::commands::autocompletion::autocomplete_owned_character_name;
-use crate::commands::character_commands::ActionType;
-use crate::commands::{character_commands, find_character, update_character_post, Error};
+use crate::commands::{Error, find_character};
+use crate::shared::action_log::{ActionType, LogActionArguments};
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::errors::ValidationError;
 use crate::shared::utility::button_building;
-use crate::shared::{emoji, PoiseContext};
+use crate::shared::{PoiseContext, action_log, emoji};
 
 const CONFIRM: &str = "unlock_hidden_ability_proceed";
 const ABORT: &str = "unlock_hidden_ability_abort";
@@ -39,17 +40,15 @@ pub async fn unlock_hidden_ability(
     }
 
     if character_record.money < PRICE {
-        return Err(Box::new(ValidationError::new(
-            format!(
-                "**Unable to unlock {}'s hidden ability.**\n*That would require {} {}. Right now, {} only owns {} {}.*",
-                character.name,
-                PRICE,
-                emoji::POKE_COIN,
-                character.name,
-                character_record.money,
-                emoji::POKE_COIN
-            )
-        )));
+        return Err(Box::new(ValidationError::new(format!(
+            "**Unable to unlock {}'s hidden ability.**\n*That would require {} {}. Right now, {} only owns {} {}.*",
+            character.name,
+            PRICE,
+            emoji::POKE_COIN,
+            character.name,
+            character_record.money,
+            emoji::POKE_COIN
+        ))));
     }
 
     let original_message = format!(
@@ -101,9 +100,9 @@ pub async fn unlock_hidden_ability(
                 .await;
 
             if query_result.is_ok() && query_result.unwrap().rows_affected() == 1 {
-                character_commands::log_action(
+                action_log::log_action(
                     &ActionType::Payment,
-                    &ctx,
+                    LogActionArguments::triggered_by_user(&ctx),
                     format!(
                         "Removed {} {} from {}",
                         PRICE,
@@ -113,15 +112,15 @@ pub async fn unlock_hidden_ability(
                     .as_str(),
                 )
                 .await?;
-                character_commands::log_action(
+                action_log::log_action(
                     &ActionType::HiddenAbilityUnlock,
-                    &ctx,
+                    LogActionArguments::triggered_by_user(&ctx),
                     format!("Unlocked {}'s hidden ability!", character.name).as_str(),
                 )
                 .await?;
 
                 respond_to_success(ctx, reply, original_message).await?;
-                update_character_post(&ctx, character.id).await;
+                update_character_post_with_poise_context(&ctx, character.id).await;
                 return Ok(());
             }
         } else {

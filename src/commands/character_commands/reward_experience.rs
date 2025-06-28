@@ -1,9 +1,8 @@
 use crate::commands::autocompletion::autocomplete_character_name;
-use crate::commands::character_commands::{
-    build_character_list, change_character_stat, ActionType,
-};
-use crate::commands::{parse_variadic_args, send_error, Error};
+use crate::commands::character_commands::{build_character_list, change_character_stat};
+use crate::commands::{Error, parse_variadic_args, send_error};
 use crate::shared::PoiseContext;
+use crate::shared::action_log::ActionType;
 
 /// Reward players with experience points.
 #[allow(clippy::too_many_arguments)]

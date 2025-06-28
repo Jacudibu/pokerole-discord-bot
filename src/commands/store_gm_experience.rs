@@ -1,9 +1,9 @@
 use tokio::join;
 
-use crate::commands::character_commands::{log_action, ActionType};
-use crate::commands::{ensure_user_exists, Error};
-use crate::shared::errors::CommandInvocationError;
+use crate::commands::{Error, ensure_user_exists};
 use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::errors::CommandInvocationError;
 
 /// Store your GM Experience after a quest.
 #[poise::command(
@@ -43,7 +43,9 @@ pub async fn store_gm_experience(
                 Ok(_) => {
                     let text = format!("{} stored {} GM Experience!", ctx.author(), amount);
                     let reply = ctx.say(&text);
-                    let log = log_action(&ActionType::StoreGMExperience, &ctx, &text);
+                    let log = log_action(&ActionType::StoreGMExperience,
+                                         LogActionArguments::triggered_by_user(&ctx),
+                                         &text);
                     let _ = join!(reply, log);
                 }
                 Err(e) => {
@@ -52,20 +54,18 @@ pub async fn store_gm_experience(
                             "Something went wrong when applying GM Experience for a user with id {} in guild with id {}!\n```{:?}```",
                             user_id, guild_id, e
                         ))
-                            .log(),
+                            .should_be_logged(),
                     ))
                 }
             }
         }
-        Err(e) => {
-            return Err(Box::new(
-                CommandInvocationError::new(&format!(
+        Err(e) => return Err(Box::new(
+            CommandInvocationError::new(&format!(
                 "Was unable to find a user with id {} in guild with id {} in database!\n```{:?}```",
                 user_id, guild_id, e
             ))
-                .log(),
-            ))
-        }
+            .should_be_logged(),
+        )),
     };
 
     Ok(())

@@ -1,9 +1,9 @@
-use crate::commands::autocompletion::{autocomplete_rule, autocomplete_server_name};
-use crate::commands::character_commands::{log_action, ActionType};
-use crate::commands::{get_servers_this_user_is_active_in, send_ephemeral_reply};
-use crate::shared::errors::{CommandInvocationError, DatabaseError, ValidationError};
-use crate::shared::PoiseContext;
 use crate::Error;
+use crate::commands::autocompletion::{autocomplete_rule, autocomplete_server_name};
+use crate::commands::{get_servers_this_user_is_active_in, send_ephemeral_reply};
+use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
+use crate::shared::errors::{CommandInvocationError, DatabaseError, ValidationError};
 
 /// Edit this server's rules.
 #[poise::command(
@@ -65,7 +65,8 @@ ON CONFLICT (guild_id, name) DO UPDATE SET (text, flavor, example) = (excluded.t
     {
         Ok(_) => {
             send_ephemeral_reply(&ctx, "Rule was created (or updated)!").await?;
-            log_action(&ActionType::RuleUpdate, &ctx, format!("Created (or updated) a rule named {name}")).await?;
+            log_action(&ActionType::RuleUpdate,             LogActionArguments::triggered_by_user(&ctx),
+                        format!("Created (or updated) a rule named {name}")).await?;
             Ok(())
         }
         Err(e) => Err(Box::new(DatabaseError::new(e.to_string()))),
@@ -93,7 +94,7 @@ pub async fn delete(
             send_ephemeral_reply(&ctx, "Rule was deleted!").await?;
             log_action(
                 &ActionType::RuleDelete,
-                &ctx,
+                LogActionArguments::triggered_by_user(&ctx),
                 format!("Deleted a rule named {name}"),
             )
             .await?;
@@ -119,12 +120,16 @@ pub async fn clone(
             .as_ref()
             .is_some_and(|x| x.to_lowercase() == server_name.to_lowercase())
     }) else {
-        return Err(Box::new(ValidationError::new(format!("Unable to find a server named {server_name}. You need to own at least one character on it, and the server has to be set up with a server name."))));
+        return Err(Box::new(ValidationError::new(format!(
+            "Unable to find a server named {server_name}. You need to own at least one character on it, and the server has to be set up with a server name."
+        ))));
     };
 
     let guild_id = ctx.guild().expect("Command should be guild_only").id.get() as i64;
     if count_existing_guild_rules(&ctx, guild_id).await > 0 {
-        return Err(Box::new(ValidationError::new("You can only clone rules from another server when your own server has no rules set up!")));
+        return Err(Box::new(ValidationError::new(
+            "You can only clone rules from another server when your own server has no rules set up!",
+        )));
     }
 
     if let Some(server) = valid_servers.get(position) {
@@ -136,7 +141,7 @@ pub async fn clone(
         clone_all_rules(&ctx, server.id, guild_id).await;
         log_action(
             &ActionType::RuleClone,
-            &ctx,
+            LogActionArguments::triggered_by_user(&ctx),
             format!("Cloned the rules from {:?}", server.name),
         )
         .await?;

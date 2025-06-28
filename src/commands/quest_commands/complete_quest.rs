@@ -2,10 +2,9 @@ use chrono::Utc;
 
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::character_commands::build_character_list;
-use crate::commands::{
-    parse_character_names, parse_variadic_args, send_error, update_character_post, Error,
-};
+use crate::commands::{Error, parse_character_names, parse_variadic_args, send_error};
 use crate::shared::PoiseContext;
+use crate::shared::character::update_character_post_with_poise_context;
 
 /// Use this to increase the quest completion counter.
 #[allow(clippy::too_many_arguments)]
@@ -75,7 +74,7 @@ pub async fn complete_quest(
     .await?;
 
     for x in characters {
-        update_character_post(&ctx, x.id).await;
+        update_character_post_with_poise_context(&ctx, x.id).await;
     }
 
     Ok(())

@@ -1,11 +1,10 @@
 use serenity::all::CreateMessage;
 
 use crate::commands::autocompletion::autocomplete_character_name;
-use crate::commands::{
-    find_character, send_ephemeral_reply, send_error, update_character_post, Error,
-};
-use crate::shared::cache::CharacterCacheItem;
+use crate::commands::{Error, find_character, send_ephemeral_reply, send_error};
 use crate::shared::PoiseContext;
+use crate::shared::cache::CharacterCacheItem;
+use crate::shared::character::update_character_post_with_poise_context;
 
 async fn post_character_post<'a>(
     ctx: &PoiseContext<'a>,
@@ -36,7 +35,7 @@ async fn post_character_post<'a>(
     if let Ok(record) = record {
         if record.rows_affected() == 1 {
             send_ephemeral_reply(ctx, "Post has been created!").await?;
-            update_character_post(ctx, character.id).await;
+            update_character_post_with_poise_context(ctx, character.id).await;
             ctx.data()
                 .cache
                 .update_character_names(&ctx.data().database)

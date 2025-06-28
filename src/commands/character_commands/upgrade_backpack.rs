@@ -4,12 +4,11 @@ use poise::{CreateReply, ReplyHandle};
 use serenity::all::{ButtonStyle, CreateActionRow};
 
 use crate::commands::autocompletion::autocomplete_owned_character_name;
-use crate::commands::character_commands::ActionType;
-use crate::commands::{
-    character_commands, find_character, send_error, update_character_post, Error,
-};
+use crate::commands::{Error, find_character, send_error};
+use crate::shared::action_log::{ActionType, LogActionArguments};
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::utility::button_building;
-use crate::shared::{constants, emoji, PoiseContext};
+use crate::shared::{PoiseContext, action_log, constants, emoji};
 
 const CONFIRM: &str = "upgrade_backpack_proceed";
 const ABORT: &str = "upgrade_backpack_abort";
@@ -108,9 +107,9 @@ pub async fn upgrade_backpack(
                 .await;
 
             if query_result.is_ok() && query_result.unwrap().rows_affected() == 1 {
-                character_commands::log_action(
+                action_log::log_action(
                     &ActionType::Payment,
-                    &ctx,
+                    LogActionArguments::triggered_by_user(&ctx),
                     format!(
                         "Removed {} {} from {}",
                         required_money,
@@ -120,15 +119,15 @@ pub async fn upgrade_backpack(
                     .as_str(),
                 )
                 .await?;
-                character_commands::log_action(
+                action_log::log_action(
                     &ActionType::BackpackUpgrade,
-                    &ctx,
+                    LogActionArguments::triggered_by_user(&ctx),
                     format!("Increased {}'s backpack size by 1", character.name).as_str(),
                 )
                 .await?;
 
                 respond_to_success(ctx, reply, original_message).await?;
-                update_character_post(&ctx, character.id).await;
+                update_character_post_with_poise_context(&ctx, character.id).await;
                 return Ok(());
             }
         } else {

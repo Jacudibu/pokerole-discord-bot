@@ -1,10 +1,13 @@
 use crate::commands::BuildUpdatedStatMessageStringResult;
 use crate::shared::character_stats::GenericCharacterStats;
+use crate::shared::data::Data;
 use crate::shared::enums::{Gender, MysteryDungeonRank, PokemonTypeWithoutShadow};
 use crate::shared::game_data::{GameData, PokemonApiId};
-use crate::shared::utility::level_calculations;
-use crate::shared::{constants, emoji};
-use serenity::all::{ButtonStyle, CreateActionRow, CreateButton};
+use crate::shared::utility::{error_handling, level_calculations};
+use crate::shared::{PoiseContext, SerenityContext, constants, emoji};
+use serenity::all::{
+    ButtonStyle, ChannelId, CreateActionRow, CreateButton, EditMessage, GuildId, MessageId, UserId,
+};
 use sqlx::{Pool, Sqlite};
 
 pub async fn build_character_string(
@@ -275,4 +278,64 @@ fn append_tera_charges(
             pokemon_type
         ));
     }
+}
+
+pub async fn update_character_post_with_serenity_context(
+    context: &SerenityContext,
+    guild_id: Option<GuildId>,
+    channel_id: Option<ChannelId>,
+    owner_id: UserId,
+    data: &Data,
+    character_id: i64,
+) {
+    if let Some(result) = build_character_string(
+        context,
+        &data.database,
+        data.game.get(guild_id, owner_id, &data.database).await,
+        character_id,
+    )
+    .await
+    {
+        let message = context
+            .http
+            .get_message(
+                ChannelId::from(result.stat_channel_id as u64),
+                MessageId::from(result.stat_message_id as u64),
+            )
+            .await;
+        if let Ok(mut message) = message {
+            if let Err(e) = message
+                .edit(
+                    context,
+                    EditMessage::new()
+                        .content(&result.message)
+                        .components(result.components.clone()),
+                )
+                .await
+            {
+                error_handling::handle_error_during_message_edit(
+                    context,
+                    e,
+                    message,
+                    result.message,
+                    Some(result.components),
+                    result.name,
+                    channel_id,
+                )
+                .await;
+            }
+        }
+    }
+}
+
+pub async fn update_character_post_with_poise_context<'a>(ctx: &PoiseContext<'a>, id: i64) {
+    update_character_post_with_serenity_context(
+        ctx.serenity_context(),
+        ctx.guild_id(),
+        Some(ctx.channel_id()),
+        ctx.author().id,
+        ctx.data(),
+        id,
+    )
+    .await;
 }

@@ -1,14 +1,14 @@
 use std::borrow::Cow;
 
+use crate::Error;
+use crate::shared::PoiseContext;
 use crate::shared::cache::{CharacterCacheItem, WalletCacheItem};
 use crate::shared::data::Data;
 use crate::shared::errors::{ParseError, ValidationError};
 use crate::shared::game_data::pokemon::Pokemon;
 use crate::shared::utility::error_handling;
-use crate::shared::{character, PoiseContext};
-use crate::Error;
 use poise::{Command, CreateReply, ReplyHandle};
-use serenity::all::{ChannelId, CreateActionRow, EditMessage, Message, MessageId};
+use serenity::all::{CreateActionRow, Message};
 use serenity::model::guild::Member;
 use serenity::model::id::{GuildId, UserId};
 use serenity::model::prelude::User;
@@ -433,53 +433,13 @@ pub async fn ensure_user_owns_wallet_or_is_gm(
             Ok(())
         }
     } else {
-        Err(ValidationError::new("Was unable to validate whether you are allowed to access this wallet. Please try again."))
+        Err(ValidationError::new(
+            "Was unable to validate whether you are allowed to access this wallet. Please try again.",
+        ))
     }
 }
 
-async fn update_character_post<'a>(ctx: &PoiseContext<'a>, id: i64) {
-    let game_data = ctx.data().game.get_by_context(&ctx).await;
-    if let Some(result) = character::build_character_string(
-        &ctx.serenity_context(),
-        &ctx.data().database,
-        game_data,
-        id,
-    )
-    .await
-    {
-        let message = ctx
-            .serenity_context()
-            .http
-            .get_message(
-                ChannelId::from(result.stat_channel_id as u64),
-                MessageId::from(result.stat_message_id as u64),
-            )
-            .await;
-        if let Ok(mut message) = message {
-            if let Err(e) = message
-                .edit(
-                    ctx,
-                    EditMessage::new()
-                        .content(&result.message)
-                        .components(result.components.clone()),
-                )
-                .await
-            {
-                handle_error_during_message_edit(
-                    ctx,
-                    e,
-                    message,
-                    result.message,
-                    Some(result.components),
-                    result.name,
-                )
-                .await;
-            }
-        }
-    }
-}
-
-async fn handle_error_during_message_edit<'a>(
+pub(crate) async fn handle_error_during_message_edit<'a>(
     ctx: &PoiseContext<'a>,
     e: serenity::Error,
     message_to_edit: Message,
@@ -513,7 +473,10 @@ async fn pokemon_from_autocomplete_string<'a>(
     if let Some(pokemon) = pokemon {
         Ok(pokemon)
     } else {
-        Err(ParseError::new(&std::format!("Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?", name)))
+        Err(ParseError::new(&std::format!(
+            "Unable to find a pokemon named **{}**, sorry! If that wasn't a typo, maybe it isn't implemented yet?",
+            name
+        )))
     }
 }
 

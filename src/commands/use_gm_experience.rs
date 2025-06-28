@@ -1,13 +1,12 @@
 use tokio::join;
 
 use crate::commands::autocompletion::autocomplete_owned_character_name;
-use crate::commands::character_commands::{
-    change_character_stat_after_validation, log_action, ActionType,
-};
-use crate::commands::{ensure_user_exists, ensure_user_owns_character, find_character, Error};
+use crate::commands::character_commands::change_character_stat_after_validation;
+use crate::commands::{Error, ensure_user_exists, ensure_user_owns_character, find_character};
+use crate::shared::PoiseContext;
+use crate::shared::action_log::{ActionType, LogActionArguments, log_action};
 use crate::shared::emoji::get_character_emoji;
 use crate::shared::errors::{CommandInvocationError, ValidationError};
-use crate::shared::PoiseContext;
 
 /// Store your GM Experience after a quest.
 #[poise::command(
@@ -56,7 +55,11 @@ pub async fn use_gm_experience(
                     let emoji = get_character_emoji(ctx.serenity_context(), ctx.data(), character.id).await;
                     let text = format!("Used {} GM Experience on {}{}!", amount, emoji.unwrap_or(String::new()), character.name);
                     let reply = ctx.say(&text);
-                    let log = log_action(&ActionType::UseGMExperience, &ctx, &text);
+                    let log = log_action(
+                        &ActionType::UseGMExperience,
+                        LogActionArguments::triggered_by_user(&ctx),
+                        &text
+                    );
                     let _ = join!(reply, log);
                     // Do this afterwards to ensure the level up message is always sent second
                     let _ = change_character_stat_after_validation(&ctx, "experience", &character, amount, &ActionType::DoNotLog).await;
@@ -67,20 +70,18 @@ pub async fn use_gm_experience(
                             "Something went wrong when applying GM Experience for a user with id {} in guild with id {}!\n```{:?}```",
                             user_id, guild_id, e
                         ))
-                            .log(),
+                            .should_be_logged(),
                     ))
                 }
             }
         }
-        Err(e) => {
-            return Err(Box::new(
-                CommandInvocationError::new(&format!(
+        Err(e) => return Err(Box::new(
+            CommandInvocationError::new(&format!(
                 "Was unable to find a user with id {} in guild with id {} in database!\n```{:?}```",
                 user_id, guild_id, e
             ))
-                .log(),
-            ))
-        }
+            .should_be_logged(),
+        )),
     };
 
     Ok(())

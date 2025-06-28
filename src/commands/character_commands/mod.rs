@@ -1,17 +1,13 @@
-use core::fmt;
-use std::fmt::Formatter;
-
-use poise::Command;
-use serenity::all::{CreateAllowedMentions, CreateMessage, GetMessages};
-use serenity::model::id::ChannelId;
-
-use crate::commands::{parse_character_names, send_error, update_character_post};
+use crate::Error;
+use crate::commands::{parse_character_names, send_error};
+use crate::shared::action_log::{ActionType, LogActionArguments};
 use crate::shared::cache::CharacterCacheItem;
+use crate::shared::character::update_character_post_with_poise_context;
 use crate::shared::data::Data;
 use crate::shared::enums::{MysteryDungeonRank, PokemonTypeWithoutShadow};
 use crate::shared::utility::{input_validation, level_calculations};
-use crate::shared::{emoji, PoiseContext};
-use crate::Error;
+use crate::shared::{PoiseContext, action_log, emoji};
+use poise::Command;
 
 mod character_sheet;
 mod create_character;
@@ -95,122 +91,6 @@ You can copy the command string either by just pressing the up key inside the te
     ).await
 }
 
-#[derive(PartialEq)]
-pub enum ActionType {
-    Initialization,
-    Reward,
-    Payment,
-    BackpackUpgrade,
-    HiddenAbilityUnlock,
-    TradeOutgoing,
-    TradeIncoming,
-    WalletChange,
-    WalletPayment,
-    WalletWithdrawal,
-    Undo,
-    Spar,
-    NewPlayerCombatTutorial,
-    NewPlayerTour,
-    WalletEdit,
-    CharacterEdit,
-    CharacterStatReset,
-    CharacterRetirement,
-    CharacterUnRetirement,
-    TerastallizationUnlock,
-    StoreGMExperience,
-    UseGMExperience,
-    RuleUpdate,
-    RuleDelete,
-    RuleClone,
-    DoNotLog,
-}
-
-impl fmt::Display for ActionType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_str(match self {
-            ActionType::Initialization => "🌟 [Init]",
-            ActionType::Reward => "✨ [Reward]",
-            ActionType::BackpackUpgrade => "🎒 [Upgrade]",
-            ActionType::HiddenAbilityUnlock => "💊 [HA Unlock]",
-            ActionType::Payment => "💰 [Payment]",
-            ActionType::TradeOutgoing => "➡️ [Trade]",
-            ActionType::TradeIncoming => "⬅️ [Trade]",
-            ActionType::WalletChange => "👛 [Wallet]",
-            ActionType::WalletPayment => "👛⬅️ [Payment]",
-            ActionType::WalletWithdrawal => "👛➡️ [Withdrawal]",
-            ActionType::Undo => "↩️ [Undo]",
-            ActionType::Spar => "🤺 [Spar]",
-            ActionType::NewPlayerCombatTutorial => "⚔️ [Combat Tutorial]",
-            ActionType::NewPlayerTour => "🎫 [Tour]",
-            ActionType::WalletEdit => "📝 [Edit]",
-            ActionType::CharacterEdit => "📝 [Edit]",
-            ActionType::CharacterStatReset => "📝 [Edit]",
-            ActionType::CharacterRetirement => "💤 [Retirement]",
-            ActionType::CharacterUnRetirement => "⏰ [UnRetirement]",
-            ActionType::TerastallizationUnlock => "💎 [Terastallization Unlock]",
-            ActionType::StoreGMExperience => "🏦⬅️ [GM Experience]",
-            ActionType::UseGMExperience => "🏦➡️ [GM Experience]",
-            ActionType::RuleUpdate => "⚖️🌟 [Rule Update]",
-            ActionType::RuleDelete => "⚖️❌ [Rule Deletion]",
-            ActionType::RuleClone => "⚖️⚖️⚖️ [Rule Clone]",
-            ActionType::DoNotLog => "",
-        })
-    }
-}
-
-pub async fn log_action<'a>(
-    action_type: &ActionType,
-    ctx: &PoiseContext<'a>,
-    message: impl Into<String>,
-) -> Result<(), Error> {
-    let guild_id = ctx.guild_id();
-    if guild_id.is_none() {
-        return Ok(());
-    }
-
-    let guild_id = guild_id.expect("should only be called in guild_only").get() as i64;
-    let record = sqlx::query!(
-        "SELECT action_log_channel_id FROM guild WHERE id = ?",
-        guild_id
-    )
-    .fetch_one(&ctx.data().database)
-    .await;
-
-    let origin = match ctx
-        .channel_id()
-        .messages(ctx, GetMessages::new().limit(1))
-        .await
-    {
-        Ok(messages) => match messages.first() {
-            None => String::new(),
-            Some(m) => format!(" in {}", m.id.link(m.channel_id, ctx.guild_id())),
-        },
-        Err(_) => String::new(),
-    };
-
-    if let Ok(record) = record {
-        if let Some(action_log_channel_id) = record.action_log_channel_id {
-            let channel_id = ChannelId::from(action_log_channel_id as u64);
-            channel_id
-                .send_message(
-                    ctx,
-                    CreateMessage::new()
-                        .content(std::format!(
-                            "{} {} (triggered by {}{})",
-                            action_type,
-                            message.into(),
-                            ctx.author(),
-                            origin
-                        ))
-                        .allowed_mentions(CreateAllowedMentions::new().empty_users()),
-                )
-                .await?;
-        }
-    }
-
-    Ok(())
-}
-
 #[derive(sqlx::FromRow)]
 pub struct EntityWithNameAndNumericValue {
     pub id: i64,
@@ -276,7 +156,7 @@ pub async fn change_character_stat_after_validation<'a>(
                 return send_stale_data_error(ctx).await;
             }
 
-            update_character_post(ctx, record.id).await;
+            update_character_post_with_poise_context(ctx, record.id).await;
             let action = match database_column {
                 "money" => String::from(emoji::POKE_COIN),
                 "battle_points" => String::from(emoji::BATTLE_POINT),
@@ -328,7 +208,9 @@ pub async fn change_character_stat_after_validation<'a>(
             }
 
             if action_type != &ActionType::DoNotLog {
-                log_action(action_type, ctx, format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
+                action_log::log_action(action_type,
+                                       LogActionArguments::triggered_by_user(&ctx),
+                                       format!("{} {} {} {} {}", added_or_removed, amount.abs(), action, to_or_from, record.name).as_str()).await
             } else {
                 Ok(())
             }

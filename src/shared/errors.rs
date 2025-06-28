@@ -19,7 +19,7 @@ impl CommandInvocationError {
         }
     }
 
-    pub fn log(mut self) -> Self {
+    pub fn should_be_logged(mut self) -> Self {
         self.log = true;
         self
     }
