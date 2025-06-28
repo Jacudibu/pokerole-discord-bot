@@ -13,7 +13,7 @@ pub mod emoji;
 pub mod enums;
 pub mod errors;
 pub mod game_data;
-pub mod helpers;
 pub mod metronome;
+pub(crate) mod utility;
 
 pub type PoiseContext<'a> = poise::Context<'a, Data, Error>;

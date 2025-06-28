@@ -7,7 +7,7 @@ use crate::events::character_stat_edit::{
 use crate::events::{send_error, update_character_post};
 use crate::shared::character_stats::SingleCharacterStatType;
 use crate::shared::game_data::GameData;
-use crate::shared::helpers;
+use crate::shared::utility::level_calculations;
 use crate::Error;
 use serenity::all::{ComponentInteraction, Context, EditInteractionResponse};
 use sqlx::{Pool, Sqlite};
@@ -184,7 +184,7 @@ async fn edit_specific_stat(
         }
 
         let points_required_for_limit_break =
-            helpers::calculate_next_limit_break_cost(limit_break_count);
+            level_calculations::calculate_next_limit_break_cost(limit_break_count);
         if edited_stat.current + 1 > edited_stat.species_max
             && remaining_points < points_required_for_limit_break
         {

@@ -1,5 +1,6 @@
 use crate::shared::errors::ParseError;
-use crate::shared::{helpers, PoiseContext};
+use crate::shared::utility::button_building;
+use crate::shared::PoiseContext;
 use crate::Error;
 use poise::CreateReply;
 use rand::Rng;
@@ -90,7 +91,7 @@ async fn execute_roll<'a>(ctx: &PoiseContext<'a>, query: ParsedRollQuery) -> Res
         CreateReply::default()
             .content(result)
             .components(vec![CreateActionRow::Buttons(vec![
-                helpers::create_button("Roll again!", query_string.as_str(), false),
+                button_building::create_button("Roll again!", query_string.as_str(), false),
             ])]),
     )
     .await?;

@@ -8,7 +8,7 @@ use crate::commands::{
     send_ephemeral_reply, send_error, update_character_post, Error,
 };
 use crate::shared::enums::Gender;
-use crate::shared::helpers;
+use crate::shared::utility::level_calculations;
 use crate::shared::{emoji, PoiseContext};
 
 /// Create a new character within the database.
@@ -135,8 +135,8 @@ async fn execute(
     let stat_channel_id = message.channel_id.get() as i64;
     let creation_date = chrono::Utc::now().date_naive();
 
-    let level = helpers::calculate_level_from_experience(exp);
-    let mon = helpers::get_usual_evolution_stage_for_level(
+    let level = level_calculations::calculate_level_from_experience(exp);
+    let mon = level_calculations::get_usual_evolution_stage_for_level(
         level,
         pokemon,
         &ctx.data().game.base_data,

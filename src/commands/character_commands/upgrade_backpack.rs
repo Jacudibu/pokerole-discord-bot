@@ -8,7 +8,7 @@ use crate::commands::character_commands::ActionType;
 use crate::commands::{
     character_commands, find_character, send_error, update_character_post, Error,
 };
-use crate::shared::helpers;
+use crate::shared::utility::button_building;
 use crate::shared::{constants, emoji, PoiseContext};
 
 const CONFIRM: &str = "upgrade_backpack_proceed";
@@ -68,13 +68,18 @@ pub async fn upgrade_backpack(
             CreateReply::default()
                 .content(original_message.clone())
                 .components(vec![CreateActionRow::Buttons(vec![
-                    helpers::create_styled_button(
+                    button_building::create_styled_button(
                         "Let's do it!",
                         CONFIRM,
                         false,
                         ButtonStyle::Success,
                     ),
-                    helpers::create_styled_button("Nope!", ABORT, false, ButtonStyle::Danger),
+                    button_building::create_styled_button(
+                        "Nope!",
+                        ABORT,
+                        false,
+                        ButtonStyle::Danger,
+                    ),
                 ])]),
         )
         .await?;

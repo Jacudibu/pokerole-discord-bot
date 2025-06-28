@@ -1,6 +1,7 @@
 use crate::shared::data::Data;
 use crate::shared::game_data::GameData;
-use crate::shared::{character, constants, helpers};
+use crate::shared::utility::error_handling;
+use crate::shared::{character, constants};
 use crate::Error;
 use serenity::all::{
     ComponentInteraction, ComponentInteractionDataKind, CreateActionRow, CreateAllowedMentions,
@@ -333,7 +334,7 @@ async fn handle_error_during_message_edit(
     components: Option<Vec<CreateActionRow>>,
     name: impl Into<String>,
 ) {
-    helpers::handle_error_during_message_edit(
+    error_handling::handle_error_during_message_edit(
         ctx,
         e,
         message_to_edit,

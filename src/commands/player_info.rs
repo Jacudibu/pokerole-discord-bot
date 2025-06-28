@@ -5,8 +5,9 @@ use crate::commands::Error;
 use crate::shared::data::Data;
 use crate::shared::errors::DatabaseError;
 use crate::shared::game_data::PokemonApiId;
-use crate::shared::helpers;
-use crate::shared::helpers::split_long_messages;
+use crate::shared::utility::channel_id_ext::ChannelIdExt;
+use crate::shared::utility::message_splitting::split_long_messages;
+use crate::shared::utility::{error_handling, level_calculations};
 use crate::shared::{emoji, PoiseContext};
 
 /// Display Stats for a player
@@ -102,15 +103,16 @@ async fn build_reply(
     for character in characters {
         total_exp += character.experience;
 
-        let character_level = helpers::calculate_level_from_experience(character.experience);
+        let character_level =
+            level_calculations::calculate_level_from_experience(character.experience);
         total_levels += character_level;
-        let current_exp = helpers::calculate_current_experience(character.experience);
+        let current_exp = level_calculations::calculate_current_experience(character.experience);
 
         let channel_id = ChannelId::new(character.stat_channel_id as u64);
         let api_id = PokemonApiId(character.species_api_id as u16);
 
         let Some(pokemon) = data.game.base_data.pokemon_by_api_id.get(&api_id) else {
-            helpers::log_error(ctx, format!(
+            error_handling::log_error(ctx, format!(
                 "Database values should always be valid, but couldn't find an API entry for character with id {:?} and poke_api id {:?}",
                 user_in_guild.user.id,
                 api_id
@@ -124,7 +126,7 @@ async fn build_reply(
             "### {}{} – {}\n        Level: {} ({} exp)\n",
             emoji.await,
             character.name,
-            helpers::channel_id_link(channel_id),
+            channel_id.channel_id_link(),
             character_level,
             current_exp
         ))

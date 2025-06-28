@@ -1,7 +1,7 @@
 use crate::commands::{send_error, Error};
 use crate::shared::data::Data;
 use crate::shared::enums::QuestParticipantSelectionMechanism;
-use crate::shared::helpers;
+use crate::shared::utility::quest_message_utils;
 use crate::shared::PoiseContext;
 use chrono::Utc;
 use poise::CreateReply;
@@ -55,19 +55,23 @@ pub async fn create_quest(
 
     match result {
         Ok(_) => {
-            let (text, too_many_signups) = helpers::generate_quest_post_message_content(
-                ctx.serenity_context(),
-                ctx.data(),
-                channel_id,
-                max_participants,
-                selection_mechanism,
-            )
-            .await?;
+            let (text, too_many_signups) =
+                quest_message_utils::generate_quest_post_message_content(
+                    ctx.serenity_context(),
+                    ctx.data(),
+                    channel_id,
+                    max_participants,
+                    selection_mechanism,
+                )
+                .await?;
             reply
                 .edit(
                     ctx,
                     CreateReply::default().content(text).components(
-                        helpers::create_quest_signup_buttons(selection_mechanism, too_many_signups),
+                        quest_message_utils::create_quest_signup_buttons(
+                            selection_mechanism,
+                            too_many_signups,
+                        ),
                     ),
                 )
                 .await?;

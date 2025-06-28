@@ -1,5 +1,5 @@
 use crate::shared::data::Data;
-use crate::shared::helpers;
+use crate::shared::utility::{button_building, quest_message_utils};
 use crate::Error;
 use chrono::Utc;
 use serenity::all::{
@@ -73,7 +73,7 @@ pub async fn quest_sign_up(
     let character_buttons = available_characters
         .iter()
         .map(|x| {
-            helpers::create_button(
+            button_building::create_button(
                 x.name.as_str(),
                 &format!("quest-sign-up_{}_{}", x.id, timestamp),
                 false,
@@ -142,7 +142,7 @@ async fn process_signup(
     }
     .await?;
 
-    helpers::update_quest_message(context, data, channel_id).await?;
+    quest_message_utils::update_quest_message(context, data, channel_id).await?;
 
     Ok(())
 }

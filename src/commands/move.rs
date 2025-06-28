@@ -1,7 +1,7 @@
 use crate::commands::autocompletion::autocomplete_move;
 use crate::commands::Error;
 use crate::shared::game_data::r#move::Move;
-use crate::shared::helpers;
+use crate::shared::utility::button_building;
 use crate::shared::PoiseContext;
 use poise::CreateReply;
 use serenity::all::CreateActionRow;
@@ -39,7 +39,7 @@ async fn execute_metronome<'a>(ctx: PoiseContext<'a>, poke_move: &Move) -> Resul
             CreateReply::default()
                 .content(poke_move.build_string())
                 .components(vec![CreateActionRow::Buttons(vec![
-                    helpers::create_button("Use Metronome", "metronome", false),
+                    button_building::create_button("Use Metronome", "metronome", false),
                 ])]),
         )
         .await?;

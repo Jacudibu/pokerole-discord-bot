@@ -1,5 +1,5 @@
 use crate::shared::data::Data;
-use crate::shared::helpers;
+use crate::shared::utility::quest_message_utils;
 use crate::Error;
 use rand::Rng;
 use serenity::all::{
@@ -31,7 +31,7 @@ pub async fn quest_add_random_participants(
         .await?;
 
     if !was_error {
-        helpers::update_quest_message(context, data, channel_id).await?;
+        quest_message_utils::update_quest_message(context, data, channel_id).await?;
     }
 
     Ok(())

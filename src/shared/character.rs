@@ -2,7 +2,7 @@ use crate::commands::BuildUpdatedStatMessageStringResult;
 use crate::shared::character_stats::GenericCharacterStats;
 use crate::shared::enums::{Gender, MysteryDungeonRank, PokemonTypeWithoutShadow};
 use crate::shared::game_data::{GameData, PokemonApiId};
-use crate::shared::helpers;
+use crate::shared::utility::level_calculations;
 use crate::shared::{constants, emoji};
 use serenity::all::{ButtonStyle, CreateActionRow, CreateButton};
 use sqlx::{Pool, Sqlite};
@@ -25,8 +25,8 @@ pub async fn build_character_string(
     let completed_quest_count = count_completed_quests(database, character_id).await;
     match entry {
         Ok(record) => {
-            let level = helpers::calculate_level_from_experience(record.experience);
-            let experience = helpers::calculate_current_experience(record.experience);
+            let level = level_calculations::calculate_level_from_experience(record.experience);
+            let experience = level_calculations::calculate_current_experience(record.experience);
             let rank = MysteryDungeonRank::from_level(level as u8);
             let pokemon = game_data
                 .pokemon_by_api_id
@@ -72,12 +72,13 @@ pub async fn build_character_string(
                 emoji::type_to_emoji(&pokemon.type1).to_string()
             };
 
-            let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
-                level,
-                pokemon,
-                game_data,
-                record.species_override_for_stats,
-            );
+            let pokemon_evolution_form_for_stats =
+                level_calculations::get_usual_evolution_stage_for_level(
+                    level,
+                    pokemon,
+                    game_data,
+                    record.species_override_for_stats,
+                );
             let combat_stats = GenericCharacterStats::from_combat(
                 pokemon_evolution_form_for_stats,
                 record.stat_strength,
@@ -194,8 +195,9 @@ pub async fn build_character_string(
                 ));
             }
 
-            let remaining_combat_points = helpers::calculate_available_combat_points(level)
-                - combat_stats.calculate_invested_stat_points();
+            let remaining_combat_points =
+                level_calculations::calculate_available_combat_points(level)
+                    - combat_stats.calculate_invested_stat_points();
             let remaining_social_points =
                 rank.social_stat_points() as i64 - social_stats.calculate_invested_stat_points();
 

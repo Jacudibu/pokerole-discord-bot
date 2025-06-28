@@ -9,7 +9,8 @@ use crate::commands::{parse_character_names, send_error, update_character_post};
 use crate::shared::cache::CharacterCacheItem;
 use crate::shared::data::Data;
 use crate::shared::enums::{MysteryDungeonRank, PokemonTypeWithoutShadow};
-use crate::shared::{emoji, helpers, PoiseContext};
+use crate::shared::utility::{input_validation, level_calculations};
+use crate::shared::{emoji, PoiseContext};
 use crate::Error;
 
 mod character_sheet;
@@ -306,8 +307,8 @@ pub async fn change_character_stat_after_validation<'a>(
                 to_or_from = "to";
 
                 if database_column == "experience" {
-                    let old_level = helpers::calculate_level_from_experience(record.value);
-                    let new_level = helpers::calculate_level_from_experience(record.value + amount);
+                    let old_level = level_calculations::calculate_level_from_experience(record.value);
+                    let new_level = level_calculations::calculate_level_from_experience(record.value + amount);
                     if new_level > old_level {
                         let old_rank = MysteryDungeonRank::from_level(old_level as u8);
                         let new_rank = MysteryDungeonRank::from_level(new_level as u8);
@@ -339,7 +340,7 @@ pub async fn change_character_stat_after_validation<'a>(
 }
 
 pub fn validate_user_input<'a>(text: &str) -> Result<(), &'a str> {
-    helpers::validate_user_input(text, 30)
+    input_validation::validate_user_input(text, 30)
 }
 
 pub fn build_character_list(characters: &[CharacterCacheItem]) -> String {

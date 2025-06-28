@@ -1,5 +1,5 @@
 use crate::shared::data::Data;
-use crate::shared::helpers;
+use crate::shared::utility::quest_message_utils;
 use crate::Error;
 use serenity::all::{
     ComponentInteraction, CreateInteractionResponse, CreateInteractionResponseMessage,
@@ -39,7 +39,7 @@ pub async fn quest_sign_out(
         .await?;
 
     if rows_affected > 0 {
-        helpers::update_quest_message(context, data, channel_id).await?;
+        quest_message_utils::update_quest_message(context, data, channel_id).await?;
     }
 
     Ok(())

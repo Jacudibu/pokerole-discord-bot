@@ -3,7 +3,7 @@ use serenity::all::ChannelId;
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::{find_character, send_ephemeral_reply, Error};
 use crate::shared::errors::DatabaseError;
-use crate::shared::helpers;
+use crate::shared::utility::channel_id_ext::ChannelIdExt;
 use crate::shared::PoiseContext;
 
 /// Pulls up a link to a character sheet
@@ -26,7 +26,7 @@ pub async fn character_sheet(
     {
         Ok(record) => {
             let channel_id = ChannelId::new(record.stat_channel_id as u64);
-            let _ = send_ephemeral_reply(&ctx, &helpers::channel_id_link(channel_id)).await;
+            let _ = send_ephemeral_reply(&ctx, channel_id.channel_id_link()).await;
         }
         Err(e) => {
             return Err(Box::new(DatabaseError::new(&format!(

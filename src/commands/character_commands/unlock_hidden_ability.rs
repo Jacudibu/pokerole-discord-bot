@@ -7,7 +7,7 @@ use crate::commands::autocompletion::autocomplete_owned_character_name;
 use crate::commands::character_commands::ActionType;
 use crate::commands::{character_commands, find_character, update_character_post, Error};
 use crate::shared::errors::ValidationError;
-use crate::shared::helpers;
+use crate::shared::utility::button_building;
 use crate::shared::{emoji, PoiseContext};
 
 const CONFIRM: &str = "unlock_hidden_ability_proceed";
@@ -40,7 +40,7 @@ pub async fn unlock_hidden_ability(
 
     if character_record.money < PRICE {
         return Err(Box::new(ValidationError::new(
-            &format!(
+            format!(
                 "**Unable to unlock {}'s hidden ability.**\n*That would require {} {}. Right now, {} only owns {} {}.*",
                 character.name,
                 PRICE,
@@ -64,13 +64,18 @@ pub async fn unlock_hidden_ability(
             CreateReply::default()
                 .content(original_message.clone())
                 .components(vec![CreateActionRow::Buttons(vec![
-                    helpers::create_styled_button(
+                    button_building::create_styled_button(
                         "Let's do it!",
                         CONFIRM,
                         false,
                         ButtonStyle::Success,
                     ),
-                    helpers::create_styled_button("Nope!", ABORT, false, ButtonStyle::Danger),
+                    button_building::create_styled_button(
+                        "Nope!",
+                        ABORT,
+                        false,
+                        ButtonStyle::Danger,
+                    ),
                 ])]),
         )
         .await?;

@@ -1,6 +1,6 @@
 use crate::commands::autocompletion::autocomplete_character_name;
 use crate::commands::{parse_character_names, parse_variadic_args, send_error, Error};
-use crate::shared::helpers;
+use crate::shared::utility::quest_message_utils;
 use crate::shared::PoiseContext;
 
 /// Manually remove a character to the quest.
@@ -57,6 +57,7 @@ pub async fn remove_quest_participant(
     }
 
     ctx.say(result).await?;
-    helpers::update_quest_message(ctx.serenity_context(), ctx.data(), channel_id).await?;
+    quest_message_utils::update_quest_message(ctx.serenity_context(), ctx.data(), channel_id)
+        .await?;
     Ok(())
 }

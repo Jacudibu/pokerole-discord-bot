@@ -1,7 +1,7 @@
 use crate::commands::autocompletion::autocomplete_rule;
 use crate::commands::{edit_rules, Error};
 use crate::shared::errors::ValidationError;
-use crate::shared::helpers;
+use crate::shared::utility::message_splitting;
 use crate::shared::PoiseContext;
 
 /// Display rule
@@ -25,7 +25,7 @@ pub async fn rule(
     .await
     {
         Ok(rule) => {
-            for split in helpers::split_long_messages(rule.build_string().into()) {
+            for split in message_splitting::split_long_messages(rule.build_string().into()) {
                 if let Err(e) = ctx.say(split).await {
                     let _ = ctx
                         .reply(&format!("Encountered an unexpected error:\n```{}```", e))

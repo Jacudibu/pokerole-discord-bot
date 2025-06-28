@@ -12,7 +12,9 @@ use crate::events::{
 };
 use crate::shared::errors::CommandInvocationError;
 use crate::shared::game_data::GameData;
-use crate::shared::{clunky_stuff, dice_rolls, emoji, helpers};
+use crate::shared::utility::channel_id_ext::ChannelIdExt;
+use crate::shared::utility::message_splitting;
+use crate::shared::{clunky_stuff, dice_rolls, emoji};
 use crate::{shared, Error};
 
 async fn get_game_data<'a>(
@@ -68,9 +70,9 @@ pub async fn handle_button_interaction(
                 pokemon,
             )
             .await;
-            for response_part in
-                helpers::split_long_messages(pokemon.build_all_learnable_moves_list(emoji).into())
-            {
+            for response_part in message_splitting::split_long_messages(
+                pokemon.build_all_learnable_moves_list(emoji).into(),
+            ) {
                 interaction.message.reply(context, response_part).await?;
             }
         }
@@ -100,7 +102,9 @@ pub async fn handle_button_interaction(
             disable_button_on_original_message(context, interaction).await?;
             let game_data = get_game_data(&framework, interaction).await;
             let pokemon = game_data.pokemon.get(args[0]).unwrap();
-            for response_part in helpers::split_long_messages(pokemon.build_pokedex_string()) {
+            for response_part in
+                message_splitting::split_long_messages(pokemon.build_pokedex_string())
+            {
                 interaction.message.reply(context, response_part).await?;
             }
         }
@@ -233,13 +237,13 @@ async fn post_quest_history(
 
             for x in records {
                 let channel_id = serenity::model::id::ChannelId::from(x.quest_id as u64);
-                result.push_str(&helpers::channel_id_link(channel_id));
+                result.push_str(&channel_id.channel_id_link());
                 result.push('\n');
             }
 
             result.push_str("\n(If any of these say 'Unknown', you need to tap on them to load the channel name. That's just how Discord works, sorry!)");
 
-            for message in helpers::split_long_messages(result) {
+            for message in message_splitting::split_long_messages(result) {
                 let _ = send_ephemeral_reply(interaction, context, &message).await;
             }
 

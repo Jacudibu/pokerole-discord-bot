@@ -1,5 +1,5 @@
 use crate::shared::data::Data;
-use crate::shared::helpers;
+use crate::shared::utility::message_splitting;
 use log::info;
 use serenity::all::{ChannelId, Context, CreateMessage};
 
@@ -34,7 +34,7 @@ pub async fn restart_message(ctx: &Context, data: &Data) {
         }
     );
 
-    for message in helpers::split_long_messages(message) {
+    for message in message_splitting::split_long_messages(message) {
         let _ = status_channel_id
             .send_message(ctx, CreateMessage::new().content(message))
             .await;

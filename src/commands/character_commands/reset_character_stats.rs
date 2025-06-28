@@ -3,7 +3,7 @@ use crate::commands::character_commands::{log_action, ActionType};
 use crate::commands::{find_character, update_character_post, Error};
 use crate::shared::cache::CharacterCacheItem;
 use crate::shared::game_data::PokemonApiId;
-use crate::shared::helpers;
+use crate::shared::utility::level_calculations;
 use crate::shared::PoiseContext;
 
 /// Resets a characters stats to its default values.
@@ -57,9 +57,9 @@ pub async fn reset_db_stats(
         .get(&species_id)
         .expect("DB IDs should always be mappable.");
 
-    let level = helpers::calculate_level_from_experience(record.experience);
+    let level = level_calculations::calculate_level_from_experience(record.experience);
 
-    let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+    let pokemon_evolution_form_for_stats = level_calculations::get_usual_evolution_stage_for_level(
         level,
         used_poke_species,
         &ctx.data().game.base_data,

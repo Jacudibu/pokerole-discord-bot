@@ -1,6 +1,6 @@
 use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::{pokemon_from_autocomplete_string, Error};
-use crate::shared::helpers;
+use crate::shared::utility::button_building;
 use crate::shared::{emoji, PoiseContext};
 use poise::CreateReply;
 use serenity::all::CreateActionRow;
@@ -50,12 +50,12 @@ pub async fn stats(
 
 fn create_buttons<'a>(name: &String) -> CreateActionRow {
     CreateActionRow::Buttons(vec![
-        helpers::create_button("Abilities", format!("abilities_{}", name).as_str(), false),
-        helpers::create_button(
+        button_building::create_button("Abilities", format!("abilities_{}", name).as_str(), false),
+        button_building::create_button(
             "Type Effectiveness",
             format!("efficiency_{}", name).as_str(),
             false,
         ),
-        helpers::create_button("Moves", format!("moves_{}", name).as_str(), false),
+        button_building::create_button("Moves", format!("moves_{}", name).as_str(), false),
     ])
 }

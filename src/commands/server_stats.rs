@@ -1,6 +1,6 @@
 use crate::commands::Error;
 use crate::shared::game_data::PokemonApiId;
-use crate::shared::helpers;
+use crate::shared::utility::message_splitting;
 use crate::shared::{emoji, PoiseContext};
 use log::warn;
 
@@ -48,7 +48,7 @@ pub async fn server_stats(ctx: PoiseContext<'_>) -> Result<(), Error> {
 
     let _ = defer.await;
 
-    for message in helpers::split_long_messages(result) {
+    for message in message_splitting::split_long_messages(result) {
         let result = ctx.reply(message).await;
         if let Err(error) = result {
             let _ = ctx

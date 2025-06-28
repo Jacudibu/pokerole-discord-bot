@@ -7,7 +7,7 @@ use crate::events::send_error;
 use crate::shared::character_stats::GenericCharacterStats;
 use crate::shared::enums::MysteryDungeonRank;
 use crate::shared::game_data::{GameData, PokemonApiId};
-use crate::shared::helpers;
+use crate::shared::utility::level_calculations;
 use crate::Error;
 use serenity::all::{ComponentInteraction, Context, CreateInteractionResponse};
 use sqlx::{Pool, Sqlite};
@@ -51,7 +51,7 @@ async fn initialize_combat(
 
         return match record {
             Ok(record) => {
-                let level = helpers::calculate_level_from_experience(record.experience);
+                let level = level_calculations::calculate_level_from_experience(record.experience);
                 let experience = record.experience % 100;
                 let rank = MysteryDungeonRank::from_level(level as u8);
                 let pokemon = game_data
@@ -64,12 +64,13 @@ async fn initialize_combat(
                     ))
                     .expect("All mons inside the Database should have a valid API ID assigned.");
 
-                let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
-                    level,
-                    pokemon,
-                    game_data,
-                    record.species_override_for_stats,
-                );
+                let pokemon_evolution_form_for_stats =
+                    level_calculations::get_usual_evolution_stage_for_level(
+                        level,
+                        pokemon,
+                        game_data,
+                        record.species_override_for_stats,
+                    );
                 let combat_stats = GenericCharacterStats::from_combat(
                     pokemon_evolution_form_for_stats,
                     record.stat_strength,
@@ -79,7 +80,7 @@ async fn initialize_combat(
                     record.stat_insight,
                 );
 
-                let remaining_points = helpers::calculate_available_combat_points(level)
+                let remaining_points = level_calculations::calculate_available_combat_points(level)
                     - combat_stats.calculate_invested_stat_points();
 
                 if remaining_points <= 0 {
@@ -149,7 +150,7 @@ async fn initialize_social(
 
         return match record {
             Ok(record) => {
-                let level = helpers::calculate_level_from_experience(record.experience);
+                let level = level_calculations::calculate_level_from_experience(record.experience);
                 let experience = record.experience % 100;
                 let rank = MysteryDungeonRank::from_level(level as u8);
                 let pokemon = game_data
@@ -162,12 +163,13 @@ async fn initialize_social(
                     ))
                     .expect("All mons inside the Database should have a valid API ID assigned.");
 
-                let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
-                    level,
-                    pokemon,
-                    game_data,
-                    record.species_override_for_stats,
-                );
+                let pokemon_evolution_form_for_stats =
+                    level_calculations::get_usual_evolution_stage_for_level(
+                        level,
+                        pokemon,
+                        game_data,
+                        record.species_override_for_stats,
+                    );
                 let social_stats = GenericCharacterStats::from_social(
                     record.stat_tough,
                     record.stat_cool,

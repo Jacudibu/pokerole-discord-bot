@@ -9,7 +9,7 @@ use crate::shared::enums::{
 use crate::shared::game_data::pokemon::Pokemon;
 use crate::shared::game_data::r#move::Move;
 use crate::shared::game_data::GameData;
-use crate::shared::helpers;
+use crate::shared::utility::{level_calculations, message_splitting};
 use crate::shared::PoiseContext;
 
 /// Encounter some wild pokemon!
@@ -31,7 +31,9 @@ pub async fn encounter(
     let pokemon = pokemon_from_autocomplete_string(&ctx, &pokemon).await?;
     let game_data = ctx.data().game.get_by_context(&ctx).await;
     for encounter in build_encounter(pokemon, level, amount) {
-        for part in helpers::split_long_messages(encounter.build_string(pokemon, &game_data)) {
+        for part in
+            message_splitting::split_long_messages(encounter.build_string(pokemon, &game_data))
+        {
             ctx.say(part).await?;
         }
     }
@@ -106,7 +108,8 @@ impl EncounterMon {
             Stat::Insight,
         ];
         let mut non_maxed_stat_points = all_stats.clone();
-        let mut remaining_stat_points = helpers::calculate_available_combat_points(level as i64);
+        let mut remaining_stat_points =
+            level_calculations::calculate_available_combat_points(level as i64);
         let mut limit_break_count = 0;
         while remaining_stat_points > 0 {
             if let Some(mut stat) = non_maxed_stat_points.iter().choose(&mut rng) {

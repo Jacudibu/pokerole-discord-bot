@@ -1,7 +1,7 @@
 use crate::events::send_ephemeral_reply;
 use crate::shared::data::Data;
 use crate::shared::enums::QuestParticipantSelectionMechanism;
-use crate::shared::helpers;
+use crate::shared::utility::{message_splitting, quest_message_utils};
 use crate::Error;
 use serenity::all::{ComponentInteraction, CreateInteractionResponseFollowup};
 use serenity::client::Context;
@@ -24,7 +24,7 @@ pub async fn quest_list_all_participants(
         QuestParticipantSelectionMechanism::from_repr(quest_record.participant_selection_mechanism)
             .expect("Should always be valid!");
 
-    let (text, _) = helpers::create_quest_participant_list(
+    let (text, _) = quest_message_utils::create_quest_participant_list(
         context,
         data,
         channel_id,
@@ -36,7 +36,7 @@ pub async fn quest_list_all_participants(
 
     // Could also add pagination when this gets too ridiculous
     let mut first = true;
-    for text in helpers::split_long_messages(text) {
+    for text in message_splitting::split_long_messages(text) {
         if first {
             let _ = send_ephemeral_reply(&interaction, context, &text).await;
             first = false;

@@ -4,7 +4,8 @@ use crate::shared::cache::{CharacterCacheItem, WalletCacheItem};
 use crate::shared::data::Data;
 use crate::shared::errors::{ParseError, ValidationError};
 use crate::shared::game_data::pokemon::Pokemon;
-use crate::shared::{character, helpers, PoiseContext};
+use crate::shared::utility::error_handling;
+use crate::shared::{character, PoiseContext};
 use crate::Error;
 use poise::{Command, CreateReply, ReplyHandle};
 use serenity::all::{ChannelId, CreateActionRow, EditMessage, Message, MessageId};
@@ -486,7 +487,7 @@ async fn handle_error_during_message_edit<'a>(
     components: Option<Vec<CreateActionRow>>,
     name: impl Into<String>,
 ) {
-    helpers::handle_error_during_message_edit(
+    error_handling::handle_error_during_message_edit(
         ctx.serenity_context(),
         e,
         message_to_edit,

@@ -1,8 +1,9 @@
+use crate::shared::constants;
 use crate::shared::data::Data;
 use crate::shared::enums::{Gender, PokemonType, RegionalVariant};
 use crate::shared::game_data::pokemon::Pokemon;
 use crate::shared::game_data::PokemonApiId;
-use crate::shared::{constants, emoji, helpers};
+use crate::shared::utility::error_handling;
 use crate::Error;
 use image::{DynamicImage, GenericImageView, ImageFormat};
 use rand::Rng;
@@ -52,7 +53,7 @@ pub async fn get_character_emoji(
         let gender = Gender::from_phenotype(record.phenotype);
         let api_id = PokemonApiId(record.species_api_id as u16);
         let Some(pokemon) = data.game.base_data.pokemon_by_api_id.get(&api_id) else {
-            helpers::log_error(context, format!("DB species ID should always be set, but was unable to find a pokemon for api_id {api_id:?}!")).await;
+            error_handling::log_error(context, format!("DB species ID should always be set, but was unable to find a pokemon for api_id {api_id:?}!")).await;
             return None;
         };
 

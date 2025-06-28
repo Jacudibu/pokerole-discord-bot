@@ -1,5 +1,6 @@
 use crate::commands::send_ephemeral_reply;
-use crate::shared::{helpers, PoiseContext};
+use crate::shared::utility::message_splitting;
+use crate::shared::PoiseContext;
 use crate::Error;
 
 /// Removes emoji which have been manually deleted from the server from the database.
@@ -43,7 +44,7 @@ pub async fn prune_emojis(ctx: PoiseContext<'_>) -> Result<(), Error> {
     }
 
     let text = format!("Removed {} emojis.\n```{}```", list.len(), list.join("\n"));
-    for text in helpers::split_long_messages(text) {
+    for text in message_splitting::split_long_messages(text) {
         send_ephemeral_reply(&ctx, &text).await?;
     }
 

@@ -1,8 +1,9 @@
 use crate::events::send_error;
 use crate::shared::character_stats::GenericCharacterStats;
+use crate::shared::emoji;
 use crate::shared::enums::{Gender, MysteryDungeonRank};
 use crate::shared::game_data::{GameData, PokemonApiId};
-use crate::shared::{emoji, helpers};
+use crate::shared::utility::level_calculations;
 use crate::Error;
 use serenity::all::{
     ButtonStyle, ComponentInteraction, CreateActionRow, CreateInteractionResponseMessage,
@@ -165,7 +166,7 @@ struct CharacterDataForStatEditing {
 
 impl CharacterDataForStatEditing {
     pub fn remaining_combat_points(&self) -> i64 {
-        helpers::calculate_available_combat_points(self.level)
+        level_calculations::calculate_available_combat_points(self.level)
             - self.combat_stats.calculate_invested_stat_points()
     }
     pub fn remaining_social_points(&self) -> i64 {
@@ -195,7 +196,7 @@ async fn get_character_data_for_edit(
         .await
         .unwrap();
 
-    let level = helpers::calculate_level_from_experience(record.experience);
+    let level = level_calculations::calculate_level_from_experience(record.experience);
     let rank = MysteryDungeonRank::from_level(level as u8);
     let pokemon = game_data
         .pokemon_by_api_id
@@ -218,7 +219,7 @@ async fn get_character_data_for_edit(
     .await
     .unwrap_or(format!("[{}]", pokemon.name));
 
-    let pokemon_evolution_form_for_stats = helpers::get_usual_evolution_stage_for_level(
+    let pokemon_evolution_form_for_stats = level_calculations::get_usual_evolution_stage_for_level(
         level,
         pokemon,
         game_data,
@@ -321,7 +322,7 @@ async fn create_stat_edit_overview_message(
     let limit_break_substring = if stats.is_any_stat_at_or_above_max() {
         format!(
             "\nLimit breaking would cost you {}.",
-            helpers::calculate_next_limit_break_cost(stats.count_limit_breaks())
+            level_calculations::calculate_next_limit_break_cost(stats.count_limit_breaks())
         )
     } else {
         String::new()
