@@ -2,12 +2,14 @@ use crate::shared::data::Data;
 use crate::shared::emoji;
 use crate::shared::enums::QuestParticipantSelectionMechanism;
 use crate::shared::utility::button_building;
+use crate::shared::utility::channel_id_ext::ChannelIdExt;
 use crate::Error;
 use serenity::all::{ButtonStyle, ChannelId, Context, CreateActionRow, EditMessage, MessageId};
 
 struct QuestSignup {
     character_name: String,
     character_experience: i64,
+    stat_channel_id: ChannelId,
     user_id: i64,
     accepted: bool,
     emoji: String,
@@ -51,8 +53,10 @@ pub async fn create_quest_participant_list(
     selection_mechanism: QuestParticipantSelectionMechanism,
     stop_at_character_limit: bool,
 ) -> Result<(String, bool), Error> {
-    let records = sqlx::query!(
-        "SELECT character.id as character_id, character.name as character_name, character.user_id as user_id, character.species_api_id as character_species_id, character.experience as character_experience, quest_signup.accepted as accepted
+    let records = sqlx::query!("
+SELECT character.id as character_id, character.name as character_name, character.user_id as user_id,
+       character.species_api_id as character_species_id, character.experience as character_experience,
+       character.stat_channel_id as stat_channel_id, quest_signup.accepted as accepted
 FROM quest_signup
 INNER JOIN character ON
     quest_signup.character_id = character.id
@@ -74,6 +78,7 @@ ORDER BY quest_signup.accepted DESC, quest_signup.timestamp
         quest_signups.push(QuestSignup {
             character_name: record.character_name.clone(),
             character_experience: record.character_experience,
+            stat_channel_id: ChannelId::new(record.stat_channel_id as u64),
             user_id: record.user_id,
             accepted: record.accepted,
             emoji,
@@ -117,24 +122,44 @@ ORDER BY quest_signup.accepted DESC, quest_signup.timestamp
                 }
 
                 text.push_str("**Participants:**\n");
-                add_character_names(&mut text, accepted_participants, displayable_accepted);
+                add_character_names(&mut text, accepted_participants, displayable_accepted, true);
 
                 if !floating_participants.is_empty() {
                     text.push_str("\n**Waiting Queue:**\n");
-                    add_character_names(&mut text, floating_participants, displayable_floating);
+                    add_character_names(
+                        &mut text,
+                        floating_participants,
+                        displayable_floating,
+                        false,
+                    );
                 }
             }
             QuestParticipantSelectionMechanism::Random
             | QuestParticipantSelectionMechanism::GMPicks => {
                 if accepted_participants.is_empty() {
                     text.push_str("**Signups:**\n");
-                    add_character_names(&mut text, floating_participants, displayable_accepted);
+                    add_character_names(
+                        &mut text,
+                        floating_participants,
+                        displayable_accepted,
+                        false,
+                    );
                 } else {
                     text.push_str("**Participants:**\n");
-                    add_character_names(&mut text, accepted_participants, displayable_accepted);
+                    add_character_names(
+                        &mut text,
+                        accepted_participants,
+                        displayable_accepted,
+                        true,
+                    );
                     if !floating_participants.is_empty() {
                         text.push_str("\n**Waiting Queue:**\n");
-                        add_character_names(&mut text, floating_participants, displayable_floating);
+                        add_character_names(
+                            &mut text,
+                            floating_participants,
+                            displayable_floating,
+                            false,
+                        );
                     }
                 }
             }
@@ -149,11 +174,22 @@ ORDER BY quest_signup.accepted DESC, quest_signup.timestamp
     Ok((text, hidden_signup_count > 0))
 }
 
-fn add_character_names(text: &mut String, quest_signups: Vec<&QuestSignup>, max: usize) {
+fn add_character_names(
+    text: &mut String,
+    quest_signups: Vec<&QuestSignup>,
+    max: usize,
+    display_link_to_character_sheet: bool,
+) {
     for record in quest_signups.iter().take(max) {
+        let cs_link = if display_link_to_character_sheet {
+            format!(" ({})", record.stat_channel_id.channel_id_link())
+        } else {
+            String::new()
+        };
+
         text.push_str(
             format!(
-                "- {}{} (<@{}>) Lv.{}\n",
+                "- {}{} (<@{}>) Lv.{}{cs_link}\n",
                 record.emoji,
                 record.character_name,
                 record.user_id,
