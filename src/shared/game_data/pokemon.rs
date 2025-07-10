@@ -456,7 +456,7 @@ impl Pokemon {
             );
         }
 
-        let (api_id, evolves_from_api_id, abilities) = match api_option {
+        let (api_id, evolves_from_api_id, abilities, type1, type2) = match api_option {
             None => (
                 PokemonApiId(raw.number),
                 None,
@@ -466,11 +466,15 @@ impl Pokemon {
                     hidden_ability: Pokemon::parse_ability(raw.hidden_ability.clone()),
                     event_abilities: Pokemon::parse_ability(raw.event_abilities.clone()),
                 },
+                Pokemon::parse_type(raw.type1.clone()).unwrap(),
+                Pokemon::parse_type(raw.type1.clone()),
             ),
             Some(item) => (
                 PokemonApiId(item.pokemon_id.0),
                 item.evolves_from,
                 PokemonAbilities::from(&item.abilities),
+                item.type1,
+                item.type2,
             ),
         };
 
@@ -483,8 +487,8 @@ impl Pokemon {
             evolves_from: evolves_from_api_id,
             regional_variant,
             api_issue,
-            type1: Pokemon::parse_type(raw.type1.clone()).unwrap(),
-            type2: Pokemon::parse_type(raw.type2.clone()),
+            type1,
+            type2,
             base_hp: raw.base_hp,
             strength: PokemonStat::new(raw.strength, raw.max_strength),
             dexterity: PokemonStat::new(raw.dexterity, raw.max_dexterity),
