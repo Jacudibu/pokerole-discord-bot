@@ -3,11 +3,11 @@ use crate::shared::enums::{
     MysteryDungeonRank, PokemonGeneration, PokemonType, RegionalVariant, Stat,
 };
 use crate::shared::errors::DataParsingError;
-use crate::shared::game_data::ability::Ability;
 use crate::shared::game_data::enums::poke_role_rank::PokeRoleRank;
 use crate::shared::game_data::parser::custom_data::custom_pokemon::{
     CustomPokemon, CustomPokemonMoves,
 };
+use crate::shared::game_data::pokemon_abilities::PokemonAbilities;
 use crate::shared::game_data::pokemon_api::PokemonApiId;
 use crate::shared::game_data::pokemon_api::pokemon_api_parser::{PokedexEntry, PokemonApiData};
 use crate::shared::game_data::pokerole_data::raw_pokemon::{
@@ -72,10 +72,7 @@ pub struct Pokemon {
     pub vitality: PokemonStat,
     pub special: PokemonStat,
     pub insight: PokemonStat,
-    pub ability1: String,
-    pub ability2: Option<String>,
-    pub hidden_ability: Option<String>,
-    pub event_abilities: Option<String>,
+    pub abilities: PokemonAbilities,
     pub height: Height,
     pub weight: Weight,
     pub moves: LearnablePokemonMoves,
@@ -141,67 +138,6 @@ impl Pokemon {
             Stat::Insight => &self.insight,
             _ => panic!("Unexpected stat: {}", stat),
         }
-    }
-}
-
-impl Pokemon {
-    pub fn build_ability_string(
-        &self,
-        emoji: String,
-        abilities: &HashMap<String, Ability>,
-    ) -> impl Into<String> {
-        let mut result = std::format!("## {}{} Abilities\n", emoji, self.name);
-        Pokemon::push_ability(&mut result, &self.ability1, abilities, "");
-        if let Some(ability) = &self.ability2 {
-            Pokemon::push_ability(&mut result, ability, abilities, "");
-        }
-
-        if let Some(ability) = &self.hidden_ability {
-            Pokemon::push_ability(&mut result, ability, abilities, "(Hidden)");
-        }
-
-        if let Some(ability) = &self.event_abilities {
-            Pokemon::push_ability(&mut result, ability, abilities, "(Event / Hidden)");
-        }
-
-        result
-    }
-
-    pub fn build_simple_ability_list(&self, include_hidden: bool, include_event: bool) -> String {
-        let mut result = format!("- {}\n", self.ability1);
-        if let Some(ability) = &self.ability2 {
-            result.push_str(&format!("- {}\n", ability));
-        }
-
-        if include_hidden {
-            if let Some(ability) = &self.hidden_ability {
-                result.push_str(&format!("- {} (Hidden)\n", ability));
-            }
-        }
-
-        if include_event {
-            if let Some(ability) = &self.event_abilities {
-                result.push_str(&format!("- {} (Event)\n", ability));
-            }
-        }
-
-        result
-    }
-
-    fn push_ability(
-        result: &mut String,
-        ability_name: &String,
-        abilities: &HashMap<String, Ability>,
-        suffix: &str,
-    ) {
-        match abilities.get(ability_name.to_lowercase().as_str()) {
-            None => result.push_str(
-                std::format!("### {} {}\nNot implemented. :(\n", ability_name, suffix).as_str(),
-            ),
-            Some(ability) => {
-                result.push_str(std::format!("{}\n", ability.build_string(suffix).into()).as_str())
-            }
-        };
     }
 }
 
@@ -520,25 +456,23 @@ impl Pokemon {
             );
         }
 
-        let (api_id, evolves_from_api_id, ability1, ability2, hidden_ability, event_abilities) =
-            match api_option {
-                None => (
-                    PokemonApiId(raw.number),
-                    None,
-                    raw.ability1.clone(),
-                    Pokemon::parse_ability(raw.ability2.clone()),
-                    Pokemon::parse_ability(raw.hidden_ability.clone()),
-                    Pokemon::parse_ability(raw.event_abilities.clone()),
-                ),
-                Some(item) => (
-                    PokemonApiId(item.pokemon_id.0),
-                    item.evolves_from,
-                    item.abilities.ability1.clone(),
-                    item.abilities.ability2.clone(),
-                    item.abilities.hidden.clone(),
-                    item.abilities.event.clone(),
-                ),
-            };
+        let (api_id, evolves_from_api_id, abilities) = match api_option {
+            None => (
+                PokemonApiId(raw.number),
+                None,
+                PokemonAbilities {
+                    ability1: raw.ability1.clone(),
+                    ability2: Pokemon::parse_ability(raw.ability2.clone()),
+                    hidden_ability: Pokemon::parse_ability(raw.hidden_ability.clone()),
+                    event_abilities: Pokemon::parse_ability(raw.event_abilities.clone()),
+                },
+            ),
+            Some(item) => (
+                PokemonApiId(item.pokemon_id.0),
+                item.evolves_from,
+                PokemonAbilities::from(&item.abilities),
+            ),
+        };
 
         Pokemon {
             number: raw.number,
@@ -557,10 +491,7 @@ impl Pokemon {
             vitality: PokemonStat::new(raw.vitality, raw.max_vitality),
             special: PokemonStat::new(raw.special, raw.max_special),
             insight: PokemonStat::new(raw.insight, raw.max_insight),
-            ability1,
-            ability2,
-            hidden_ability,
-            event_abilities,
+            abilities,
             height: raw.height.clone(),
             weight: raw.weight.clone(),
             moves,
@@ -671,10 +602,7 @@ impl Pokemon {
             vitality: PokemonStat::from_str(&raw.vitality)?,
             special: PokemonStat::from_str(&raw.special)?,
             insight: PokemonStat::from_str(&raw.insight)?,
-            ability1: api_data.abilities.ability1.clone(),
-            ability2: api_data.abilities.ability2.clone(),
-            hidden_ability: api_data.abilities.hidden.clone(),
-            event_abilities: api_data.abilities.event.clone(),
+            abilities: PokemonAbilities::from(&api_data.abilities),
             height: api_data.height.clone(),
             weight: api_data.weight.clone(),
             moves,
@@ -733,16 +661,16 @@ impl Pokemon {
         self.insight.append_stat_string(&mut result, "Insight");
 
         result.push_str("**Ability**: ");
-        result.push_str(&self.ability1);
-        if let Some(ability2) = &self.ability2 {
+        result.push_str(&self.abilities.ability1);
+        if let Some(ability2) = &self.abilities.ability2 {
             result.push_str(&std::format!(" / {}", ability2))
         }
 
-        if let Some(hidden) = &self.hidden_ability {
+        if let Some(hidden) = &self.abilities.hidden_ability {
             result.push_str(&std::format!(" ({})", hidden))
         }
 
-        if let Some(event) = &self.event_abilities {
+        if let Some(event) = &self.abilities.event_abilities {
             result.push_str(&std::format!(" ({})", event))
         }
 

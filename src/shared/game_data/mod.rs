@@ -22,6 +22,7 @@ mod pokerole_data;
 pub mod enums;
 
 pub mod parser;
+mod pokemon_abilities;
 pub mod type_efficiency;
 
 /// Data which is stored and accessible in all command invocations

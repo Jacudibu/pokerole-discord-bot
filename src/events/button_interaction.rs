@@ -141,7 +141,8 @@ pub async fn handle_button_interaction(
                 .reply(
                     context,
                     pokemon
-                        .build_ability_string(emoji, &game_data.abilities)
+                        .abilities
+                        .build_ability_string(&emoji, &pokemon.name, &game_data.abilities)
                         .into(),
                 )
                 .await?;
@@ -210,7 +211,7 @@ async fn post_quest_history(
 ) -> Result<(), Error> {
     let Ok(character_id) = i64::from_str(args[0]) else {
         return Err(Box::new(
-            CommandInvocationError::new(&format!("Invalid character ID in request: {}", args[0]))
+            CommandInvocationError::new(format!("Invalid character ID in request: {}", args[0]))
                 .should_be_logged(),
         ));
     };
@@ -315,7 +316,7 @@ fn create_button_from_discord_button(button: &Button, used_button_id: &String) -
         }
         ButtonKind::NonLink { custom_id, style } => {
             let mut result = CreateButton::new(custom_id)
-                .style(style.clone())
+                .style(*style)
                 .disabled(button.disabled || custom_id == used_button_id);
 
             if let Some(label) = &button.label {

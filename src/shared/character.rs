@@ -99,8 +99,9 @@ pub async fn build_character_string(
                 record.stat_clever,
             );
 
-            let ability_list =
-                pokemon.build_simple_ability_list(record.is_hidden_ability_unlocked, false);
+            let ability_list = pokemon
+                .abilities
+                .build_simple_ability_list(record.is_hidden_ability_unlocked, false);
 
             let retired_or_not = if record.is_retired { "[RETIRED]" } else { "" };
 
