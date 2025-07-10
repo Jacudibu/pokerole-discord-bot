@@ -29,7 +29,6 @@ pub async fn server_stats(ctx: PoiseContext<'_>) -> Result<(), Error> {
     result.push_str(&quests);
     result.push_str(&character_money);
     result.push_str(&wallet_money);
-    result.push_str(&quests);
     result.push_str(&pokemon);
 
     result.push_str("\n*(Got any other ideas for what should be displayed here? Lemme know and I might add it!)*");
