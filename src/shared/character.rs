@@ -65,14 +65,14 @@ pub async fn build_character_string(
                     String::new()
                 };
 
-            let type_emojis = if let Some(type2) = pokemon.type2 {
+            let type_emojis = if let Some(type2) = pokemon.types.type2 {
                 format!(
                     "{}/{}",
-                    emoji::type_to_emoji(&pokemon.type1),
+                    emoji::type_to_emoji(&pokemon.types.type1),
                     emoji::type_to_emoji(&type2)
                 )
             } else {
-                emoji::type_to_emoji(&pokemon.type1).to_string()
+                emoji::type_to_emoji(&pokemon.types.type1).to_string()
             };
 
             let pokemon_evolution_form_for_stats =

@@ -91,10 +91,10 @@ impl TypeEfficiency {
             .data
             .get(move_type)
             .unwrap()
-            .get(&pokemon.type1)
+            .get(&pokemon.types.type1)
             .unwrap();
 
-        let type2 = match pokemon.type2 {
+        let type2 = match pokemon.types.type2 {
             None => &1.0,
             Some(t) => self.data.get(move_type).unwrap().get(&t).unwrap(),
         };

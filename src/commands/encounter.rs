@@ -4,12 +4,11 @@ use rand::{Rng, rng};
 use crate::commands::autocompletion::autocomplete_pokemon;
 use crate::commands::{Error, pokemon_from_autocomplete_string};
 use crate::shared::PoiseContext;
-use crate::shared::enums::{
-    CombatOrSocialStat, Gender, MysteryDungeonRank, PokemonType, SocialStat, Stat,
-};
+use crate::shared::enums::{CombatOrSocialStat, Gender, MysteryDungeonRank, SocialStat, Stat};
 use crate::shared::game_data::GameData;
 use crate::shared::game_data::r#move::Move;
 use crate::shared::game_data::pokemon::Pokemon;
+use crate::shared::game_data::pokemon_types::PokemonTypes;
 use crate::shared::utility::{level_calculations, message_splitting};
 
 /// Encounter some wild pokemon!
@@ -54,8 +53,7 @@ fn build_encounter(pokemon: &Pokemon, level: u8, amount: Option<u8>) -> Vec<Enco
 struct EncounterMon {
     pub name: String,
     pub gender: Gender,
-    pub type1: PokemonType,
-    pub type2: Option<PokemonType>,
+    pub types: PokemonTypes,
     pub level: u8,
     pub rank: MysteryDungeonRank,
     pub ability: String,
@@ -79,8 +77,7 @@ impl EncounterMon {
         let mut result = EncounterMon {
             name: pokemon.name.clone(),
             gender: EncounterMon::get_random_gender(pokemon),
-            type1: pokemon.type1,
-            type2: pokemon.type2,
+            types: pokemon.types.clone(),
             level,
             rank: MysteryDungeonRank::from_level(level),
             ability: EncounterMon::get_random_ability(pokemon),
@@ -255,10 +252,10 @@ impl EncounterMon {
             self.level,
             self.rank.emoji_string()
         );
-        if let Some(type2) = self.type2 {
-            result.push_str(std::format!("**Types**: {} / {}\n", self.type1, type2).as_str());
+        if let Some(type2) = self.types.type2 {
+            result.push_str(std::format!("**Types**: {} / {}\n", self.types.type1, type2).as_str());
         } else {
-            result.push_str(std::format!("**Type**: {}\n", self.type1).as_str());
+            result.push_str(std::format!("**Type**: {}\n", self.types.type1).as_str());
         }
         result.push_str(
             std::format!(
@@ -322,7 +319,9 @@ INS: {:>2} / {:>2}      Cute:   {} / 5
                     let accuracy = self.calculate_accuracy(m);
                     let damage = self.calculate_damage(m);
                     if damage > 0 {
-                        if m.typing.has_stab(&Some(self.type1)) || m.typing.has_stab(&self.type2) {
+                        if m.typing.has_stab(&Some(self.types.type1))
+                            || m.typing.has_stab(&self.types.type2)
+                        {
                             result.push_str(
                                 std::format!(
                                     "ACC: **{}** | DMG: **{} + STAB**\n",

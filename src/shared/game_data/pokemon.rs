@@ -1,7 +1,5 @@
 use crate::shared::emoji;
-use crate::shared::enums::{
-    MysteryDungeonRank, PokemonGeneration, PokemonType, RegionalVariant, Stat,
-};
+use crate::shared::enums::{MysteryDungeonRank, PokemonGeneration, RegionalVariant, Stat};
 use crate::shared::errors::DataParsingError;
 use crate::shared::game_data::enums::poke_role_rank::PokeRoleRank;
 use crate::shared::game_data::parser::custom_data::custom_pokemon::{
@@ -10,6 +8,7 @@ use crate::shared::game_data::parser::custom_data::custom_pokemon::{
 use crate::shared::game_data::pokemon_abilities::PokemonAbilities;
 use crate::shared::game_data::pokemon_api::PokemonApiId;
 use crate::shared::game_data::pokemon_api::pokemon_api_parser::{PokedexEntry, PokemonApiData};
+use crate::shared::game_data::pokemon_types::PokemonTypes;
 use crate::shared::game_data::pokerole_data::raw_pokemon::{
     RawPokemonMoveLearnedByLevelUp, RawPokerolePokemon,
 };
@@ -64,8 +63,7 @@ pub struct Pokemon {
     pub evolves_from: Option<PokemonApiId>,
     pub api_issue: Option<ApiIssueType>,
     pub name: String,
-    pub type1: PokemonType,
-    pub type2: Option<PokemonType>,
+    pub types: PokemonTypes,
     pub base_hp: u8,
     pub strength: PokemonStat,
     pub dexterity: PokemonStat,
@@ -456,7 +454,7 @@ impl Pokemon {
             );
         }
 
-        let (api_id, evolves_from_api_id, abilities, type1, type2) = match api_option {
+        let (api_id, evolves_from_api_id, abilities, types) = match api_option {
             None => (
                 PokemonApiId(raw.number),
                 None,
@@ -466,15 +464,16 @@ impl Pokemon {
                     hidden_ability: Pokemon::parse_ability(raw.hidden_ability.clone()),
                     event_abilities: Pokemon::parse_ability(raw.event_abilities.clone()),
                 },
-                Pokemon::parse_type(raw.type1.clone()).unwrap(),
-                Pokemon::parse_type(raw.type1.clone()),
+                PokemonTypes::parse_types(&raw.type1, &raw.type2),
             ),
-            Some(item) => (
-                PokemonApiId(item.pokemon_id.0),
-                item.evolves_from,
-                PokemonAbilities::from(&item.abilities),
-                item.type1,
-                item.type2,
+            Some(api_data) => (
+                PokemonApiId(api_data.pokemon_id.0),
+                api_data.evolves_from,
+                PokemonAbilities::from(&api_data.abilities),
+                PokemonTypes {
+                    type1: api_data.type1,
+                    type2: api_data.type2,
+                },
             ),
         };
 
@@ -487,8 +486,7 @@ impl Pokemon {
             evolves_from: evolves_from_api_id,
             regional_variant,
             api_issue,
-            type1,
-            type2,
+            types,
             base_hp: raw.base_hp,
             strength: PokemonStat::new(raw.strength, raw.max_strength),
             dexterity: PokemonStat::new(raw.dexterity, raw.max_dexterity),
@@ -598,8 +596,10 @@ impl Pokemon {
             regional_variant,
             api_issue,
             evolves_from: raw.evolves_from_override.or(api_data.evolves_from),
-            type1: api_data.type1,
-            type2: api_data.type2,
+            types: PokemonTypes {
+                type1: api_data.type1,
+                type2: api_data.type2,
+            },
             base_hp: raw.base_hp,
             strength: PokemonStat::from_str(&raw.strength)?,
             dexterity: PokemonStat::from_str(&raw.dexterity)?,
@@ -630,14 +630,6 @@ impl Pokemon {
         None
     }
 
-    fn parse_type(raw: String) -> Option<PokemonType> {
-        if raw.is_empty() {
-            return None;
-        }
-
-        Some(PokemonType::from_str(&raw).unwrap())
-    }
-
     fn parse_ability(raw: String) -> Option<String> {
         if raw.is_empty() {
             return None;
@@ -650,8 +642,8 @@ impl Pokemon {
         let mut result = std::format!("### {}{} [#{}]\n", emoji, self.name, self.number);
         result.push_str(&std::format!("{}   |   {}\n", self.height, self.weight));
         result.push_str("**Type**: ");
-        result.push_str(std::format!("{}", self.type1).as_str());
-        if let Some(type2) = self.type2 {
+        result.push_str(std::format!("{}", self.types.type1).as_str());
+        if let Some(type2) = self.types.type2 {
             result.push_str(std::format!(" / {}", type2).as_str())
         }
         result.push('\n');
