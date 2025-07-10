@@ -8,8 +8,8 @@ use crate::shared::game_data::enums::poke_role_rank::PokeRoleRank;
 use crate::shared::game_data::parser::custom_data::custom_pokemon::{
     CustomPokemon, CustomPokemonMoves,
 };
-use crate::shared::game_data::pokemon_api::pokemon_api_parser::{PokedexEntry, PokemonApiData};
 use crate::shared::game_data::pokemon_api::PokemonApiId;
+use crate::shared::game_data::pokemon_api::pokemon_api_parser::{PokedexEntry, PokemonApiData};
 use crate::shared::game_data::pokerole_data::raw_pokemon::{
     RawPokemonMoveLearnedByLevelUp, RawPokerolePokemon,
 };
@@ -149,7 +149,7 @@ impl Pokemon {
         &self,
         emoji: String,
         abilities: &HashMap<String, Ability>,
-    ) -> impl Into<String> + Sized {
+    ) -> impl Into<String> {
         let mut result = std::format!("## {}{} Abilities\n", emoji, self.name);
         Pokemon::push_ability(&mut result, &self.ability1, abilities, "");
         if let Some(ability) = &self.ability2 {
@@ -250,7 +250,7 @@ impl Pokemon {
 }
 
 impl Pokemon {
-    pub fn build_move_string(&self, emoji: String) -> impl Into<String> + Sized {
+    pub fn build_move_string(&self, emoji: String) -> impl Into<String> {
         let mut result = std::format!("### {}{} [#{}]\n", emoji, self.name, self.number);
         self.filter_moves(
             &mut result,
@@ -520,13 +520,25 @@ impl Pokemon {
             );
         }
 
-        let (api_id, evolves_from_api_id) = match api_option {
-            None => {
-                //warn!("Unable to match {}", raw.name);
-                (PokemonApiId(raw.number), None)
-            }
-            Some(item) => (PokemonApiId(item.pokemon_id.0), item.evolves_from),
-        };
+        let (api_id, evolves_from_api_id, ability1, ability2, hidden_ability, event_abilities) =
+            match api_option {
+                None => (
+                    PokemonApiId(raw.number),
+                    None,
+                    raw.ability1.clone(),
+                    Pokemon::parse_ability(raw.ability2.clone()),
+                    Pokemon::parse_ability(raw.hidden_ability.clone()),
+                    Pokemon::parse_ability(raw.event_abilities.clone()),
+                ),
+                Some(item) => (
+                    PokemonApiId(item.pokemon_id.0),
+                    item.evolves_from,
+                    item.abilities.ability1.clone(),
+                    item.abilities.ability2.clone(),
+                    item.abilities.hidden.clone(),
+                    item.abilities.event.clone(),
+                ),
+            };
 
         Pokemon {
             number: raw.number,
@@ -545,10 +557,10 @@ impl Pokemon {
             vitality: PokemonStat::new(raw.vitality, raw.max_vitality),
             special: PokemonStat::new(raw.special, raw.max_special),
             insight: PokemonStat::new(raw.insight, raw.max_insight),
-            ability1: raw.ability1.clone(),
-            ability2: Pokemon::parse_ability(raw.ability2.clone()),
-            hidden_ability: Pokemon::parse_ability(raw.hidden_ability.clone()),
-            event_abilities: Pokemon::parse_ability(raw.event_abilities.clone()),
+            ability1,
+            ability2,
+            hidden_ability,
+            event_abilities,
             height: raw.height.clone(),
             weight: raw.weight.clone(),
             moves,
