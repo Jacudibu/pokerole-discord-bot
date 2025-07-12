@@ -75,8 +75,7 @@ pub async fn successive_action_roll(
     let defer = ctx.defer();
     let accuracy_reduction_per_success = accuracy_reduction_per_success
         .unwrap_or(action_kind.default_accuracy_reduction_per_throw());
-    let mut required_accuracy =
-        1 + base_accuracy_reduction.unwrap_or(action_kind.default_accuracy_reduction_per_throw());
+    let mut required_accuracy = 1 + base_accuracy_reduction.unwrap_or(0);
     let damage_change_per_roll = damage_change_per_roll.unwrap_or(0) as i16;
 
     let mut message = format!(
