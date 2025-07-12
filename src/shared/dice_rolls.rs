@@ -1,7 +1,7 @@
+use crate::Error;
+use crate::shared::PoiseContext;
 use crate::shared::errors::ParseError;
 use crate::shared::utility::button_building;
-use crate::shared::PoiseContext;
-use crate::Error;
 use poise::CreateReply;
 use rand::Rng;
 use serenity::all::CreateActionRow;
@@ -49,7 +49,7 @@ pub fn parse_query(query: &str) -> Result<ParsedRollQuery, Error> {
             Err(_) => return Err(Box::new(ParseError::new("Unable to parse query."))),
         };
 
-        return Ok(ParsedRollQuery::new(amount, Some(6), flat_addition));
+        return Ok(ParsedRollQuery::new(amount, Some(6), flat_addition, true));
     }
 
     let amount = match u8::from_str(split[0]) {
@@ -62,7 +62,7 @@ pub fn parse_query(query: &str) -> Result<ParsedRollQuery, Error> {
         Err(_) => return Err(Box::new(ParseError::new("Unable to parse query."))),
     };
 
-    Ok(ParsedRollQuery::new(amount, sides, flat_addition))
+    Ok(ParsedRollQuery::new(amount, sides, flat_addition, true))
 }
 
 pub async fn execute_query<'a>(ctx: &PoiseContext<'a>, query: &str) -> Result<(), Error> {
@@ -80,12 +80,16 @@ pub async fn roll<'a>(
     sides: Option<u8>,
     flat_addition: Option<u8>,
 ) -> Result<(), Error> {
-    execute_roll(ctx, ParsedRollQuery::new(amount, sides, flat_addition)).await
+    execute_roll(
+        ctx,
+        ParsedRollQuery::new(amount, sides, flat_addition, true),
+    )
+    .await
 }
 
 async fn execute_roll<'a>(ctx: &PoiseContext<'a>, query: ParsedRollQuery) -> Result<(), Error> {
     ctx.defer().await?;
-    let result = query.execute();
+    let result = query.execute().message;
     let query_string = query.as_button_callback_query_string();
     ctx.send(
         CreateReply::default()
@@ -98,18 +102,32 @@ async fn execute_roll<'a>(ctx: &PoiseContext<'a>, query: ParsedRollQuery) -> Res
     Ok(())
 }
 
+#[derive(Default)]
 pub struct ParsedRollQuery {
     amount: u8,
     sides: u8,
     flat_addition: u8,
+    can_critical_hit: bool,
+}
+
+pub struct RollQueryResult {
+    pub success_count: u8,
+    pub message: String,
+    pub is_critical_hit: bool,
 }
 
 impl ParsedRollQuery {
-    pub fn new(dice: Option<u8>, sides: Option<u8>, flat_addition: Option<u8>) -> Self {
+    pub fn new(
+        dice: Option<u8>,
+        sides: Option<u8>,
+        flat_addition: Option<u8>,
+        can_critical_hit: bool,
+    ) -> Self {
         ParsedRollQuery {
             amount: dice.unwrap_or(1).clamp(0, 100),
             sides: sides.unwrap_or(6).clamp(0, 100),
             flat_addition: flat_addition.unwrap_or(0),
+            can_critical_hit,
         }
     }
 
@@ -120,11 +138,11 @@ impl ParsedRollQuery {
         )
     }
 
-    pub fn execute(&self) -> String {
+    pub fn execute(&self) -> RollQueryResult {
         let mut results = Vec::new();
         let mut total: u32 = self.flat_addition as u32;
-        let mut six_count: u32 = 0;
-        let mut successes: u32 = 0;
+        let mut six_count: u8 = 0;
+        let mut successes: u8 = 0;
         {
             // TODO: this is ugly :>
             let mut rng = rand::rng();
@@ -157,15 +175,16 @@ impl ParsedRollQuery {
             .collect::<Vec<String>>()
             .join(", ");
 
-        let mut text = format!("{}d{}", self.amount, self.sides);
+        let mut message = format!("{}d{}", self.amount, self.sides);
 
+        let mut is_critical_hit = false;
         if self.flat_addition > 0 {
-            text.push_str(&format!(
+            message.push_str(&format!(
                 "+{} — {}+{} = {}",
                 self.flat_addition, result_list, self.flat_addition, total
             ));
         } else {
-            text.push_str(&format!(" — {}", result_list));
+            message.push_str(&format!(" — {}", result_list));
             if self.sides == 6 {
                 let success_string: &str;
                 if successes == 0 {
@@ -180,15 +199,20 @@ impl ParsedRollQuery {
                     success_string = "Successes.";
                 }
 
-                let crit_string = if six_count >= 3 { " **(CRIT)**" } else { "" };
+                is_critical_hit = self.can_critical_hit && six_count >= 3;
+                let crit_string = if is_critical_hit { " **(CRIT)**" } else { "" };
 
-                text.push_str(&format!(
+                message.push_str(&format!(
                     "\n**{}** {}{}",
                     successes, success_string, crit_string
                 ));
             }
         }
 
-        text
+        RollQueryResult {
+            success_count: successes,
+            message,
+            is_critical_hit,
+        }
     }
 }

@@ -48,6 +48,7 @@ mod server_stats;
 mod setting_time_offset;
 mod setup_guild;
 mod store_gm_experience;
+mod successive_action_roll;
 mod use_gm_experience;
 mod wallet_commands;
 
@@ -81,6 +82,7 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         create_role_reaction_post::create_role_reaction_post(),
         setting_time_offset::setting_time_offset(),
         say::say(),
+        successive_action_roll::successive_action_roll(),
         about::about(),
         //prune_emojis::prune_emojis(),
         server_stats::server_stats(),

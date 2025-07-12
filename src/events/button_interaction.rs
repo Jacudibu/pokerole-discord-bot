@@ -150,7 +150,8 @@ pub async fn handle_button_interaction(
         "roll-dice" => {
             let message = dice_rolls::parse_query(args[0])
                 .expect("This should always be a valid query in buttons!")
-                .execute();
+                .execute()
+                .message;
             interaction
                 .create_response(
                     context,
