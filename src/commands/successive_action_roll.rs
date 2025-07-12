@@ -59,15 +59,15 @@ pub async fn successive_action_roll(
     #[min = 0_i16]
     #[max = 40_i16]
     damage_dies: i16,
-    #[description = "Override for the initial accuracy reduction. Defaults to 2 for Successive, 1 for Double/Triple."]
-    #[min = 0_u8]
+    #[description = "Add an initial accuracy reduction. Defaults to 0."]
+    #[min = 1_u8]
     #[max = 10_u8]
     base_accuracy_reduction: Option<u8>,
     #[description = "Override for how many accuracy dies are removed per success."]
     #[min = 1_u8]
     #[max = 100_u8]
     accuracy_reduction_per_success: Option<u8>,
-    #[description = "Override for how many damage dies are added per success. May be negative."]
+    #[description = "Override for how many damage dies are added per success. Can be negative to instead remove some."]
     #[min = -2_i8]
     #[max = 2_i8]
     damage_change_per_roll: Option<i8>,
@@ -123,7 +123,7 @@ pub async fn successive_action_roll(
 
     if hit_success_count == 0 {
         message.push_str(&format!(
-            "**Missing completely!**\n*{}*",
+            "**Missing completely!** *{}*",
             get_random_mockery(&COMPLETE_MISS_COMMENTARY)
         ));
 
@@ -134,7 +134,7 @@ pub async fn successive_action_roll(
     }
     if hit_success_count == 1 {
         message.push_str(&format!(
-            "Succeeding once!\n*{}*\n",
+            "**Succeeding once!** *{}*\n",
             get_random_mockery(&SINGLE_HIT_COMMENTARY)
         ));
     } else {
@@ -179,7 +179,7 @@ pub async fn successive_action_roll(
             };
 
             message.push_str(&format!(
-                "**Hitting the target {hit_text}!**\n*{}*",
+                "**Hitting the target {hit_text}!** *{}*",
                 get_random_mockery(&ZERO_DAMAGE_COMMENTARY)
             ));
         } else {
@@ -189,7 +189,7 @@ pub async fn successive_action_roll(
                 "attacks"
             };
 
-            message.push_str(&format!("Yielding a total of **{damage_success_count}** successful damage rolls over {hit_success_count} {attack_string}!\n"));
+            message.push_str(&format!("Yielding a total of **{damage_success_count}** successful damage rolls over **{hit_success_count} {attack_string}**!\n"));
             // message.push_str(&format!(
             //     "Final damage formula: `{damage_success_count} - ({hit_success_count} * Target Defense)` ... `+ {hit_success_count}xSTAB, item and type efficiency (if applicable)`"
             // ));
