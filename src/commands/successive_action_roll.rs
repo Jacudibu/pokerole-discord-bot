@@ -1,7 +1,7 @@
 use crate::Error;
 use crate::commands::send_ephemeral_reply;
-use crate::shared::PoiseContext;
 use crate::shared::dice_rolls::ParsedRollQuery;
+use crate::shared::{PoiseContext, dice_rolls};
 use rand::prelude::IndexedRandom;
 use std::convert::Into;
 use std::fmt::{Display, Formatter};
@@ -71,19 +71,26 @@ pub async fn successive_action_roll(
     #[min = -2_i8]
     #[max = 2_i8]
     damage_change_per_roll: Option<i8>,
+    #[description = "Override for how many 6 are required to land a critical hit. Defaults to 3."]
+    #[min = 0_u8]
+    #[max = 5_u8]
+    crit_6_count: Option<u8>,
 ) -> Result<(), Error> {
     let defer = ctx.defer();
     let accuracy_reduction_per_success = accuracy_reduction_per_success
         .unwrap_or(action_kind.default_accuracy_reduction_per_throw());
     let mut required_accuracy = 1 + base_accuracy_reduction.unwrap_or(0);
     let damage_change_per_roll = damage_change_per_roll.unwrap_or(0) as i16;
+    let crit_6_count = crit_6_count.unwrap_or(dice_rolls::DEFAULT_CRIT_DIE_COUNT);
 
     let mut message = format!(
-        "{action_kind} Action roll.\nParameters: Accuracy dies: {accuracy_dies} | Required Accuracy: {required_accuracy}+{accuracy_reduction_per_success} per success | Damage dies: {damage_dies}"
+        "### {action_kind} Action roll.\nParameters: Accuracy dies: {accuracy_dies} | Required Accuracy: {required_accuracy}+{accuracy_reduction_per_success} per success | Damage dies: {damage_dies}"
     );
     if damage_change_per_roll > 0 {
         message.push_str(&format!("+{damage_change_per_roll} per roll"));
     }
+    dice_rolls::append_crit_stat_if_changed(&mut message, crit_6_count);
+
     message.push('\n');
 
     if required_accuracy > accuracy_dies {
@@ -102,7 +109,7 @@ pub async fn successive_action_roll(
         && failed_successive_roll.not()
         && roll_counter <= action_kind.maximum_hits()
     {
-        let query = ParsedRollQuery::new(accuracy_dies.into(), None, None, true);
+        let query = ParsedRollQuery::new(accuracy_dies.into(), None, None, Some(crit_6_count));
         let roll_result = query.execute();
 
         if roll_result.success_count >= required_accuracy {
@@ -154,7 +161,7 @@ pub async fn successive_action_roll(
                 damage_dies as u8
             };
 
-            let query = ParsedRollQuery::new(damage_dies_for_this_roll.into(), None, None, false);
+            let query = ParsedRollQuery::new(damage_dies_for_this_roll.into(), None, None, None);
             let roll_result = query.execute();
             damage_success_count += roll_result.success_count as u16;
 

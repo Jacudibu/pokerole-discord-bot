@@ -10,6 +10,9 @@ use std::str::FromStr;
 const CRIT: u8 = 6;
 const FAIL_THRESHOLD: u8 = 3;
 
+pub const DEFAULT_CRIT_DIE_COUNT: u8 = 3;
+pub const DEFAULT_CRIT_DIE_COUNT_OPTION: Option<u8> = Some(DEFAULT_CRIT_DIE_COUNT);
+
 pub fn parse_query(query: &str) -> Result<ParsedRollQuery, Error> {
     let flat_addition: Option<u8>;
 
@@ -49,7 +52,12 @@ pub fn parse_query(query: &str) -> Result<ParsedRollQuery, Error> {
             Err(_) => return Err(Box::new(ParseError::new("Unable to parse query."))),
         };
 
-        return Ok(ParsedRollQuery::new(amount, Some(6), flat_addition, true));
+        return Ok(ParsedRollQuery::new(
+            amount,
+            Some(6),
+            flat_addition,
+            DEFAULT_CRIT_DIE_COUNT_OPTION,
+        ));
     }
 
     let amount = match u8::from_str(split[0]) {
@@ -62,7 +70,12 @@ pub fn parse_query(query: &str) -> Result<ParsedRollQuery, Error> {
         Err(_) => return Err(Box::new(ParseError::new("Unable to parse query."))),
     };
 
-    Ok(ParsedRollQuery::new(amount, sides, flat_addition, true))
+    Ok(ParsedRollQuery::new(
+        amount,
+        sides,
+        flat_addition,
+        DEFAULT_CRIT_DIE_COUNT_OPTION,
+    ))
 }
 
 pub async fn execute_query<'a>(ctx: &PoiseContext<'a>, query: &str) -> Result<(), Error> {
@@ -82,7 +95,7 @@ pub async fn roll<'a>(
 ) -> Result<(), Error> {
     execute_roll(
         ctx,
-        ParsedRollQuery::new(amount, sides, flat_addition, true),
+        ParsedRollQuery::new(amount, sides, flat_addition, DEFAULT_CRIT_DIE_COUNT_OPTION),
     )
     .await
 }
@@ -107,7 +120,9 @@ pub struct ParsedRollQuery {
     amount: u8,
     sides: u8,
     flat_addition: u8,
-    can_critical_hit: bool,
+
+    /// None means this roll cannot crit.
+    required_amount_of_6_for_critical_hit: Option<u8>,
 }
 
 pub struct RollQueryResult {
@@ -121,13 +136,13 @@ impl ParsedRollQuery {
         dice: Option<u8>,
         sides: Option<u8>,
         flat_addition: Option<u8>,
-        can_critical_hit: bool,
+        critical_hit_die_count: Option<u8>,
     ) -> Self {
         ParsedRollQuery {
             amount: dice.unwrap_or(1).clamp(0, 100),
             sides: sides.unwrap_or(6).clamp(0, 100),
             flat_addition: flat_addition.unwrap_or(0),
-            can_critical_hit,
+            required_amount_of_6_for_critical_hit: critical_hit_die_count,
         }
     }
 
@@ -199,7 +214,14 @@ impl ParsedRollQuery {
                     success_string = "Successes.";
                 }
 
-                is_critical_hit = self.can_critical_hit && six_count >= 3;
+                is_critical_hit = if let Some(critical_hit_dies_necessary) =
+                    self.required_amount_of_6_for_critical_hit
+                {
+                    six_count >= critical_hit_dies_necessary
+                } else {
+                    false
+                };
+
                 let crit_string = if is_critical_hit { " **(CRIT)**" } else { "" };
 
                 message.push_str(&format!(
@@ -213,6 +235,16 @@ impl ParsedRollQuery {
             success_count: successes,
             message,
             is_critical_hit,
+        }
+    }
+}
+
+pub fn append_crit_stat_if_changed(message: &mut String, crit_6_count: u8) {
+    if crit_6_count != DEFAULT_CRIT_DIE_COUNT {
+        if crit_6_count > 0 {
+            message.push_str(&format!(" | {crit_6_count}x6 required for crit"));
+        } else {
+            message.push_str(" | guaranteed critical hit");
         }
     }
 }
