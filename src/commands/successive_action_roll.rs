@@ -1,6 +1,7 @@
 use crate::Error;
 use crate::commands::send_ephemeral_reply;
 use crate::shared::dice_rolls::ParsedRollQuery;
+use crate::shared::utility::message_splitting::split_long_messages;
 use crate::shared::{PoiseContext, dice_rolls};
 use rand::prelude::IndexedRandom;
 use std::convert::Into;
@@ -47,13 +48,14 @@ impl Display for SuccessiveActionKind {
 
 /// Roll multiple dice to quickly get the results for successive actions.
 #[poise::command(slash_command)]
+#[allow(clippy::too_many_arguments)]
 pub async fn successive_action_roll(
     ctx: PoiseContext<'_>,
     #[description = "What kind of successive action move are we using?"]
     action_kind: SuccessiveActionKind,
     #[description = "How many accuracy dies do we have initially?"]
     #[min = 1_u8]
-    #[max = 20_u8]
+    #[max = 40_u8]
     accuracy_dies: u8,
     #[description = "How many damage dies do we have initially?"]
     #[min = 0_i16]
@@ -104,12 +106,19 @@ pub async fn successive_action_roll(
 
     let mut roll_counter = 1;
     let mut crit_log = Vec::new();
+    let mut is_first_hit = true;
     message.push_str("### Accuracy rolls:\n");
     while required_accuracy < accuracy_dies
         && failed_successive_roll.not()
         && roll_counter <= action_kind.maximum_hits()
     {
-        let query = ParsedRollQuery::new(accuracy_dies.into(), None, None, Some(crit_6_count));
+        let crit_die = if is_first_hit {
+            Some(crit_6_count)
+        } else {
+            None
+        };
+
+        let query = ParsedRollQuery::new(accuracy_dies.into(), None, None, crit_die);
         let roll_result = query.execute();
 
         if roll_result.success_count >= required_accuracy {
@@ -126,6 +135,8 @@ pub async fn successive_action_roll(
         crit_log.push(roll_result.is_critical_hit);
         required_accuracy += accuracy_reduction_per_success;
         roll_counter += 1;
+
+        is_first_hit = false;
     }
 
     if hit_success_count == 0 {
@@ -197,14 +208,13 @@ pub async fn successive_action_roll(
             };
 
             message.push_str(&format!("Yielding a total of **{damage_success_count}** successful damage rolls over **{hit_success_count} {attack_string}**!\n"));
-            // message.push_str(&format!(
-            //     "Final damage formula: `{damage_success_count} - ({hit_success_count} * Target Defense)` ... `+ {hit_success_count}xSTAB, item and type efficiency (if applicable)`"
-            // ));
         }
     }
 
     let _ = defer.await;
-    let _ = ctx.reply(message).await;
+    for message in split_long_messages(message) {
+        let _ = ctx.reply(message).await;
+    }
     Ok(())
 }
 

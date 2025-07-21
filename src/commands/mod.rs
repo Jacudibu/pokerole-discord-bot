@@ -37,6 +37,7 @@ mod status;
 mod timestamp;
 mod weather;
 
+mod area_attack_roll;
 mod attack_roll;
 mod character_commands;
 mod edit_rules;
@@ -61,6 +62,7 @@ pub fn get_all_commands() -> Vec<Command<Data, Error>> {
         r#move::poke_move(),
         ability::ability(),
         attack_roll::attack_roll(),
+        area_attack_roll::area_attack_roll(),
         item::item(),
         stats::stats(),
         stats::pokemon(),

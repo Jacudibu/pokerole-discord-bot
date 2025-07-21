@@ -5,13 +5,13 @@ use crate::shared::{PoiseContext, dice_rolls};
 use rand::prelude::IndexedRandom;
 use std::convert::Into;
 
-/// Roll multiple dice to quickly get the results for successive actions.
+/// Quickly get the results for attack actions.
 #[poise::command(slash_command)]
 pub async fn attack_roll(
     ctx: PoiseContext<'_>,
     #[description = "How many accuracy dies should be rolled?"]
     #[min = 1_u8]
-    #[max = 20_u8]
+    #[max = 40_u8]
     accuracy_dies: u8,
     #[description = "How many damage dies should be rolled?"]
     #[min = 0_u8]
@@ -89,32 +89,34 @@ pub async fn attack_roll(
         }
     }
 
-    if let Some(status_effect_dies) = status_effect_dies {
-        let query = ParsedRollQuery::new(status_effect_dies.into(), None, None, None);
-        let status_roll_result = query.execute();
-
-        message.push_str(&format!(
-            "**Status Effect roll**: {}\n",
-            status_roll_result.message.replace("\n", " – ")
-        ));
-    }
-
-    if let Some(status_effect_dies) = status_effect_dies_2 {
-        let query = ParsedRollQuery::new(status_effect_dies.into(), None, None, None);
-        let status_roll_result = query.execute();
-
-        message.push_str(&format!(
-            "**Status Effect #2 roll**: {}\n",
-            status_roll_result.message.replace("\n", " – ")
-        ));
-    }
+    append_status_effect_roll(status_effect_dies, "", "", &mut message);
+    append_status_effect_roll(status_effect_dies_2, "", "#2 ", &mut message);
 
     let _ = defer.await;
     let _ = ctx.reply(message).await;
     Ok(())
 }
 
-fn append_random_mockery(message: &mut String, from: &'static [&'static str]) {
+pub fn append_status_effect_roll(
+    status_effect_dies: Option<u8>,
+    prefix: &str,
+    roll_number_string: &str,
+    message: &mut String,
+) {
+    let Some(status_effect_dies) = status_effect_dies else {
+        return;
+    };
+
+    let query = ParsedRollQuery::new(status_effect_dies.into(), None, None, None);
+    let status_roll_result = query.execute();
+
+    message.push_str(&format!(
+        "{prefix}**Status Effect {roll_number_string}roll**: {}\n",
+        status_roll_result.message.replace("\n", " – ")
+    ));
+}
+
+pub fn append_random_mockery(message: &mut String, from: &'static [&'static str]) {
     let mut rng = rand::rng();
     let mockery = from.choose(&mut rng).expect("This should never be empty!");
     message.push_str(&format!("*{}*\n", mockery));
