@@ -20,10 +20,7 @@ fn get_randomized_element_string(amount: u8, targets: String) -> String {
 }
 
 pub fn get_randomized_elements_from_csv(amount: Option<usize>, targets: String) -> Vec<String> {
-    let mut target_split: Vec<String> = targets
-        .split(',')
-        .map(|x| x.to_string())
-        .collect::<Vec<String>>();
+    let mut target_split = split_csv(targets);
     let mut result = Vec::default();
     let mut rng = rand::rng();
 
@@ -39,4 +36,10 @@ pub fn get_randomized_elements_from_csv(amount: Option<usize>, targets: String) 
     }
 
     result
+}
+
+pub fn split_csv(csv: String) -> Vec<String> {
+    csv.split(',')
+        .map(|x| x.trim().to_string())
+        .collect::<Vec<String>>()
 }

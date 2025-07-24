@@ -36,15 +36,21 @@ pub async fn area_attack_roll(
     #[min = 1_u8]
     #[max = 10_u8]
     accuracy_reduction: Option<u8>,
+    #[description = "Set to false to turn off random target selection. On by default."]
+    randomize_order: Option<bool>,
 ) -> Result<(), Error> {
     let defer = ctx.defer();
     let required_accuracy = 1 + accuracy_reduction.unwrap_or(0);
     let crit_6_count = crit_6_count.unwrap_or(dice_rolls::DEFAULT_CRIT_DIE_COUNT);
+    let randomize_order = randomize_order.unwrap_or(false);
 
     let mut message = format!(
         "### Area Attack roll.\nParameters: Accuracy dies: {accuracy_dies} | Required Accuracy: {required_accuracy} | Damage dies: {damage_dies}"
     );
     dice_rolls::append_crit_stat_if_changed(&mut message, crit_6_count);
+    if !randomize_order {
+        message.push_str(" | target randomization disabled");
+    }
 
     message.push_str("\n\n");
 
@@ -70,13 +76,22 @@ pub async fn area_attack_roll(
         return Ok(());
     }
 
-    attack_roll::append_random_mockery(&mut message, &RANDOM_TARGET_ORDER_COMMENTARY);
+    let targets = if randomize_order {
+        attack_roll::append_random_mockery(&mut message, &RANDOM_TARGET_ORDER_COMMENTARY);
+        select_random::get_randomized_elements_from_csv(None, targets)
+    } else {
+        select_random::split_csv(targets)
+    };
     message.push('\n');
 
-    let targets = select_random::get_randomized_elements_from_csv(None, targets);
     let mut is_first_hit = true;
     let mut damage_dies = damage_dies;
     for target in targets {
+        if damage_dies <= 0 {
+            message.push_str("**Out  of damage dies!**\n");
+            attack_roll::append_random_mockery(&mut message, &OUT_OF_DAMAGE_DICE_COMMENTARY);
+            break;
+        }
         message.push_str(&format!("**Targeting {target}!**\n"));
 
         if damage_dies > 0 {
@@ -318,4 +333,59 @@ const RANDOM_TARGET_ORDER_COMMENTARY: [&str; 153] = [
     "Initiating the tactical dartboard method!",
     "Let’s deal damage the lazy, chaotic way!",
     "It's attack time — let’s go full random feral mode!",
+];
+
+const OUT_OF_DAMAGE_DICE_COMMENTARY: [&str; 52] = [
+    "Ran out of steam halfway through the smackdown!",
+    "And just like that... the move gave up.",
+    "Somehow forgot to pack enough pain for everyone.",
+    "The move fizzled out like a budget fireworks show.",
+    "Someone, somewhere, breathes a sigh of relief.",
+    "Out of dice, out of damage, out of luck!",
+    "The attack stopped politely after hitting a few folks.",
+    "Guess they didn’t pay for the full AoE package.",
+    "Ran out of damage halfway through the dramatic pose.",
+    "They brought fists to seven targets. There were ten.",
+    "Oops! All energy, no follow-through.",
+    "The rest just stood there awkwardly — untouched!",
+    "Some targets got lucky. Others got lazy coding.",
+    "The attack got tired and went home.",
+    "They were like 'nah, that's enough damage for today.'",
+    "Too much ambition, not enough dice.",
+    "Some targets were spared... by pure arithmetic!",
+    "Only hit as many targets as they could count to.",
+    "Momentum? Gone. Damage? Also gone.",
+    "It started strong and ended... confused.",
+    "The final targets were spared by technicality!",
+    "The leftovers just looked around like, 'Was that it?'",
+    "Damage budget blown halfway through!",
+    "Got halfway through the rampage, then ran out of rage.",
+    "And just like that, the violence stopped.",
+    "Looks like someone needs to roll a bit harder next time.",
+    "That’s what happens when you don’t pace yourself.",
+    "The attack tripped on its own enthusiasm.",
+    "Too many targets, not enough juice!",
+    "RNG giveth, damage dice taketh away.",
+    "Damage dice ran out like batteries in a remote.",
+    "That move was 70% murder, 30% shrug.",
+    "The back half of the battlefield just blinked in confusion.",
+    "Ambition: 10 targets. Reality: 7 dice.",
+    "Some were hit. Others just got popcorn.",
+    "And the rest of the enemies? Not even winded.",
+    "Ran out of oomph halfway through the boomph.",
+    "Everyone else just flinched for no reason.",
+    "It was a group attack! ...In theory.",
+    "This is what happens when you overbook destruction.",
+    "Guess the second wave of damage missed their flight.",
+    "The move came, it saw, it kinda forgot the rest.",
+    "Some got clobbered. Others just observed.",
+    "They didn’t get hit — just slightly startled.",
+    "A move so powerful... it gave up halfway.",
+    "And the rest were spared by sheer technicality.",
+    "Out of dice, out of spite.",
+    "Turns out the AoE was more of a SoE — *Some* of Effect.",
+    "Damage didn’t run out — it just got picky.",
+    "What started as an area attack ended as a selective slap.",
+    "Collateral damage was canceled due to low resources.",
+    "The last few targets just got a light breeze.",
 ];
