@@ -15,6 +15,7 @@ pub mod enums;
 pub mod errors;
 pub mod game_data;
 pub mod metronome;
+pub mod permissions;
 pub mod retire_character;
 pub mod utility;
 

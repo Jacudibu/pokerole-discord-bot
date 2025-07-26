@@ -3,6 +3,7 @@ use std::str::FromStr;
 use serenity::all::{
     ActionRow, ActionRowComponent, Button, ButtonKind, ComponentInteraction,
     CreateInteractionResponse, CreateInteractionResponseFollowup, CreateInteractionResponseMessage,
+    RoleId,
 };
 use serenity::builder::{CreateActionRow, CreateButton};
 use serenity::client::Context;
@@ -14,7 +15,7 @@ use crate::shared::errors::CommandInvocationError;
 use crate::shared::game_data::GameData;
 use crate::shared::utility::channel_id_ext::ChannelIdExt;
 use crate::shared::utility::message_splitting;
-use crate::shared::{clunky_stuff, dice_rolls, emoji};
+use crate::shared::{clunky_stuff, dice_rolls, emoji, permissions};
 use crate::{Error, shared};
 
 async fn get_game_data<'a>(
@@ -198,9 +199,50 @@ pub async fn handle_button_interaction(
             )
             .await?;
         }
+        "toggle-role" => toggle_role(context, interaction, args).await?,
         &_ => {}
     }
 
+    Ok(())
+}
+
+async fn toggle_role(
+    context: &Context,
+    interaction: &&ComponentInteraction,
+    args: Vec<&str>,
+) -> Result<(), Error> {
+    let guild_id = interaction.guild_id.unwrap();
+    let Ok(role_id) = u64::from_str(args[0]) else {
+        return Err(Box::new(
+            CommandInvocationError::new(format!("Invalid role ID in request: {}", args[0]))
+                .should_be_logged(),
+        ));
+    };
+    let role_id = RoleId::new(role_id);
+    let role = context.http.get_guild_role(guild_id, role_id).await?;
+
+    if permissions::does_role_have_dangerous_permissions(&role) {
+        return Err(Box::new(
+            CommandInvocationError::new(format!(
+                "Someone tried assigning themselves a role with dangerous permissions: {}",
+                args[0]
+            ))
+            .should_be_logged(),
+        ));
+    }
+
+    let member = interaction.member.clone().unwrap();
+    let response = if member.roles.contains(&role_id) {
+        let response = format!("Removed the role {role}.");
+        member.remove_role(context, role).await?;
+        response
+    } else {
+        let response = format!("Assigned the role {role}.");
+        member.add_role(context, role).await?;
+        response
+    };
+
+    let _ = send_ephemeral_reply(interaction, context, &response).await;
     Ok(())
 }
 

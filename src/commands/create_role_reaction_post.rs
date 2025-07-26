@@ -1,23 +1,25 @@
-use crate::commands::Error;
-use crate::shared::PoiseContext;
-use poise::CreateReply;
-use serenity::all::CreateMessage;
-use serenity::model::channel::Channel;
-use serenity::model::channel::ReactionType;
+use crate::commands::create_role_reaction_post::CreateRoleError::RoleWasNone;
+use crate::commands::{Error, send_ephemeral_reply};
+use crate::shared::utility::button_building::create_button;
+use crate::shared::{PoiseContext, permissions};
+use serenity::all::{CreateActionRow, CreateMessage, RoleId};
+use serenity::builder::CreateButton;
 use serenity::model::guild::Role;
-use serenity::utils::MessageBuilder;
 
-/// WIP. Create a post for role reactions.
-#[poise::command(slash_command, default_member_permissions = "ADMINISTRATOR")]
+/// Create a post that allows users to assign non-administrative roles to themselves.
+#[poise::command(
+    slash_command,
+    guild_only,
+    default_member_permissions = "ADMINISTRATOR"
+)]
 #[allow(clippy::too_many_arguments)]
 pub async fn create_role_reaction_post(
     ctx: PoiseContext<'_>,
-    #[description = "In which channel?"] channel: Channel,
-    #[description = "What should be the post title?"] text: String,
-    #[description = "The emoji for the first role"] emoji_1: String,
+    #[description = "What should the message say?"] message_text: String,
+    #[description = "The emoji for the first role"] emoji_1: Option<String>,
     #[description = "The role for the first role"] role_1: Role,
-    emoji_2: String,
-    role_2: Role,
+    emoji_2: Option<String>,
+    role_2: Option<Role>,
     emoji_3: Option<String>,
     role_3: Option<Role>,
     emoji_4: Option<String>,
@@ -30,137 +32,72 @@ pub async fn create_role_reaction_post(
     role_7: Option<Role>,
     emoji_8: Option<String>,
     role_8: Option<Role>,
-    emoji_9: Option<String>,
-    role_9: Option<Role>,
 ) -> Result<(), Error> {
-    if ctx.author().id.get() != 878982444412448829 {
-        ctx.send(CreateReply::default()
-            .content("This command is currently highly WIP and requires some manual hacks to work. Sowwie! Contact Lilo if you really need to use it.")
-            .ephemeral(true)
-        ).await?;
-        return Ok(());
-    }
+    let channel = ctx.channel_id();
+    let mut issues = String::new();
 
-    let mut reaction_message = MessageBuilder::default();
-    let mut command_response = MessageBuilder::default();
-    let mut reactions = Vec::default();
-    reaction_message.push_bold_line(text);
+    let buttons = vec![
+        add_button(emoji_1, role_1.into()),
+        add_button(emoji_2, role_2),
+        add_button(emoji_3, role_3),
+        add_button(emoji_4, role_4),
+        add_button(emoji_5, role_5),
+        add_button(emoji_6, role_6),
+        add_button(emoji_7, role_7),
+        add_button(emoji_8, role_8),
+    ]
+    .into_iter()
+    .flat_map(|x| match x {
+        Ok(x) => Some(x),
+        Err(e) => match e {
+            RoleWasNone => None,
+            CreateRoleError::EvilPermission(role) => {
+                issues.push_str(&format!(
+                    "Role with dangerous permissions detected which should not be self-assignable by everyone: @{role}. I'll skip that one.\n"
+                ));
+                None
+            }
+        },
+    })
+    .collect::<Vec<CreateButton>>()
+    .chunks(4)
+    .map(|chunk| CreateActionRow::Buttons(chunk.to_vec()))
+    .collect::<Vec<CreateActionRow>>();
 
-    add_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_1,
-        role_1,
-        &mut reactions,
-    );
-    add_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_2,
-        role_2,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_3,
-        role_3,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_4,
-        role_4,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_5,
-        role_5,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_6,
-        role_6,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_7,
-        role_7,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_8,
-        role_8,
-        &mut reactions,
-    );
-    add_optional_role(
-        &mut reaction_message,
-        &mut command_response,
-        emoji_9,
-        role_9,
-        &mut reactions,
-    );
-
-    let message = channel
-        .id()
-        .send_message(ctx, CreateMessage::new().content(reaction_message.build()))
+    let _ = send_ephemeral_reply(&ctx, if issues.is_empty() { "ok" } else { &issues }).await;
+    let _ = channel
+        .send_message(
+            ctx,
+            CreateMessage::new()
+                .content(message_text)
+                .components(buttons),
+        )
         .await?;
-
-    for x in reactions {
-        message.react(ctx, ReactionType::Unicode(x)).await?;
-    }
-
-    ctx.say(format!(
-        "Message created.\nMessageId: `{}`\n{}",
-        message.id, command_response
-    ))
-    .await?;
 
     Ok(())
 }
 
-fn add_optional_role(
-    reaction_message: &mut MessageBuilder,
-    command_response: &mut MessageBuilder,
-    emoji: Option<String>,
-    role: Option<Role>,
-    all_emojis: &mut Vec<String>,
-) {
-    if let Some(emoji) = emoji {
-        add_role(
-            reaction_message,
-            command_response,
-            emoji,
-            role.unwrap(),
-            all_emojis,
-        );
-    }
+enum CreateRoleError {
+    /// That's to be expected for optional roles.
+    RoleWasNone,
+    /// Evil role permissions.
+    EvilPermission(String),
 }
 
-fn add_role(
-    reaction_message: &mut MessageBuilder,
-    command_response: &mut MessageBuilder,
-    emoji: String,
-    role: Role,
-    all_emojis: &mut Vec<String>,
-) {
-    command_response.push(&emoji);
-    command_response.push_mono(role.id.get().to_string());
-    command_response.push(' ');
-    command_response.push_mono_line("@".to_owned() + &role.name);
+fn add_button(emoji: Option<String>, role: Option<Role>) -> Result<CreateButton, CreateRoleError> {
+    let Some(role) = role else {
+        return Err(RoleWasNone);
+    };
 
-    reaction_message.push(&emoji);
-    reaction_message.push(' ');
-    reaction_message.push_line(role.name);
+    if permissions::does_role_have_dangerous_permissions(&role) {
+        return Err(CreateRoleError::EvilPermission(role.name));
+    }
 
-    all_emojis.push(emoji);
+    let emoji = emoji.unwrap_or_default();
+
+    Ok(create_button(
+        format!("{emoji} @{}", role.name).trim(),
+        &format!("toggle-role_{}", role.id),
+        false,
+    ))
 }

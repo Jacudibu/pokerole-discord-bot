@@ -1,17 +1,10 @@
+use crate::Error;
 use crate::events::FrameworkContext;
 use crate::shared::emoji;
-use crate::Error;
 use log::info;
-use serenity::all::{MessageInteractionMetadata, RoleId};
+use serenity::all::MessageInteractionMetadata;
 use serenity::client::Context;
 use serenity::model::channel::{Reaction, ReactionType};
-
-// TODO: Move this into a database.
-const ALLOWED_MESSAGE_IDS: [u64; 3] = [
-    1119664626188156978,
-    1119665389899616396,
-    1119666186867716137,
-];
 
 pub async fn handle_reaction_add(
     ctx: &Context,
@@ -19,20 +12,6 @@ pub async fn handle_reaction_add(
     reaction: &Reaction,
 ) -> Result<(), Error> {
     let emoji_name = get_emoji_name(&reaction.emoji);
-    if ALLOWED_MESSAGE_IDS.contains(&reaction.message_id.get()) {
-        let role_id = emoji_to_role_id(emoji_name.as_str());
-        ctx.http
-            .add_member_role(
-                reaction.guild_id.unwrap(),
-                reaction.user_id.unwrap(),
-                RoleId::from(role_id),
-                Some("Clicked the button to add the role."),
-            )
-            .await?;
-
-        return Ok(());
-    }
-
     match emoji_name.as_str() {
         emoji::UNICODE_CROSS_MARK | emoji::UNICODE_CROSS_MARK_BUTTON => {
             delete_bot_message(ctx, reaction).await
@@ -62,7 +41,9 @@ async fn delete_bot_message(ctx: &Context, reaction: &Reaction) -> Result<(), Er
                             .await?;
                     }
                 } else {
-                    info!("Encountered invalid message interaction metadata when trying to delete a message!")
+                    info!(
+                        "Encountered invalid message interaction metadata when trying to delete a message!"
+                    )
                 }
             }
         }
@@ -71,40 +52,11 @@ async fn delete_bot_message(ctx: &Context, reaction: &Reaction) -> Result<(), Er
 }
 
 pub async fn handle_reaction_remove(
-    ctx: &Context,
+    _ctx: &Context,
     _framework: FrameworkContext<'_>,
-    reaction: &Reaction,
+    _reaction: &Reaction,
 ) -> Result<(), Error> {
-    if ALLOWED_MESSAGE_IDS.contains(&reaction.message_id.get()) {
-        let bla = get_emoji_name(&reaction.emoji);
-        let role_id = emoji_to_role_id(bla.as_str());
-        ctx.http
-            .remove_member_role(
-                reaction.guild_id.unwrap(),
-                reaction.user_id.unwrap(),
-                RoleId::from(role_id),
-                Some("Clicked the button to remove the role."),
-            )
-            .await?;
-    }
-
     Ok(())
-}
-
-fn emoji_to_role_id(emoji_name: &str) -> u64 {
-    match emoji_name {
-        "❤️" => 1115475058958278707,
-        "💙" => 1115475277611544596,
-        "💛" => 1115475324264792074,
-        "🍆" => 1115475361380188171,
-        "🐱" => 1115475400215244861,
-        "🔔" => 1115475494956179598,
-        "⚙️" => 1115475607950721165,
-        "🤖" => 1116615590308749352,
-        "💬" => 1115475646668353577,
-        "📣" => 1119659198968512655,
-        _ => panic!("unexpected emoji name! {}", emoji_name),
-    }
 }
 
 fn get_emoji_name(reaction: &ReactionType) -> String {

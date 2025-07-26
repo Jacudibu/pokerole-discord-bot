@@ -17,9 +17,9 @@ mod backups;
 mod button_interaction;
 mod character_stat_edit;
 mod guild_member_removal;
+mod handle_emoji_reaction;
 mod monthly_reset;
 mod quests;
-mod role_reaction;
 mod select_menu_interaction;
 mod status_messages;
 mod weekly_reset;
@@ -36,10 +36,11 @@ pub async fn handle_events<'a>(
             handle_interaction(context, framework, interaction).await
         }
         FullEvent::ReactionAdd { add_reaction } => {
-            role_reaction::handle_reaction_add(context, framework, add_reaction).await
+            handle_emoji_reaction::handle_reaction_add(context, framework, add_reaction).await
         }
         FullEvent::ReactionRemove { removed_reaction } => {
-            role_reaction::handle_reaction_remove(context, framework, removed_reaction).await
+            handle_emoji_reaction::handle_reaction_remove(context, framework, removed_reaction)
+                .await
         }
         FullEvent::GuildMemberRemoval { guild_id, user, .. } => {
             guild_member_removal::handle_guild_member_removal(
