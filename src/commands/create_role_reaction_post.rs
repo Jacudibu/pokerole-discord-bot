@@ -2,7 +2,7 @@ use crate::commands::create_role_reaction_post::CreateRoleError::RoleWasNone;
 use crate::commands::{Error, send_ephemeral_reply};
 use crate::shared::utility::button_building::create_button;
 use crate::shared::{PoiseContext, permissions};
-use serenity::all::{CreateActionRow, CreateMessage, RoleId};
+use serenity::all::{CreateActionRow, CreateMessage};
 use serenity::builder::CreateButton;
 use serenity::model::guild::Role;
 
@@ -69,7 +69,7 @@ pub async fn create_role_reaction_post(
         .send_message(
             ctx,
             CreateMessage::new()
-                .content(message_text)
+                .content(format!("### {message_text}"))
                 .components(buttons),
         )
         .await?;
