@@ -13,8 +13,8 @@ pub async fn scale(
     #[autocomplete = "autocomplete_pokemon"]
     name: String,
     #[description = "To which percentage? (Whole number)"]
-    #[min = 67_u8]
-    #[max = 133_u8]
+    #[min = 50_u8]
+    #[max = 150_u8]
     percent: u8,
 ) -> Result<(), Error> {
     let pokemon = pokemon_from_autocomplete_string(&ctx, &name).await?;
