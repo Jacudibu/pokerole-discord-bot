@@ -1,11 +1,11 @@
+# ⚠ Development has moved off GitHub in 2025. To receive access to the source code, contact me through the development discord server.
+
 A discord bot to support playing a homebrewed, Mystery-Dungeon Themed version
 of [Pokèrole](https://www.pokeroleproject.com).
 
 If you are fine with our custom changes to the Pokèrole Systems, feel free to
 just [add it to your own server using this link](https://discord.com/oauth2/authorize?client_id=1113153708201615430&permissions=9089493346368&scope=applications.commands%20bot)!
 Any persistent data is server specific, so there's no need to worry about breaking anything.
-
-# ⚠ This repository has moved off GitHub. To receive access to the source code, contact me through the development discord.
 
 # Features
 
